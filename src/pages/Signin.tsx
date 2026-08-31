@@ -15,15 +15,49 @@ function Signin() {
 
   const [showPassword, setShowPassword] =
     useState(false);
+  const [email, setEmail] = useState('admin@aisha.com');
+  const [password, setPassword] = useState('admin123');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    setLoading(true);
+    setError('');
 
-    // Temporary only.
-    // Later, replace with Supabase Auth.
-    navigate('/');
+    try {
+      const response = await fetch('http://localhost:3001/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to sign in.');
+      }
+
+      localStorage.setItem('aisha_user', JSON.stringify(data.user));
+
+      const routeMap: Record<string, string> = {
+        admin: '/admin',
+        employee: '/employee',
+        customer: '/customer',
+      };
+
+      navigate(routeMap[data.user.role] || '/customer');
+    } catch (submitError) {
+      const message =
+        submitError instanceof Error ? submitError.message : 'Login failed.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -220,6 +254,11 @@ function Signin() {
             onSubmit={handleSubmit}
             className="mt-8 space-y-5"
           >
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             {/* ======================================
                 EMAIL
@@ -253,6 +292,8 @@ function Signin() {
                   id="email"
                   type="email"
                   placeholder="you@email.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className="input-field w-full pl-11"
                   required
                 />
@@ -298,6 +339,8 @@ function Signin() {
                       : 'password'
                   }
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   className="
                     input-field
                     w-full
@@ -371,9 +414,10 @@ function Signin() {
 
             <button
               type="submit"
-              className="primary-btn w-full"
+              className="primary-btn w-full disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={loading}
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
           </form>
