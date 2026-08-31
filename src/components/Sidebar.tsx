@@ -6,43 +6,48 @@ import {
   LogOut,
   PlusCircle,
   Sparkles,
+  Users,
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const navigation = [
-  {
-    name: 'Home',
-    path: '/',
-    icon: House,
-  },
-  {
-    name: 'Appointments',
-    path: '/appointments',
-    icon: CalendarDays,
-  },
-  {
-    name: 'Book Now',
-    path: '/booking',
-    icon: PlusCircle,
-  },
-  {
-    name: 'History',
-    path: '/history',
-    icon: Clock3,
-  },
-  {
-    name: 'Notifications',
-    path: '/notifications',
-    icon: Bell,
-  },
-];
+const navigationByRole: Record<string, Array<{ name: string; path: string; icon: typeof House }>> = {
+  admin: [
+    { name: 'Home', path: '/admin', icon: House },
+    { name: 'Appointments', path: '/appointments', icon: CalendarDays },
+    { name: 'Book Now', path: '/booking', icon: PlusCircle },
+    { name: 'History', path: '/history', icon: Clock3 },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
+  ],
+  employee: [
+    { name: 'Home', path: '/employee', icon: House },
+    { name: 'Appointments', path: '/appointments', icon: CalendarDays },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
+    { name: 'Profile', path: '/profile', icon: Users },
+  ],
+  customer: [
+    { name: 'Home', path: '/customer', icon: House },
+    { name: 'Book Now', path: '/booking', icon: PlusCircle },
+    { name: 'Appointments', path: '/appointments', icon: CalendarDays },
+    { name: 'History', path: '/history', icon: Clock3 },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
+  ],
+};
 
 function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const savedUser = localStorage.getItem('aisha_user');
+  const currentUser = savedUser ? JSON.parse(savedUser) : null;
+  const role = currentUser?.role || 'customer';
+  const navigation = navigationByRole[role] || navigationByRole.customer;
+
+  const handleLogout = () => {
+    localStorage.removeItem('aisha_user');
+    navigate('/signin');
+  };
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[250px] flex-col border-r border-pink-100 bg-white px-4 py-6 md:flex">
         <div className="mb-8 flex items-center gap-3 px-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff0d8] text-[#b88a2c]">
@@ -51,17 +56,14 @@ function Sidebar() {
 
           <div>
             <h2 className="font-bold text-[#49343a]">Aisha</h2>
-            <p className="text-xs text-[#b88a2c]">Beauty & Wellness</p>
+            <p className="text-xs text-[#b88a2c] capitalize">{role} Access</p>
           </div>
         </div>
 
         <nav className="space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
-
-            const isActive =
-              location.pathname === item.path ||
-              (item.path === '/' && location.pathname === '/');
+            const isActive = location.pathname === item.path;
 
             return (
               <Link
@@ -81,20 +83,20 @@ function Sidebar() {
         </nav>
 
         <div className="mt-auto border-t border-pink-100 pt-4">
-          <Link
-            to="/signin"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#c66b83] transition hover:bg-pink-50"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-[#c66b83] transition hover:bg-pink-50"
           >
             <LogOut size={19} />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 bg-white px-2 py-2 md:hidden">
         <div className="flex items-center justify-around">
-          {navigation.slice(0, 4).map((item) => {
+          {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
 

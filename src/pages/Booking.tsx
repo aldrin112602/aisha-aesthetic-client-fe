@@ -323,12 +323,14 @@ function Booking() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/bookings', {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiBaseUrl}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          customerId: 3,
           serviceId: service.id,
           serviceName: service.name,
           category: service.category,

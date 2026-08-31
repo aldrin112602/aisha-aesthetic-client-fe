@@ -19,6 +19,35 @@ import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 
+const roleRouteMap: Record<string, string> = {
+  admin: '/admin',
+  employee: '/employee',
+  customer: '/customer',
+};
+
+function ProtectedRoute({
+  allowedRoles,
+  children,
+}: {
+  allowedRoles: string[];
+  children: React.ReactNode;
+}) {
+  const location = useLocation();
+  const savedUser = localStorage.getItem('aisha_user');
+  const currentUser = savedUser ? JSON.parse(savedUser) : null;
+
+  if (!currentUser) {
+    return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
+  }
+
+  if (!allowedRoles.includes(currentUser.role)) {
+    const fallback = roleRouteMap[currentUser.role] || '/customer';
+    return <Navigate to={fallback} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
   const location = useLocation();
   const savedUser = localStorage.getItem('aisha_user');
@@ -27,26 +56,15 @@ function App() {
   const authPages = ['/signin', '/signup'];
   const isAuthPage = authPages.includes(location.pathname);
 
-  if (isAuthPage) {
-    return (
-      <Routes>
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/signup" element={<Signup />} />
-      </Routes>
-    );
+  if (currentUser && isAuthPage) {
+    return <Navigate to={roleRouteMap[currentUser.role] || '/customer'} replace />;
   }
 
-  if (!currentUser) {
-    return <Navigate to="/signin" replace />;
+  if (!currentUser && !isAuthPage) {
+    return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
   }
 
-  const roleRouteMap: Record<string, string> = {
-    admin: '/admin',
-    employee: '/employee',
-    customer: '/customer',
-  };
-
-  const expectedRoute = roleRouteMap[currentUser.role] || '/customer';
+  const expectedRoute = roleRouteMap[currentUser?.role || 'customer'] || '/customer';
 
   if (location.pathname === '/') {
     return <Navigate to={expectedRoute} replace />;
@@ -68,25 +86,83 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/signin" element={<Signin />} />
+      <Route path="/signup" element={<Signup />} />
+
       <Route
         path="/admin"
-        element={renderProtectedLayout(<AdminDashboard />)}
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            {renderProtectedLayout(<AdminDashboard />)}
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/employee"
-        element={renderProtectedLayout(<EmployeeDashboard />)}
+        element={
+          <ProtectedRoute allowedRoles={['employee']}>
+            {renderProtectedLayout(<EmployeeDashboard />)}
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/customer"
-        element={renderProtectedLayout(<CustomerDashboard />)}
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            {renderProtectedLayout(<CustomerDashboard />)}
+          </ProtectedRoute>
+        }
       />
 
-      <Route path="/dashboard" element={renderProtectedLayout(<Dashboard />)} />
-      <Route path="/booking" element={renderProtectedLayout(<Booking />)} />
-      <Route path="/appointments" element={renderProtectedLayout(<Appointments />)} />
-      <Route path="/history" element={renderProtectedLayout(<History />)} />
-      <Route path="/notifications" element={renderProtectedLayout(<Notification />)} />
-      <Route path="/profile" element={renderProtectedLayout(<Profile />)} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            {renderProtectedLayout(<Dashboard />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/booking"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'customer']}>
+            {renderProtectedLayout(<Booking />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/appointments"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            {renderProtectedLayout(<Appointments />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'customer']}>
+            {renderProtectedLayout(<History />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            {renderProtectedLayout(<Notification />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            {renderProtectedLayout(<Profile />)}
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to={expectedRoute} replace />} />
     </Routes>
   );
