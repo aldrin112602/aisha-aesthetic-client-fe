@@ -320,6 +320,14 @@ function Booking() {
       return;
     }
 
+    const savedUser = localStorage.getItem('aisha_user');
+    const currentUser = savedUser ? JSON.parse(savedUser) : null;
+
+    if (!currentUser?.id) {
+      alert('Please sign in before booking an appointment.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -330,7 +338,7 @@ function Booking() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerId: 3,
+          customerId: currentUser.id,
           serviceId: service.id,
           serviceName: service.name,
           category: service.category,

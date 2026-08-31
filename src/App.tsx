@@ -11,13 +11,16 @@ import Dashboard from './pages/Dashboard';
 import Booking from './pages/Booking';
 import Appointments from './pages/Appointments';
 import History from './pages/History';
-import Notification from './pages/Notification';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Profile from './pages/profile';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
+import AdminAppointments from './pages/AdminAppointments';
+import EmployeeManagement from './pages/EmployeeManagement';
+import WalkinManagement from './pages/WalkinManagement';
+import FollowupReminders from './pages/FollowupReminders';
 
 const roleRouteMap: Record<string, string> = {
   admin: '/admin',
@@ -123,6 +126,38 @@ function App() {
         }
       />
       <Route
+        path="/admin-appointments"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            {renderProtectedLayout(<AdminAppointments />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/employee-management"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            {renderProtectedLayout(<EmployeeManagement />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/walkins"
+        element={
+          <ProtectedRoute allowedRoles={['employee', 'admin']}>
+            {renderProtectedLayout(<WalkinManagement />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            {renderProtectedLayout(<FollowupReminders />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/booking"
         element={
           <ProtectedRoute allowedRoles={['admin', 'customer']}>
@@ -143,14 +178,6 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['admin', 'customer']}>
             {renderProtectedLayout(<History />)}
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
-            {renderProtectedLayout(<Notification />)}
           </ProtectedRoute>
         }
       />

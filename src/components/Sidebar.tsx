@@ -6,6 +6,7 @@ import {
   LogOut,
   PlusCircle,
   Sparkles,
+  UserCog,
   Users,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -13,16 +14,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 const navigationByRole: Record<string, Array<{ name: string; path: string; icon: typeof House }>> = {
   admin: [
     { name: 'Home', path: '/admin', icon: House },
-    { name: 'Appointments', path: '/appointments', icon: CalendarDays },
+    { name: 'Appointments', path: '/admin-appointments', icon: CalendarDays },
+    { name: 'Employees', path: '/employee-management', icon: UserCog },
     { name: 'Book Now', path: '/booking', icon: PlusCircle },
-    { name: 'History', path: '/history', icon: Clock3 },
+    { name: 'Walk-ins', path: '/walkins', icon: Users },
     { name: 'Notifications', path: '/notifications', icon: Bell },
   ],
   employee: [
     { name: 'Home', path: '/employee', icon: House },
     { name: 'Appointments', path: '/appointments', icon: CalendarDays },
+    { name: 'Walk-ins', path: '/walkins', icon: Users },
     { name: 'Notifications', path: '/notifications', icon: Bell },
-    { name: 'Profile', path: '/profile', icon: Users },
   ],
   customer: [
     { name: 'Home', path: '/customer', icon: House },
