@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, Bell, Calendar, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Bell, Calendar, CheckCircle2, Mail } from 'lucide-react';
 
 interface Followup {
   id: number;
@@ -112,6 +112,14 @@ function FollowupReminders() {
 
   return (
     <div className="page-container">
+      {/* Email Notification Badge */}
+      <div className="mb-6 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+        <Mail size={18} className="text-green-600" />
+        <p className="text-sm font-semibold text-green-800">
+          📧 Email notifications enabled. All reminders will be sent to your registered email.
+        </p>
+      </div>
+
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Reminders & Follow-ups</h1>

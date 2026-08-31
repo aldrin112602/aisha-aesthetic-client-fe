@@ -1,4 +1,4 @@
-import { Bell, CalendarCheck, CheckCheck, Sparkles } from 'lucide-react';
+import { Bell, CalendarCheck, CheckCheck, Mail, Sparkles } from 'lucide-react';
 
 const notifications = [
   {
@@ -48,6 +48,14 @@ function Notification() {
 
   return (
     <div className="page-container">
+      {/* Email Notification Status Banner */}
+      <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+        <Mail size={18} className="text-green-600" />
+        <p className="text-sm font-semibold text-green-800">
+          📧 Email notifications enabled. Appointment and reminder emails will be sent to your registered email address.
+        </p>
+      </div>
+
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="page-title">Notifications</h1>
