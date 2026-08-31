@@ -233,6 +233,9 @@ function Booking() {
   const [selectedArea, setSelectedArea] =
     useState<string>('Main Branch - Area A');
 
+  const [isSubmitting, setIsSubmitting] =
+    useState<boolean>(false);
+
   // ==========================================
   // SELECTED SERVICE
   // ==========================================
@@ -296,7 +299,7 @@ function Booking() {
   // HANDLE BOOKING
   // ==========================================
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!service) {
       alert('Please select a service.');
       return;
@@ -317,16 +320,42 @@ function Booking() {
       return;
     }
 
-    alert(
-      `Appointment booked!
+    setIsSubmitting(true);
 
-Service: ${service.name}
-Category: ${service.category}
-Date: ${selectedDate}
-Time: ${selectedTime}
-Area: ${selectedArea}
-Price: ₱${service.price.toLocaleString()}`
-    );
+    try {
+      const response = await fetch('http://localhost:3001/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          serviceId: service.id,
+          serviceName: service.name,
+          category: service.category,
+          date: selectedDate,
+          time: selectedTime,
+          area: selectedArea,
+          price: service.price,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to book appointment.');
+      }
+
+      alert(
+        `Appointment booked successfully!\n\nService: ${service.name}\nDate: ${selectedDate}\nTime: ${selectedTime}\nArea: ${selectedArea}\nPrice: ₱${service.price.toLocaleString()}`
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Something went wrong.';
+
+      alert(`Booking failed: ${message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1034,13 +1063,16 @@ Price: ₱${service.price.toLocaleString()}`
             <button
               type="button"
               onClick={handleBooking}
+              disabled={isSubmitting}
               className="
                 primary-btn
                 mt-7
                 w-full
+                disabled:cursor-not-allowed
+                disabled:opacity-70
               "
             >
-              Confirm Booking
+              {isSubmitting ? 'Booking...' : 'Confirm Booking'}
             </button>
 
 

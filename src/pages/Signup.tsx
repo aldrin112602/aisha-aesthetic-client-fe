@@ -1,4 +1,4 @@
-import { LockKeyhole, Mail, Sparkles, User } from 'lucide-react';
+import { LockKeyhole, Mail, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Signup() {
@@ -14,9 +14,7 @@ function Signup() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#fff8fa] px-4 py-8">
       <div className="w-full max-w-xl rounded-3xl border border-pink-100 bg-white p-6 shadow-xl shadow-pink-100/40 sm:p-10">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fff2df] text-[#c18c2d]">
-          <Sparkles size={26} />
-        </div>
+        
 
         <div className="mt-6 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b88a2c]">

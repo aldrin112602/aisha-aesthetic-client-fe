@@ -7,7 +7,6 @@ import {
   LockKeyhole,
   ChevronRight,
   LogOut,
-  Settings,
   Camera,
   X,
   Check,
