@@ -22,6 +22,13 @@ function Appointments() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    action: () => void;
+    actionLabel: string;
+    isDangerous: boolean;
+  } | null>(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
@@ -105,38 +112,43 @@ function Appointments() {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) {
-      return;
-    }
+    setConfirmAction({
+      title: 'Cancel Appointment?',
+      message: `Are you sure you want to cancel this appointment? You can reschedule it later if needed.`,
+      action: async () => {
+        setIsSubmitting(true);
+        setError('');
 
-    setIsSubmitting(true);
-    setError('');
+        try {
+          const response = await fetch(`${apiBaseUrl}/api/appointments/${appointmentId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'cancelled' }),
+          });
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/appointments/${appointmentId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'cancelled' }),
-      });
+          if (!response.ok) {
+            throw new Error('Unable to cancel this appointment.');
+          }
 
-      if (!response.ok) {
-        throw new Error('Unable to cancel this appointment.');
-      }
+          setAppointments((current) =>
+            current.map((item) =>
+              item.id === appointmentId ? { ...item, status: 'cancelled' } : item
+            )
+          );
 
-      setAppointments((current) =>
-        current.map((item) =>
-          item.id === appointmentId ? { ...item, status: 'cancelled' } : item
-        )
-      );
-
-      setSuccess('Appointment cancelled successfully!');
-      setSelectedAppointment(null);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
-    } finally {
-      setIsSubmitting(false);
-    }
+          setSuccess('Appointment cancelled successfully!');
+          setSelectedAppointment(null);
+          setConfirmAction(null);
+          setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      actionLabel: 'Yes, Cancel It',
+      isDangerous: true,
+    });
   };
 
   const startEditAppointment = (appointment: AppointmentItem) => {
@@ -185,33 +197,38 @@ function Appointments() {
   };
 
   const deleteAppointment = async (appointmentId: number) => {
-    if (!window.confirm('Permanently delete this appointment? This cannot be undone.')) {
-      return;
-    }
+    setConfirmAction({
+      title: 'Delete Appointment?',
+      message: 'Permanently delete this appointment? This cannot be undone.',
+      action: async () => {
+        setIsSubmitting(true);
+        setError('');
 
-    setIsSubmitting(true);
-    setError('');
+        try {
+          const response = await fetch(`${apiBaseUrl}/api/appointments/${appointmentId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+          });
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/appointments/${appointmentId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-      });
+          if (!response.ok) {
+            throw new Error('Unable to delete this appointment.');
+          }
 
-      if (!response.ok) {
-        throw new Error('Unable to delete this appointment.');
-      }
+          setAppointments((current) => current.filter((item) => item.id !== appointmentId));
 
-      setAppointments((current) => current.filter((item) => item.id !== appointmentId));
-
-      setSuccess('Appointment deleted successfully!');
-      setSelectedAppointment(null);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete appointment');
-    } finally {
-      setIsSubmitting(false);
-    }
+          setSuccess('Appointment deleted successfully!');
+          setSelectedAppointment(null);
+          setConfirmAction(null);
+          setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to delete appointment');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      actionLabel: 'Yes, Delete It',
+      isDangerous: true,
+    });
   };
 
   return (
@@ -506,6 +523,70 @@ function Appointments() {
                   {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION MODAL */}
+      {confirmAction && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
+          <div className="rounded-3xl bg-white max-w-md w-full shadow-2xl overflow-hidden">
+            <div
+              className={`px-6 py-6 ${
+                confirmAction.isDangerous
+                  ? 'bg-gradient-to-r from-red-50 to-orange-50'
+                  : 'bg-gradient-to-r from-[#fff5f8] to-[#ffe8ed]'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                    confirmAction.isDangerous ? 'bg-red-100' : 'bg-[#ffd4e0]'
+                  }`}
+                >
+                  {confirmAction.isDangerous ? (
+                    <AlertCircle
+                      size={24}
+                      className="text-red-600"
+                    />
+                  ) : (
+                    <CheckCircle2
+                      size={24}
+                      className="text-[#d77992]"
+                    />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-[#4b343b]">
+                    {confirmAction.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-[#80656d]">
+                    {confirmAction.message}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 border-t border-pink-100 bg-white p-6">
+              <button
+                onClick={() => setConfirmAction(null)}
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl border-2 border-[#e9b5c3] bg-white hover:bg-[#fff5f8] px-4 py-3 font-semibold text-[#4b343b] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction.action}
+                disabled={isSubmitting}
+                className={`flex-1 rounded-xl px-4 py-3 font-semibold text-white transition-colors disabled:opacity-50 ${
+                  confirmAction.isDangerous
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-[#c18c2d] hover:bg-[#b07720]'
+                }`}
+              >
+                {isSubmitting ? 'Processing...' : confirmAction.actionLabel}
+              </button>
             </div>
           </div>
         </div>
