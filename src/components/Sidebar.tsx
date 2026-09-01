@@ -18,6 +18,7 @@ const navigationByRole: Record<string, Array<{ name: string; path: string; icon:
     { name: 'Employees', path: '/employee-management', icon: UserCog },
     { name: 'Walk-ins', path: '/walkins', icon: Users },
     { name: 'Notifications', path: '/notifications', icon: Bell },
+    { name:  'Shop areas', path: '/shop-areas', icon: Users },
   ],
   employee: [
     { name: 'Home', path: '/employee', icon: House },
