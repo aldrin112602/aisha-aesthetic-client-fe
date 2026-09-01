@@ -19,6 +19,7 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 import AdminAppointments from './pages/AdminAppointments';
 import EmployeeManagement from './pages/EmployeeManagement';
+import AdminShopareas from './pages/AdminShopareas';
 import WalkinManagement from './pages/WalkinManagement';
 import FollowupReminders from './pages/FollowupReminders';
 
@@ -138,6 +139,14 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['admin']}>
             {renderProtectedLayout(<EmployeeManagement />)}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/shop-areas"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            {renderProtectedLayout(<AdminShopareas />)}
           </ProtectedRoute>
         }
       />
