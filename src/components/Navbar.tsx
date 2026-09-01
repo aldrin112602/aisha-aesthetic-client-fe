@@ -113,13 +113,9 @@ function Navbar() {
 
             <div>
 
-              <p className="text-xs font-semibold text-[#4b343b]">
-                Beautiful!
-              </p>
+              
 
-              <p className="text-[10px] text-[#a2878f]">
-                Client Account
-              </p>
+              
 
             </div>
 

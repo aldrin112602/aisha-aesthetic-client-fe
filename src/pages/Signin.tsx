@@ -424,30 +424,7 @@ function Signin() {
           </form>
 
 
-          {/* ========================================
-              DEMO CREDENTIALS
-          ======================================== */}
 
-          <div className="mt-8 rounded-xl border border-pink-200 bg-pink-50 p-4">
-            <p className="text-xs font-bold uppercase text-[#b88a2c]">
-              Demo Accounts
-            </p>
-            
-            <div className="mt-3 space-y-2 text-xs text-[#80656d]">
-              <div>
-                <p className="font-semibold text-[#5c444b]">👨‍💼 Admin</p>
-                <p>admin@aisha.com / admin123</p>
-              </div>
-              <div>
-                <p className="font-semibold text-[#5c444b]">👩‍💼 Employee</p>
-                <p>employee@aisha.com / employee123</p>
-              </div>
-              <div>
-                <p className="font-semibold text-[#5c444b]">👩‍🦰 Customer</p>
-                <p>customer@aisha.com / customer123</p>
-              </div>
-            </div>
-          </div>
 
 
           {/* ========================================
