@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
 interface Appointment { 
   id: number;
@@ -45,6 +46,28 @@ function AdminAppointments() {
     );
   };
 
+  const deleteAppointment = async (appointmentId: number, customerName: string) => {
+    if (!window.confirm(`Are you sure you want to delete the appointment for Customer #${customerName}?`)) {
+      return;
+    }
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
+    const response = await fetch(`${apiBaseUrl}/api/appointments/${appointmentId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      alert('Unable to delete appointment.');
+      return;
+    }
+
+    setAppointments((current) =>
+      current.filter((item) => item.id !== appointmentId)
+    );
+  };
+
   return (
     <div className="page-container">
       <div className="mb-6">
@@ -83,17 +106,26 @@ function AdminAppointments() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <select
-                      value={appointment.status}
-                      onChange={(event) => updateStatus(appointment.id, event.target.value)}
-                      className="rounded-lg border border-pink-100 bg-[#fffafb] px-2 py-2 text-xs outline-none focus:border-[#df7f98]"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="no-show">No Show</option>
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        value={appointment.status}
+                        onChange={(event) => updateStatus(appointment.id, event.target.value)}
+                        className="rounded-lg border border-pink-100 bg-[#fffafb] px-2 py-2 text-xs outline-none focus:border-[#df7f98]"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="no-show">No Show</option>
+                      </select>
+                      <button
+                        onClick={() => deleteAppointment(appointment.id, appointment.customerId)}
+                        className="flex items-center gap-1 rounded-lg bg-[#fee5e5] px-3 py-2 text-xs font-semibold text-[#c1433f] hover:bg-[#fdd5d5]"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

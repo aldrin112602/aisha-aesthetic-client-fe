@@ -273,7 +273,7 @@ function EmployeeManagement() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pink bg-opacity-50">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-[#4b343b]">
@@ -351,7 +351,7 @@ function EmployeeManagement() {
                   required
                 >
                   <option value="Employee">Employee</option>
-                  <option value="Supervisor">Supervisor</option>
+                  <option value="Customer">Customer</option>
                   <option value="Manager">Manager</option>
                 </select>
               </div>
