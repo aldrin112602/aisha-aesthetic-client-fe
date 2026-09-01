@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Clock, Phone, User } from 'lucide-react';
 
+interface Service {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  duration: string;
+  shopArea: string;
+  status: string;
+}
+
 interface WalkinRecord {
   id: number;
   name: string;
@@ -14,26 +25,52 @@ interface WalkinRecord {
 }
 
 function WalkinManagement() {
+  const [services, setServices] = useState<Service[]>([]);
   const [walkins, setWalkins] = useState<WalkinRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [servicesLoading, setServicesLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     phoneNumber: '',
+    serviceId: '',
     serviceName: '',
     category: '',
     area: 'Main Branch - Area A',
-    price: 1500,
+    price: 0,
     notes: '',
   });
 
-  useEffect(() => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-    fetch(`${apiBaseUrl}/api/walkins`)
-      .then((response) => response.json())
-      .then((data) => setWalkins(Array.isArray(data) ? data : []))
-      .catch(() => setWalkins([]));
+  // Fetch services and walk-ins on component mount
+  useEffect(() => {
+    fetchServices();
+    fetchWalkins();
   }, []);
+
+  const fetchServices = async () => {
+    try {
+      setServicesLoading(true);
+      const response = await fetch(`${apiBaseUrl}/api/services`);
+      const data = await response.json();
+      setServices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch services:', err);
+      setServices([]);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
+  const fetchWalkins = async () => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/walkins`);
+      const data = await response.json();
+      setWalkins(Array.isArray(data) ? data : []);
+    } catch {
+      setWalkins([]);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -41,6 +78,32 @@ function WalkinManagement() {
       ...prev,
       [name]: name === 'price' ? parseInt(value, 10) : value,
     }));
+  };
+
+  const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedServiceId = e.target.value;
+    
+    if (!selectedServiceId) {
+      setFormData((prev) => ({
+        ...prev,
+        serviceId: '',
+        serviceName: '',
+        category: '',
+        price: 0,
+      }));
+      return;
+    }
+
+    const selectedService = services.find((s) => s.id.toString() === selectedServiceId);
+    if (selectedService) {
+      setFormData((prev) => ({
+        ...prev,
+        serviceId: selectedServiceId,
+        serviceName: selectedService.name,
+        category: selectedService.category,
+        price: selectedService.price,
+      }));
+    }
   };
 
   const handleRecordWalkin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,12 +120,17 @@ function WalkinManagement() {
       const savedUser = localStorage.getItem('aisha_user');
       const currentUser = savedUser ? JSON.parse(savedUser) : null;
 
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const response = await fetch(`${apiBaseUrl}/api/walkins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          phoneNumber: formData.phoneNumber || null,
+          serviceName: formData.serviceName,
+          category: formData.category,
+          area: formData.area,
+          price: formData.price,
+          notes: formData.notes,
           employeeId: currentUser?.id || null,
         }),
       });
@@ -77,10 +145,11 @@ function WalkinManagement() {
       setFormData({
         name: '',
         phoneNumber: '',
+        serviceId: '',
         serviceName: '',
         category: '',
         area: 'Main Branch - Area A',
-        price: 1500,
+        price: 0,
         notes: '',
       });
 
@@ -138,16 +207,25 @@ function WalkinManagement() {
             </div>
 
             <div>
-              <label className="mb-2 text-sm font-semibold text-[#5d444c]">Service Name *</label>
-              <input
-                type="text"
-                name="serviceName"
-                value={formData.serviceName}
-                onChange={handleInputChange}
-                className="input-field w-full"
-                placeholder="E.g., Classic Lashes, Facial"
-                required
-              />
+              <label className="mb-2 text-sm font-semibold text-[#5d444c]">Service *</label>
+              {servicesLoading ? (
+                <div className="input-field w-full text-[#999]">Loading services...</div>
+              ) : (
+                <select
+                  name="serviceId"
+                  value={formData.serviceId}
+                  onChange={handleServiceChange}
+                  className="input-field w-full"
+                  required
+                >
+                  <option value="">Select a service</option>
+                  {services.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} (₱{service.price})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -157,8 +235,9 @@ function WalkinManagement() {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className="input-field w-full"
-                placeholder="E.g., Eyelash Extensions"
+                className="input-field w-full bg-[#f9f9f9]"
+                placeholder="Auto-filled from service"
+                disabled
               />
             </div>
 
@@ -178,9 +257,9 @@ function WalkinManagement() {
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
-                className="input-field w-full"
-                placeholder="1500"
-                required
+                className="input-field w-full bg-[#f9f9f9]"
+                placeholder="0"
+                disabled
               />
             </div>
           </div>
