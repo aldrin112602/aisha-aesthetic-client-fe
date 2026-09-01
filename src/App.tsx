@@ -160,7 +160,7 @@ function App() {
       <Route
         path="/booking"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'customer']}>
+          <ProtectedRoute allowedRoles={['customer']}>
             {renderProtectedLayout(<Booking />)}
           </ProtectedRoute>
         }
@@ -176,7 +176,7 @@ function App() {
       <Route
         path="/history"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'customer']}>
+          <ProtectedRoute allowedRoles={['customer']}>
             {renderProtectedLayout(<History />)}
           </ProtectedRoute>
         }
