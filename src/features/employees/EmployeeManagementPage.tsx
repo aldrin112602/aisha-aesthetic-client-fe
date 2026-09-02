@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { X, Trash2 } from 'lucide-react';
 
 import {
@@ -78,19 +78,10 @@ function EmployeeManagement() {
     useState('');
 
   // ==========================================
-  // INITIAL LOAD
-  // ==========================================
-
-  useEffect(() => {
-    fetchEmployees();
-    fetchShopAreas();
-  }, []);
-
-  // ==========================================
   // FETCH EMPLOYEES
   // ==========================================
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -113,13 +104,13 @@ function EmployeeManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ==========================================
   // FETCH SHOP AREAS
   // ==========================================
 
-  const fetchShopAreas = async () => {
+  const fetchShopAreas = useCallback(async () => {
     try {
       setLoadingShopAreas(true);
 
@@ -143,7 +134,18 @@ function EmployeeManagement() {
     } finally {
       setLoadingShopAreas(false);
     }
-  };
+  }, []);
+
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchEmployees();
+      void fetchShopAreas();
+    });
+  }, [fetchEmployees, fetchShopAreas]);
 
   // ==========================================
   // OPEN ADD MODAL

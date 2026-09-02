@@ -11,7 +11,7 @@ import {
   Clock3,
 } from 'lucide-react';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
 import {
@@ -45,12 +45,7 @@ function AdminService() {
 
   const [form, setForm] = useState(emptyForm);
 
-  // Fetch services on component mount
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getServices();
@@ -61,7 +56,14 @@ function AdminService() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch services on component mount
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchServices();
+    });
+  }, [fetchServices]);
 
   const categories = [
     'All',

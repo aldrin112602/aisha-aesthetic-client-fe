@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
   CheckCircle2,
@@ -41,15 +41,12 @@ function Appointments() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const [confirmAction, setConfirmAction] =
     useState<AppointmentConfirmAction | null>(null);
-
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
 
   /*
    * Converts:
@@ -59,7 +56,7 @@ function Appointments() {
    *
    * into a Date-compatible ISO time.
    */
-  const parseAppointmentDate = (
+  const parseAppointmentDate = useCallback((
     date: string,
     time: string
   ): Date | null => {
@@ -107,9 +104,9 @@ function Appointments() {
     }
 
     return parsed;
-  };
+  }, []);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     const savedUser = localStorage.getItem('aisha_user');
 
     if (!savedUser) {
@@ -123,6 +120,7 @@ function Appointments() {
       const data = await getCustomerAppointments(currentUser.id);
 
       setAppointments(Array.isArray(data) ? data : []);
+      setCurrentTime(Date.now());
     } catch (err) {
       console.error('Fetch appointments error:', err);
 
@@ -136,12 +134,18 @@ function Appointments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchAppointments();
+    });
+  }, [fetchAppointments]);
 
   /*
    * Determine if appointment is still upcoming.
    */
-  const isUpcoming = (appointment: AppointmentItem) => {
+  const isUpcoming = useCallback((appointment: AppointmentItem) => {
     if (appointment.status === 'cancelled') {
       return false;
     }
@@ -155,8 +159,8 @@ function Appointments() {
       return false;
     }
 
-    return appointmentDateTime.getTime() >= Date.now();
-  };
+    return appointmentDateTime.getTime() >= currentTime;
+  }, [currentTime, parseAppointmentDate]);
 
   /*
    * Split appointments into Upcoming and Past.
@@ -183,11 +187,11 @@ function Appointments() {
           ? dateA.getTime() - dateB.getTime()
           : dateB.getTime() - dateA.getTime();
       });
-  }, [appointments, activeTab]);
+  }, [appointments, activeTab, isUpcoming]);
 
   const upcomingCount = useMemo(() => {
     return appointments.filter(isUpcoming).length;
-  }, [appointments]);
+  }, [appointments, isUpcoming]);
 
   const pastCount = useMemo(() => {
     return appointments.filter(
@@ -195,7 +199,7 @@ function Appointments() {
         !isUpcoming(appointment) ||
         appointment.status === 'cancelled'
     ).length;
-  }, [appointments]);
+  }, [appointments, isUpcoming]);
 
   const canCancelAppointment = (
     appointment: AppointmentItem
@@ -610,10 +614,7 @@ function Appointments() {
 
                   <div className="flex flex-col items-start gap-3 md:items-end">
                     <p className="text-lg font-bold text-[#c18c2d]">
-                      ₱
-                      {Number(
-                        appointment.price || 0
-                      ).toLocaleString()}
+                      ₱{Number(appointment.price || 0).toLocaleString()}
                     </p>
 
                     <button
@@ -751,10 +752,7 @@ function Appointments() {
                   </p>
 
                   <p className="text-2xl font-bold text-[#c18c2d]">
-                    ₱
-                    {Number(
-                      selectedAppointment.price || 0
-                    ).toLocaleString()}
+                    ₱{Number(selectedAppointment.price || 0).toLocaleString()}
                   </p>
                 </div>
 
@@ -809,7 +807,7 @@ function Appointments() {
                         </button>
                       ) : (
                         <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm text-gray-600">
-                          ⏰{' '}
+                          <Clock3 size={16} className="inline" />{' '}
                           {
                             canCancelAppointment(
                               selectedAppointment

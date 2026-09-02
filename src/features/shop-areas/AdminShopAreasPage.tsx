@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   MapPin,
   Phone,
@@ -54,15 +54,11 @@ function AdminShopareas() {
     closingTime: '18:00',
   });
 
-  useEffect(() => {
-    fetchAreas();
-  }, []);
-
   // ============================================================
   // FETCH SHOP AREAS
   // ============================================================
 
-  const fetchAreas = async () => {
+  const fetchAreas = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -78,7 +74,13 @@ function AdminShopareas() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchAreas();
+    });
+  }, [fetchAreas]);
 
   // ============================================================
   // TIME FORMAT
@@ -113,20 +115,19 @@ function AdminShopareas() {
 
     const orderedDays = DAYS.filter((day) => selectedDays.includes(day));
 
-    let dayText = '';
-
     // Monday-Friday
-    if (
+    const dayText = (() => {
+      if (
       orderedDays.length === 5 &&
       orderedDays.every((day) =>
         ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day)
       )
     ) {
-      dayText = 'Monday - Friday';
-    }
+        return 'Monday - Friday';
+      }
 
     // Monday-Saturday
-    else if (
+      if (
       orderedDays.length === 6 &&
       orderedDays.every((day) =>
         [
@@ -139,18 +140,17 @@ function AdminShopareas() {
         ].includes(day)
       )
     ) {
-      dayText = 'Monday - Saturday';
-    }
+        return 'Monday - Saturday';
+      }
 
     // Everyday
-    else if (orderedDays.length === 7) {
-      dayText = 'Everyday';
-    }
+      if (orderedDays.length === 7) {
+        return 'Everyday';
+      }
 
     // Custom days
-    else {
-      dayText = orderedDays.join(', ');
-    }
+      return orderedDays.join(', ');
+    })();
 
     const timeText =
       openingTime && closingTime

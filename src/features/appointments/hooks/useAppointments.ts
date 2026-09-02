@@ -45,7 +45,9 @@ export function useAppointments(scope: AppointmentScope | null) {
   }, [scope]);
 
   useEffect(() => {
-    loadAppointments();
+    queueMicrotask(() => {
+      void loadAppointments();
+    });
   }, [loadAppointments]);
 
   return {

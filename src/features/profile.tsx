@@ -75,8 +75,10 @@ const Profile: React.FC = () => {
         profileImage: user.profileImage || "",
       };
 
-      setProfile(userData);
-      setEditForm(userData);
+      queueMicrotask(() => {
+        setProfile(userData);
+        setEditForm(userData);
+      });
     } catch (error) {
       console.error("Unable to load saved user:", error);
     }

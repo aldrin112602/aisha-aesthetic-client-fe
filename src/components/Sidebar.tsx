@@ -133,7 +133,6 @@ function Sidebar() {
     currentUser = savedUser ? JSON.parse(savedUser) : null;
   } catch {
     localStorage.removeItem('aisha_user');
-    currentUser = null;
   }
 
   const role = currentUser?.role || 'customer';
