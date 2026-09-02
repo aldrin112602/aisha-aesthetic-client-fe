@@ -10,7 +10,7 @@ import Profile from './features/profile';
 import AdminDashboard from './features/AdminDashboard';
 import EmployeeDashboard from './features/EmployeeDashboard';
 import CustomerDashboard from './features/CustomerDashboard';
-import AdminAppointments from './features/AdminAppointments';
+import AdminAppointments from './features/appointments/AdminAppointments';
 import EmployeeManagement from './features/EmployeeManagement';
 import AdminShopareas from './features/AdminShopareas';
 import AdminServices from './features/AdminServices';

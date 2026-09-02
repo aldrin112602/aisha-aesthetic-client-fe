@@ -7,10 +7,8 @@ import {
   Heart,
   Flower2,
   Scissors,
-  Hand,
   Package,
   Clock3,
-  X,
 } from 'lucide-react';
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
@@ -32,7 +30,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 function AdminService() {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [type, setType] = useState('All');
@@ -61,14 +58,12 @@ function AdminService() {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      setError(null);
       const response = await fetch(`${API_URL}/api/services`);
       if (!response.ok) throw new Error('Failed to fetch services');
       const data = await response.json();
       setServices(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load services';
-      setError(message);
       Swal.fire('Error', message, 'error');
     } finally {
       setLoading(false);

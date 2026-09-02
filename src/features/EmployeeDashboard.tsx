@@ -11,7 +11,6 @@ import {
   Scissors,
   PhilippinePeso,
   Eye,
-  RefreshCw,
   AlertCircle,
   X,
 } from 'lucide-react';
@@ -54,7 +53,7 @@ interface CurrentUser {
 
 type StatusFilter =
   | 'all'
-  | 'Pending'
+  | 'pending'
   | 'confirmed'
   | 'cancelled';
 
@@ -192,7 +191,6 @@ function EmployeeDashboard() {
   >([]);
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
   const [activeTab, setActiveTab] =
@@ -252,22 +250,12 @@ function EmployeeDashboard() {
       setAppointments([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [apiBaseUrl, currentUser]);
 
   useEffect(() => {
     loadAppointments();
   }, [loadAppointments]);
-
-  // ===================================================
-  // REFRESH
-  // ===================================================
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadAppointments();
-  };
 
   // ===================================================
   // EMPLOYEE APPOINTMENTS
@@ -406,7 +394,7 @@ function EmployeeDashboard() {
   // STATISTICS
   // ===================================================
 
-  const PendingAppointments =
+  const pendingAppointments =
     employeeAppointments.filter(
       (appointment) =>
         appointment.status?.toLowerCase() ===
@@ -736,7 +724,7 @@ function EmployeeDashboard() {
             }
             onClick={() => {
               setActiveTab('upcoming');
-              setStatusFilter('Pending');
+              setStatusFilter('pending');
             }}
           />
 
