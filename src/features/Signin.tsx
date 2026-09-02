@@ -8,6 +8,7 @@ import {
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { login } from '../api/auth.api';
 import beautyWoman from '../assets/img/beauty.png';
 
 function Signin() {
@@ -28,20 +29,7 @@ function Signin() {
     setError('');
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiBaseUrl}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to sign in.');
-      }
+      const data = await login({ email, password });
 
       localStorage.setItem('aisha_user', JSON.stringify(data.user));
 

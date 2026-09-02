@@ -14,18 +14,13 @@ import {
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
-type ServiceItem = {
-  id: number;
-  name: string;
-  category: string;
-  description: string;
-  price: number;
-  duration: string | null;
-  type?: 'Service' | 'Product';
-  status: 'active' | 'inactive';
-};
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import {
+  createService,
+  deleteService,
+  getServices,
+  updateService,
+} from '../api/services.api';
+import type { Service as ServiceItem } from '../types';
 
 function AdminService() {
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -58,9 +53,7 @@ function AdminService() {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/services`);
-      if (!response.ok) throw new Error('Failed to fetch services');
-      const data = await response.json();
+      const data = await getServices();
       setServices(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load services';
@@ -155,11 +148,6 @@ function AdminService() {
 
     try {
       setIsSaving(true);
-      const method = editingId === null ? 'POST' : 'PUT';
-      const endpoint = editingId === null
-        ? `${API_URL}/api/services`
-        : `${API_URL}/api/services/${editingId}`;
-
       const payload = {
         name,
         category: categoryValue,
@@ -171,15 +159,10 @@ function AdminService() {
         type: form.type,
       };
 
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save service');
+      if (editingId === null) {
+        await createService(payload);
+      } else {
+        await updateService(editingId, payload);
       }
 
       await fetchServices();
@@ -213,13 +196,7 @@ function AdminService() {
       if (!result.isConfirmed) return;
 
       try {
-        const response = await fetch(`${API_URL}/api/services/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete service');
-        }
+        await deleteService(id);
 
         await fetchServices();
 
@@ -242,23 +219,15 @@ function AdminService() {
     const newStatus = service.status === 'active' ? 'inactive' : 'active';
 
     try {
-      const response = await fetch(`${API_URL}/api/services/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: service.name,
-          category: service.category,
-          description: service.description,
-          price: service.price,
-          duration: service.duration,
-          status: newStatus,
-          type: service.type || 'Service',
-        }),
+      await updateService(id, {
+        name: service.name,
+        category: service.category,
+        description: service.description,
+        price: service.price,
+        duration: service.duration,
+        status: newStatus,
+        type: service.type || 'Service',
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update status');
-      }
 
       await fetchServices();
     } catch (err) {

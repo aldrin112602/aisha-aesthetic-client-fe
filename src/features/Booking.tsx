@@ -33,18 +33,13 @@ import footSpaImage from '../assets/img/footspa.png';
 import parafinWaxImage from '../assets/img/parafinwax.png';
 import footMassageImage from '../assets/img/footmassage.png';
 
+import { createBooking } from '../api/appointments.api';
+import { getShopAreas } from '../api/shopAreas.api';
+import type { ShopArea } from '../types';
+
 // import gelPolishImage from '../assets/img/gelpolish.png';
 // import gelRemovalImage from '../assets/img/gelremoval.png';
 // import softGelNailImage from '../assets/img/softgelnailext.jpg';
-
-// ==========================================
-// TYPES
-// ==========================================
-
-interface ShopArea {
-  id: number;
-  name: string;
-}
 
 // ==========================================
 // SERVICES
@@ -266,49 +261,14 @@ function Booking() {
   useEffect(() => {
     const loadShopAreas = async () => {
       try {
-        const apiBaseUrl =
-          import.meta.env.VITE_API_BASE_URL ||
-          'http://localhost:3001';
-
-        const response = await fetch(
-          `${apiBaseUrl}/api/shop-areas`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            'Failed to load shop areas.'
-          );
-        }
-
-        const data = await response.json();
+        const data = await getShopAreas();
 
         console.log(
           'Loaded shop areas:',
           data
         );
 
-        /*
-         * Support both:
-         *
-         * [
-         *   {
-         *     id: 1,
-         *     name: 'Main Branch - Area A'
-         *   }
-         * ]
-         *
-         * and an API response like:
-         *
-         * {
-         *   shopAreas: [...]
-         * }
-         */
-
-        const areas = Array.isArray(data)
-          ? data
-          : Array.isArray(data.shopAreas)
-            ? data.shopAreas
-            : [];
+        const areas = Array.isArray(data) ? data : [];
 
         setShopAreas(areas);
 
@@ -463,57 +423,31 @@ function Booking() {
     setIsSubmitting(true);
 
     try {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL ||
-        'http://localhost:3001';
+      await createBooking({
+        customerId:
+          currentUser.id,
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/bookings`,
-        {
-          method: 'POST',
+        serviceId:
+          service.id,
 
-          headers: {
-            'Content-Type':
-              'application/json',
-          },
+        serviceName:
+          service.name,
 
-          body: JSON.stringify({
-            customerId:
-              currentUser.id,
+        category:
+          service.category,
 
-            serviceId:
-              service.id,
+        date:
+          selectedDate,
 
-            serviceName:
-              service.name,
+        time:
+          selectedTime,
 
-            category:
-              service.category,
+        area:
+          selectedArea,
 
-            date:
-              selectedDate,
-
-            time:
-              selectedTime,
-
-            area:
-              selectedArea,
-
-            price:
-              service.price,
-          }),
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            'Unable to book appointment.'
-        );
-      }
+        price:
+          service.price,
+      });
 
       alert(
         `Appointment booked successfully!\n\n` +

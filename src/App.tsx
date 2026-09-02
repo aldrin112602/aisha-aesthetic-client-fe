@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Dashboard from './features/Dashboard';
-import Booking from './features/Booking';
-import Appointments from './features/Appointments';
+import Booking from './features/booking/BookingPage';
+import Appointments from './features/appointments/AppointmentsPage';
 import History from './features/History';
 import Signin from './features/Signin';
 import Signup from './features/Signup';
@@ -11,11 +11,11 @@ import AdminDashboard from './features/AdminDashboard';
 import EmployeeDashboard from './features/EmployeeDashboard';
 import CustomerDashboard from './features/CustomerDashboard';
 import AdminAppointments from './features/appointments/AdminAppointments';
-import EmployeeManagement from './features/EmployeeManagement';
-import AdminShopareas from './features/AdminShopareas';
-import AdminServices from './features/AdminServices';
-import WalkinManagement from './features/WalkinManagement';
-import FollowupReminders from './features/FollowupReminders';
+import EmployeeManagement from './features/employees/EmployeeManagementPage';
+import AdminShopareas from './features/shop-areas/AdminShopAreasPage';
+import AdminServices from './features/services/AdminServicesPage';
+import WalkinManagement from './features/walkins/WalkinManagementPage';
+import FollowupReminders from './features/followups/FollowupRemindersPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicRoute from './routes/PublicRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';

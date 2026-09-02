@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Bell, Calendar, CheckCircle2, Mail } from 'lucide-react';
 
-interface Followup {
-  id: number;
-  customerId: number;
-  serviceId: number | null;
-  date: string;
-  notes: string | null;
-  status: string;
-}
+import {
+  createFollowup,
+  getFollowups,
+  updateFollowupStatus,
+} from '../api/followups.api';
+import type { Followup } from '../types';
 
 function FollowupReminders() {
   const [followups, setFollowups] = useState<Followup[]>([]);
@@ -24,14 +22,7 @@ function FollowupReminders() {
   const isCustomer = currentUser?.role === 'customer';
 
   useEffect(() => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-
-    const url = isCustomer
-      ? `${apiBaseUrl}/api/followups?customerId=${currentUser?.id}`
-      : `${apiBaseUrl}/api/followups`;
-
-    fetch(url)
-      .then((response) => response.json())
+    getFollowups(isCustomer ? currentUser?.id : undefined)
       .then((data) => setFollowups(Array.isArray(data) ? data : []))
       .catch(() => setFollowups([]))
       .finally(() => setLoading(false));
@@ -53,22 +44,11 @@ function FollowupReminders() {
     setLoading(true);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiBaseUrl}/api/followups`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: currentUser?.id,
-          date: formData.date,
-          notes: formData.notes,
-        }),
+      const data = await createFollowup({
+        customerId: currentUser?.id,
+        date: formData.date,
+        notes: formData.notes,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to schedule follow-up.');
-      }
 
       setFollowups((prev) => [data, ...prev]);
       setFormData({ date: '', notes: '' });
@@ -83,18 +63,8 @@ function FollowupReminders() {
   };
 
   const updateStatus = async (followupId: number, newStatus: string) => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-
     try {
-      const response = await fetch(`${apiBaseUrl}/api/followups/${followupId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Unable to update follow-up status.');
-      }
+      await updateFollowupStatus(followupId, newStatus);
 
       setFollowups((prev) =>
         prev.map((item) =>

@@ -10,30 +10,13 @@ import {
   Trash2,
 } from 'lucide-react';
 
-interface AppointmentItem {
-  id: number;
-  customerId: number;
-  employeeId?: number | null;
-
-  serviceId?: number;
-  serviceName: string;
-  category: string;
-
-  date: string;
-  time: string;
-  area: string;
-  price: number;
-  status: string;
-
-  customerName?: string | null;
-  customerEmail?: string | null;
-
-  employeeName?: string | null;
-  employeeEmail?: string | null;
-
-  notes?: string | null;
-  createdAt?: string;
-}
+import {
+  deleteAppointmentById,
+  getCustomerAppointments,
+  updateAppointment,
+  updateAppointmentStatus,
+} from '../api/appointments.api';
+import type { Appointment as AppointmentItem } from '../types';
 
 type TabType = 'upcoming' | 'past';
 
@@ -65,9 +48,6 @@ function Appointments() {
     actionLabel: string;
     isDangerous: boolean;
   } | null>(null);
-
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
   useEffect(() => {
     fetchAppointments();
@@ -142,15 +122,7 @@ function Appointments() {
     try {
       const currentUser = JSON.parse(savedUser);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments?customerId=${currentUser.id}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch appointments.');
-      }
-
-      const data = await response.json();
+      const data = await getCustomerAppointments(currentUser.id);
 
       setAppointments(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -278,24 +250,7 @@ function Appointments() {
     setError('');
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments/${appointmentId}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status: 'confirmed',
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Unable to confirm this appointment.'
-        );
-      }
+      await updateAppointmentStatus(appointmentId, 'confirmed');
 
       setAppointments((current) =>
         current.map((item) =>
@@ -361,24 +316,7 @@ function Appointments() {
         setError('');
 
         try {
-          const response = await fetch(
-            `${apiBaseUrl}/api/appointments/${appointmentId}/status`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                status: 'cancelled',
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              'Unable to cancel this appointment.'
-            );
-          }
+          await updateAppointmentStatus(appointmentId, 'cancelled');
 
           setAppointments((current) =>
             current.map((item) =>
@@ -441,25 +379,10 @@ function Appointments() {
     setError('');
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments/${editingAppointment.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            date: editForm.date,
-            time: editForm.time,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Unable to update this appointment.'
-        );
-      }
+      await updateAppointment(editingAppointment.id, {
+        date: editForm.date,
+        time: editForm.time,
+      });
 
       setAppointments((current) =>
         current.map((item) =>
@@ -506,18 +429,7 @@ function Appointments() {
         setError('');
 
         try {
-          const response = await fetch(
-            `${apiBaseUrl}/api/appointments/${appointmentId}`,
-            {
-              method: 'DELETE',
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              'Unable to delete this appointment.'
-            );
-          }
+          await deleteAppointmentById(appointmentId);
 
           setAppointments((current) =>
             current.filter(

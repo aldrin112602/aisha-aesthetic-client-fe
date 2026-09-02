@@ -15,33 +15,11 @@ import {
   X,
 } from 'lucide-react';
 
-interface EmployeeAppointment {
-  id: number;
-
-  // Customer
-  customerId: number;
-  customerName: string | null;
-  customerEmail: string | null;
-  customerShopArea: string | null;
-
-  // Assigned Employee
-  employeeId: number | null;
-  employeeName: string | null;
-  employeeEmail: string | null;
-  employeeShopArea: string | null;
-
-  // Appointment
-  serviceId: number;
-  serviceName: string;
-  category: string;
-  date: string;
-  time: string;
-  area: string;
-  price: number;
-  status: string;
-  notes?: string | null;
-  createdAt?: string;
-}
+import {
+  getEmployeeAppointments,
+  updateAppointmentStatus as saveAppointmentStatus,
+} from '../api/appointments.api';
+import type { Appointment as EmployeeAppointment } from '../types';
 
 interface CurrentUser {
   id: number;
@@ -177,10 +155,6 @@ const isUpcomingAppointment = (
 // =====================================================
 
 function EmployeeDashboard() {
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://localhost:3001';
-
   const currentUser = useMemo(
     () => getCurrentUser(),
     []
@@ -216,23 +190,7 @@ function EmployeeDashboard() {
     try {
       setError('');
 
-      /**
-       * IMPORTANT:
-       *
-       * Only fetch appointments assigned to the
-       * currently logged-in employee.
-       */
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments?employeeId=${currentUser.id}`
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Failed to fetch employee appointments.'
-        );
-      }
-
-      const data = await response.json();
+      const data = await getEmployeeAppointments(currentUser.id);
 
       setAppointments(
         Array.isArray(data) ? data : []
@@ -251,7 +209,7 @@ function EmployeeDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl, currentUser]);
+  }, [currentUser]);
 
   useEffect(() => {
     loadAppointments();
@@ -426,24 +384,7 @@ function EmployeeDashboard() {
     try {
       setError('');
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments/${appointmentId}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Failed to update appointment status.'
-        );
-      }
+      await saveAppointmentStatus(appointmentId, status);
 
       await loadAppointments();
 

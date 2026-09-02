@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
 import { X, Trash2 } from 'lucide-react';
 
+import {
+  createUser,
+  deleteUser,
+  getEmployees,
+  updateUser,
+  type EmployeePayload,
+} from '../api/users.api';
+import { getShopAreas } from '../api/shopAreas.api';
+import type { Employee, ShopArea } from '../types';
+
 // ==========================================
 // TYPES
 // ==========================================
-
-interface Employee {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  shopArea: string;
-  status: string;
-}
-
-interface ShopArea {
-  id: number;
-  name: string;
-}
 
 interface FormData {
   name: string;
@@ -95,14 +91,6 @@ function EmployeeManagement() {
     useState('');
 
   // ==========================================
-  // API
-  // ==========================================
-
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://localhost:3001';
-
-  // ==========================================
   // INITIAL LOAD
   // ==========================================
 
@@ -119,18 +107,7 @@ function EmployeeManagement() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/users?role=Employee`
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Failed to fetch employees'
-        );
-      }
-
-      const data =
-        await response.json();
+      const data = await getEmployees();
 
       setEmployees(
         Array.isArray(data)
@@ -159,49 +136,14 @@ function EmployeeManagement() {
     try {
       setLoadingShopAreas(true);
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/shop-areas`
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Failed to fetch shop areas'
-        );
-      }
-
-      const data =
-        await response.json();
+      const data = await getShopAreas();
 
       console.log(
         'Loaded shop areas:',
         data
       );
 
-      /*
-       * Supports either:
-       *
-       * [
-       *   {
-       *     id: 1,
-       *     name: 'Main Branch - Area A'
-       *   }
-       * ]
-       *
-       * OR:
-       *
-       * {
-       *   shopAreas: [...]
-       * }
-       */
-
-      const areas: ShopArea[] =
-        Array.isArray(data)
-          ? data
-          : Array.isArray(data.shopAreas)
-            ? data.shopAreas
-            : [];
-
-      setShopAreas(areas);
+      setShopAreas(Array.isArray(data) ? data : []);
 
     } catch (err) {
       console.error(
@@ -342,9 +284,7 @@ function EmployeeManagement() {
     }
 
     try {
-      let response: Response;
-
-      let payload: any = {
+      const payload: EmployeePayload = {
         name: formData.name,
         email: formData.email,
         role: formData.role,
@@ -364,21 +304,7 @@ function EmployeeManagement() {
             formData.password;
         }
 
-        response = await fetch(
-          `${apiBaseUrl}/api/users/${editingId}`,
-          {
-            method: 'PUT',
-
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-
-            body: JSON.stringify(
-              payload
-            ),
-          }
-        );
+        await updateUser(editingId, payload);
 
       } else {
 
@@ -389,35 +315,7 @@ function EmployeeManagement() {
         payload.password =
           formData.password;
 
-        response = await fetch(
-          `${apiBaseUrl}/api/users`,
-          {
-            method: 'POST',
-
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-
-            body: JSON.stringify(
-              payload
-            ),
-          }
-        );
-      }
-
-      // ==========================================
-      // RESPONSE
-      // ==========================================
-
-      if (!response.ok) {
-        const errorData =
-          await response.json();
-
-        throw new Error(
-          errorData.message ||
-            'Failed to save employee'
-        );
+        await createUser(payload);
       }
 
       setSuccess(
@@ -465,28 +363,7 @@ function EmployeeManagement() {
     }
 
     try {
-      const response =
-        await fetch(
-          `${apiBaseUrl}/api/users/${id}`,
-          {
-            method: 'DELETE',
-
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-          }
-        );
-
-      if (!response.ok) {
-        const errorData =
-          await response.json();
-
-        throw new Error(
-          errorData.message ||
-            'Failed to delete employee'
-        );
-      }
+      await deleteUser(id);
 
       setSuccess(
         'Employee deleted successfully!'

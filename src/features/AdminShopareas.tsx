@@ -11,19 +11,13 @@ import {
   Check,
 } from 'lucide-react';
 
-interface ShopArea {
-  id: number;
-  name: string;
-  address: string;
-  contact: string;
-  operatingHours: string;
-  status: string;
-
-  // Optional fields for future backend support
-  operatingDays?: string[];
-  openingTime?: string;
-  closingTime?: string;
-}
+import {
+  createShopArea,
+  deleteShopArea,
+  getShopAreas,
+  updateShopArea,
+} from '../api/shopAreas.api';
+import type { ShopArea } from '../types';
 
 const DAYS = [
   'Monday',
@@ -60,9 +54,6 @@ function AdminShopareas() {
     closingTime: '18:00',
   });
 
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-
   useEffect(() => {
     fetchAreas();
   }, []);
@@ -75,13 +66,7 @@ function AdminShopareas() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/shop-areas`);
-
-      if (!response.ok) {
-        throw new Error('Failed to load shop areas');
-      }
-
-      const data = await response.json();
+      const data = await getShopAreas();
 
       setAreas(Array.isArray(data) ? data : []);
       setError('');
@@ -471,43 +456,21 @@ function AdminShopareas() {
     );
 
     try {
-      const method = isEditing ? 'PUT' : 'POST';
+      const payload = {
+        name: formData.name.trim(),
+        address: formData.address.trim(),
+        contact: formData.contact.trim(),
+        operatingHours,
+        operatingDays: formData.operatingDays,
+        openingTime: formData.openingTime,
+        closingTime: formData.closingTime,
+        status: 'active',
+      };
 
-      const url = isEditing
-        ? `${apiBaseUrl}/api/shop-areas/${editingId}`
-        : `${apiBaseUrl}/api/shop-areas`;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          address: formData.address.trim(),
-          contact: formData.contact.trim(),
-
-          // Existing backend field
-          operatingHours,
-
-          // These can be used once backend supports structured schedule
-          operatingDays: formData.operatingDays,
-          openingTime: formData.openingTime,
-          closingTime: formData.closingTime,
-
-          status: 'active',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          isEditing
-            ? 'Failed to update shop area'
-            : 'Failed to create shop area'
-        );
-      }
-
-      const result = await response.json();
+      const result =
+        isEditing && editingId
+          ? await updateShopArea(editingId, payload)
+          : await createShopArea(payload);
 
       if (isEditing) {
         setAreas((prev) =>
@@ -586,20 +549,7 @@ function AdminShopareas() {
     setError('');
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/api/shop-areas/${deleteTarget.id}`,
-        {
-          method: 'DELETE',
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-
-        throw new Error(
-          errorData?.message || 'Failed to delete shop area'
-        );
-      }
+      await deleteShopArea(deleteTarget.id);
 
       // Remove the deleted area from the current UI immediately.
       setAreas((prev) =>

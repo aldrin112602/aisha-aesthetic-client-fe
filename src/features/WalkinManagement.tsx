@@ -1,28 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Clock, Phone, User } from 'lucide-react';
 
-interface Service {
-  id: number;
-  name: string;
-  category: string;
-  description: string;
-  price: number;
-  duration: string;
-  shopArea: string;
-  status: string;
-}
-
-interface WalkinRecord {
-  id: number;
-  name: string;
-  phoneNumber: string | null;
-  serviceName: string;
-  category: string;
-  area: string;
-  price: number;
-  status: string;
-  createdAt: string;
-}
+import { getServices } from '../api/services.api';
+import { createWalkin, getWalkins } from '../api/walkins.api';
+import type { Service, WalkinRecord } from '../types';
 
 function WalkinManagement() {
   const [services, setServices] = useState<Service[]>([]);
@@ -40,8 +21,6 @@ function WalkinManagement() {
     notes: '',
   });
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-
   // Fetch services and walk-ins on component mount
   useEffect(() => {
     fetchServices();
@@ -51,8 +30,7 @@ function WalkinManagement() {
   const fetchServices = async () => {
     try {
       setServicesLoading(true);
-      const response = await fetch(`${apiBaseUrl}/api/services`);
-      const data = await response.json();
+      const data = await getServices();
       setServices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch services:', err);
@@ -64,8 +42,7 @@ function WalkinManagement() {
 
   const fetchWalkins = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/walkins`);
-      const data = await response.json();
+      const data = await getWalkins();
       setWalkins(Array.isArray(data) ? data : []);
     } catch {
       setWalkins([]);
@@ -120,26 +97,16 @@ function WalkinManagement() {
       const savedUser = localStorage.getItem('aisha_user');
       const currentUser = savedUser ? JSON.parse(savedUser) : null;
 
-      const response = await fetch(`${apiBaseUrl}/api/walkins`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          phoneNumber: formData.phoneNumber || null,
-          serviceName: formData.serviceName,
-          category: formData.category,
-          area: formData.area,
-          price: formData.price,
-          notes: formData.notes,
-          employeeId: currentUser?.id || null,
-        }),
+      const data = await createWalkin({
+        name: formData.name,
+        phoneNumber: formData.phoneNumber || null,
+        serviceName: formData.serviceName,
+        category: formData.category,
+        area: formData.area,
+        price: formData.price,
+        notes: formData.notes,
+        employeeId: currentUser?.id || null,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Unable to record walk-in.');
-      }
 
       setWalkins((prev) => [data, ...prev]);
       setFormData({

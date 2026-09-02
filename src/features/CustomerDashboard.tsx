@@ -2,18 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, Clock, AlertCircle } from 'lucide-react';
 
-interface DashboardAppointment {
-  id: number;
-  serviceName: string;
-  date: string;
-  time: string;
-  area: string;
-  status: string;
-}
+import { getCustomerAppointments } from '../api/appointments.api';
+import type { Appointment } from '../types';
 
 function CustomerDashboard() {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState<DashboardAppointment[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,10 +20,7 @@ function CustomerDashboard() {
       return;
     }
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-
-    fetch(`${apiBaseUrl}/api/appointments?customerId=${currentUser.id}`)
-      .then((response) => response.json())
+    getCustomerAppointments(currentUser.id)
       .then((data) => {
         setAppointments(Array.isArray(data) ? data : []);
         setError('');
