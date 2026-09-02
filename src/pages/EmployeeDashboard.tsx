@@ -54,7 +54,7 @@ interface CurrentUser {
 
 type StatusFilter =
   | 'all'
-  | 'pending'
+  | 'Pending'
   | 'confirmed'
   | 'cancelled';
 
@@ -406,7 +406,7 @@ function EmployeeDashboard() {
   // STATISTICS
   // ===================================================
 
-  const pendingAppointments =
+  const PendingAppointments =
     employeeAppointments.filter(
       (appointment) =>
         appointment.status?.toLowerCase() ===
@@ -736,7 +736,7 @@ function EmployeeDashboard() {
             }
             onClick={() => {
               setActiveTab('upcoming');
-              setStatusFilter('pending');
+              setStatusFilter('Pending');
             }}
           />
 
@@ -1524,7 +1524,7 @@ function EmployeeDashboard() {
               {/* ACTION BUTTONS */}
 
               {selectedAppointment.status?.toLowerCase() ===
-                'pending' &&
+                'Pending' &&
                 activeTab === 'upcoming' && (
                   <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-5 sm:grid-cols-2">
 

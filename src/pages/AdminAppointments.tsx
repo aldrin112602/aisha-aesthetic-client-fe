@@ -299,7 +299,7 @@ function AdminAppointments() {
                           }
                           className="rounded-lg border border-pink-100 bg-[#fffafb] px-2 py-2 text-xs outline-none focus:border-[#df7f98]"
                         >
-                          <option value="pending">
+                          <option value="Pending">
                             Pending
                           </option>
 

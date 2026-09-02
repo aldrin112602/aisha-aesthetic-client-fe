@@ -17,7 +17,7 @@ function AdminDashboard() {
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           ["Today's Appointments", '18'],
-          ['Upcoming Appointments', '42'],
+          ['Upcoming Appointments', '18'],
           ['Pending Approval', '7'],
           ['Confirmed', '31'],
         ].map(([label, value]) => (

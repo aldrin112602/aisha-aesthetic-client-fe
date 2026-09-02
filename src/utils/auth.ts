@@ -5,7 +5,7 @@ export const roleRouteMap: Record<UserRole, string> = {
   employee: '/employee',
   customer: '/customer',
 };
-const STORAGE_KEY = 'aisha_user';
+const STORAGE_KEY = import.meta.env.VITE_STORAGE_KEY || '2HNC6JYg8wqRO6yNP1D8T1nFGmpTptgx';
 export function getCurrentUser(): CurrentUser | null {
   const savedUser = localStorage.getItem(STORAGE_KEY);
 
