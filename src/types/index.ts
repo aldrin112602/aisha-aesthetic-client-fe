@@ -1,4 +1,5 @@
 export * from './appointment';
+export * from './auth';
 export * from './followup';
 export * from './global';
 export * from './service';

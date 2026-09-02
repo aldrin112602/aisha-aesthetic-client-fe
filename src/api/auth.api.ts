@@ -1,9 +1,5 @@
 import { apiRequest } from './client';
-import type { LoginCredentials, SignupPayload, User } from '../types';
-
-export interface AuthResponse {
-  user: User;
-}
+import type { AuthResponse, LoginCredentials, SignupPayload } from '../types';
 
 export function login(credentials: LoginCredentials) {
   return apiRequest<AuthResponse>('/api/login', {
