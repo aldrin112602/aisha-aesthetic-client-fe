@@ -1,432 +1,1253 @@
-import { useEffect, useState } from 'react';
-import { MapPin, Phone, Clock, Edit2, Trash2, X, Plus, AlertCircle } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Sparkles,
+  Heart,
+  Flower2,
+  Scissors,
+  Package,
+  Clock3,
+  X,
+} from 'lucide-react';
 
-interface ShopArea {
+import { useMemo, useState } from 'react';
+
+type ServiceItem = {
   id: number;
   name: string;
-  address: string;
-  contact: string;
-  operatingHours: string;
-  status: string;
-}
+  category: string;
+  description: string;
+  price: number;
+  duration: string;
+  type: 'Service' | 'Product';
+  status: 'Active' | 'Inactive';
+};
 
-function AdminShopareas() {
-  const [areas, setAreas] = useState<ShopArea[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [confirmAction, setConfirmAction] = useState<{
-    title: string;
-    message: string;
-    action: () => void;
-  } | null>(null);
+const initialServices: ServiceItem[] = [
+  // ==========================================
+  // LASH SERVICES
+  // ==========================================
 
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    contact: '',
-    operatingHours: '',
-  });
+  {
+    id: 1,
+    name: 'Classic Lashes',
+    category: 'Lash Extensions',
+    description: 'Natural-looking individual lash extensions.',
+    price: 800,
+    duration: '1 hr 30 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 2,
+    name: 'Hybrid Lashes',
+    category: 'Lash Extensions',
+    description: 'Combination of classic and volume lash extensions.',
+    price: 1000,
+    duration: '1 hr 45 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 3,
+    name: 'Russian Lashes',
+    category: 'Lash Extensions',
+    description: 'Full and dramatic lightweight volume lashes.',
+    price: 1200,
+    duration: '2 hrs',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 4,
+    name: 'Daily Wear Lashes',
+    category: 'Lash Extensions',
+    description: 'Soft and lightweight lashes suitable for everyday wear.',
+    price: 700,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 5,
+    name: 'Lash Lift',
+    category: 'Lash Care',
+    description: 'Natural lash lifting treatment for a curled appearance.',
+    price: 600,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 6,
+    name: 'Lash Tint',
+    category: 'Lash Care',
+    description: 'Semi-permanent tint for darker and defined lashes.',
+    price: 400,
+    duration: '45 min',
+    type: 'Service',
+    status: 'Active',
+  },
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  // ==========================================
+  // NAIL SERVICES
+  // ==========================================
 
-  useEffect(() => {
-    fetchAreas();
-  }, []);
+  {
+    id: 7,
+    name: 'Basic Manicure',
+    category: 'Nail Services',
+    description: 'Classic manicure with nail cleaning and shaping.',
+    price: 350,
+    duration: '45 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 8,
+    name: 'Basic Pedicure',
+    category: 'Nail Services',
+    description: 'Classic pedicure with cleaning and nail shaping.',
+    price: 400,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 9,
+    name: 'Gel Manicure',
+    category: 'Nail Services',
+    description: 'Long-lasting gel polish manicure.',
+    price: 650,
+    duration: '1 hr 15 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 10,
+    name: 'Gel Pedicure',
+    category: 'Nail Services',
+    description: 'Long-lasting gel polish pedicure.',
+    price: 700,
+    duration: '1 hr 15 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 11,
+    name: 'Soft Gel Extensions',
+    category: 'Nail Extensions',
+    description: 'Natural-looking soft gel nail extensions.',
+    price: 1000,
+    duration: '2 hrs',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 12,
+    name: 'Gel Nail Art',
+    category: 'Nail Art',
+    description: 'Customized nail art design using gel polish.',
+    price: 850,
+    duration: '1 hr 30 min',
+    type: 'Service',
+    status: 'Active',
+  },
 
-  const fetchAreas = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/shop-areas`);
-      const data = await response.json();
-      setAreas(Array.isArray(data) ? data : []);
-      setError('');
-    } catch (err) {
-      setError('Failed to load shop areas');
-      setAreas([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ==========================================
+  // FACIAL SERVICES
+  // ==========================================
 
-  const handleOpenModal = (area?: ShopArea) => {
-    if (area) {
-      setIsEditing(true);
-      setEditingId(area.id);
-      setFormData({
-        name: area.name,
-        address: area.address,
-        contact: area.contact,
-        operatingHours: area.operatingHours,
-      });
-    } else {
-      setIsEditing(false);
-      setEditingId(null);
-      setFormData({
-        name: '',
-        address: '',
-        contact: '',
-        operatingHours: '',
-      });
-    }
-    setShowModal(true);
-    setError('');
-  };
+  {
+    id: 13,
+    name: 'Basic Facial',
+    category: 'Facial',
+    description: 'Refreshing facial treatment for basic skin care.',
+    price: 600,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 14,
+    name: 'Deep Cleansing Facial',
+    category: 'Facial',
+    description: 'Deep cleansing treatment for congested and oily skin.',
+    price: 850,
+    duration: '1 hr 15 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 15,
+    name: 'Hydrating Facial',
+    category: 'Facial',
+    description: 'Moisturizing treatment for dry and dehydrated skin.',
+    price: 900,
+    duration: '1 hr 15 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 16,
+    name: 'Brightening Facial',
+    category: 'Facial',
+    description: 'Skin brightening treatment for a fresh and glowing appearance.',
+    price: 950,
+    duration: '1 hr 15 min',
+    type: 'Service',
+    status: 'Active',
+  },
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // ==========================================
+  // WAXING
+  // ==========================================
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
+  {
+    id: 17,
+    name: 'Eyebrow Wax',
+    category: 'Waxing',
+    description: 'Eyebrow shaping and waxing treatment.',
+    price: 250,
+    duration: '20 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 18,
+    name: 'Upper Lip Wax',
+    category: 'Waxing',
+    description: 'Quick and gentle upper lip waxing service.',
+    price: 200,
+    duration: '15 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 19,
+    name: 'Underarm Wax',
+    category: 'Waxing',
+    description: 'Underarm hair removal using professional waxing products.',
+    price: 450,
+    duration: '30 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 20,
+    name: 'Full Arm Wax',
+    category: 'Waxing',
+    description: 'Complete hair removal for both arms.',
+    price: 700,
+    duration: '45 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 21,
+    name: 'Full Leg Wax',
+    category: 'Waxing',
+    description: 'Complete hair removal treatment for both legs.',
+    price: 1000,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
 
-    if (!formData.name.trim() || !formData.address.trim()) {
-      setError('Please fill in all required fields (Name and Exact Location)');
-      setIsSubmitting(false);
-      return;
-    }
+  // ==========================================
+  // BROW SERVICES
+  // ==========================================
 
-    try {
-      const method = isEditing ? 'PUT' : 'POST';
-      const url = isEditing
-        ? `${apiBaseUrl}/api/shop-areas/${editingId}`
-        : `${apiBaseUrl}/api/shop-areas`;
+  {
+    id: 22,
+    name: 'Brow Lamination',
+    category: 'Brows',
+    description: 'Brow styling treatment for fuller-looking brows.',
+    price: 750,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 23,
+    name: 'Brow Tint',
+    category: 'Brows',
+    description: 'Brow tinting treatment for enhanced definition.',
+    price: 450,
+    duration: '30 min',
+    type: 'Service',
+    status: 'Active',
+  },
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          status: 'active',
-        }),
-      });
+  // ==========================================
+  // MAKEUP
+  // ==========================================
 
-      if (!response.ok) {
-        throw new Error(isEditing ? 'Failed to update shop area' : 'Failed to create shop area');
-      }
+  {
+    id: 24,
+    name: 'Basic Makeup',
+    category: 'Makeup',
+    description: 'Simple makeup application for everyday occasions.',
+    price: 800,
+    duration: '1 hr',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 25,
+    name: 'Event Makeup',
+    category: 'Makeup',
+    description: 'Professional makeup application for special events.',
+    price: 1500,
+    duration: '1 hr 30 min',
+    type: 'Service',
+    status: 'Active',
+  },
+  {
+    id: 26,
+    name: 'Bridal Makeup',
+    category: 'Makeup',
+    description: 'Premium makeup service for brides and weddings.',
+    price: 2500,
+    duration: '2 hrs',
+    type: 'Service',
+    status: 'Active',
+  },
 
-      const result = await response.json();
+  // ==========================================
+  // BEAUTY PRODUCTS
+  // ==========================================
 
-      if (isEditing) {
-        setAreas((prev) =>
-          prev.map((area) => (area.id === editingId ? result : area))
-        );
-        setSuccess('Shop area updated successfully!');
-      } else {
-        setAreas((prev) => [...prev, result]);
-        setSuccess('Shop area created successfully!');
-      }
+  {
+    id: 27,
+    name: 'Lash Shampoo',
+    category: 'Beauty Products',
+    description: 'Gentle cleansing shampoo for lash extensions.',
+    price: 350,
+    duration: '-',
+    type: 'Product',
+    status: 'Active',
+  },
+  {
+    id: 28,
+    name: 'Lash Extension Sealant',
+    category: 'Beauty Products',
+    description: 'Aftercare product designed to help maintain lash extensions.',
+    price: 450,
+    duration: '-',
+    type: 'Product',
+    status: 'Active',
+  },
+  {
+    id: 29,
+    name: 'Cuticle Oil',
+    category: 'Nail Care Products',
+    description: 'Moisturizing oil for nails and cuticles.',
+    price: 250,
+    duration: '-',
+    type: 'Product',
+    status: 'Active',
+  },
+  {
+    id: 30,
+    name: 'Facial Cleanser',
+    category: 'Skin Care Products',
+    description: 'Gentle daily facial cleanser.',
+    price: 450,
+    duration: '-',
+    type: 'Product',
+    status: 'Active',
+  },
+  {
+    id: 31,
+    name: 'Moisturizing Cream',
+    category: 'Skin Care Products',
+    description: 'Daily moisturizer for hydrated and healthy-looking skin.',
+    price: 550,
+    duration: '-',
+    type: 'Product',
+    status: 'Active',
+  },
+];
 
-      setShowModal(false);
-      setFormData({ name: '', address: '', contact: '', operatingHours: '' });
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+function AdminService() {
+  const [services, setServices] =
+    useState<ServiceItem[]>(initialServices);
 
-  const handleDeleteClick = (area: ShopArea) => {
-    setConfirmAction({
-      title: 'Delete Shop Area?',
-      message: `Are you sure you want to delete "${area.name}"? This action cannot be undone.`,
-      action: () => deleteArea(area.id),
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
+  const [type, setType] = useState('All');
+
+  // ============================================================
+  // DELETE MODAL STATE
+  // ============================================================
+
+  const [deleteTarget, setDeleteTarget] =
+    useState<ServiceItem | null>(null);
+
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // ============================================================
+  // CATEGORIES
+  // ============================================================
+
+  const categories = [
+    'All',
+    ...Array.from(
+      new Set(
+        services.map((service) => service.category)
+      )
+    ),
+  ];
+
+  // ============================================================
+  // FILTER
+  // ============================================================
+
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const searchValue = search.toLowerCase();
+
+      const matchesSearch =
+        service.name
+          .toLowerCase()
+          .includes(searchValue) ||
+        service.category
+          .toLowerCase()
+          .includes(searchValue) ||
+        service.description
+          .toLowerCase()
+          .includes(searchValue);
+
+      const matchesCategory =
+        category === 'All' ||
+        service.category === category;
+
+      const matchesType =
+        type === 'All' ||
+        service.type === type;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesType
+      );
     });
+  }, [services, search, category, type]);
+
+  // ============================================================
+  // OPEN DELETE MODAL
+  // ============================================================
+
+  const handleDeleteClick = (
+    service: ServiceItem
+  ) => {
+    setDeleteTarget(service);
   };
 
-  const deleteArea = async (id: number) => {
-    setIsSubmitting(true);
-    setError('');
+  // ============================================================
+  // CLOSE DELETE MODAL
+  // ============================================================
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+
+    setDeleteTarget(null);
+  };
+
+  // ============================================================
+  // CONFIRM DELETE
+  // ============================================================
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    setIsDeleting(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/shop-areas/${id}`, {
-        method: 'DELETE',
-      });
+      // Remove service from the current data
+      setServices((currentServices) =>
+        currentServices.filter(
+          (service) =>
+            service.id !== deleteTarget.id
+        )
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to delete shop area');
-      }
+      // Close modal
+      setDeleteTarget(null);
 
-      setAreas((prev) => prev.filter((area) => area.id !== id));
-      setSuccess('Shop area deleted successfully!');
-      setConfirmAction(null);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (error) {
+      console.error(
+        'Failed to delete service:',
+        error
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsDeleting(false);
     }
   };
+
+  // ============================================================
+  // TOTAL COUNTS
+  // ============================================================
+
+  const totalServices = services.filter(
+    (item) => item.type === 'Service'
+  ).length;
+
+  const totalProducts = services.filter(
+    (item) => item.type === 'Product'
+  ).length;
+
+  const totalActive = services.filter(
+    (item) => item.status === 'Active'
+  ).length;
 
   return (
     <div className="page-container">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+      {/* ========================================================
+          HEADER
+      ======================================================== */}
+
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+
         <div>
-          <h1 className="page-title">Shop Areas</h1>
-          <p className="page-subtitle">Manage your shop branches and exact locations.</p>
+          <h1 className="page-title">
+            Services & Products
+          </h1>
+
+          <p className="mt-1 text-sm text-[#92737c]">
+            Manage AishaEsthetics services,
+            treatments, and beauty products.
+          </p>
         </div>
+
         <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-3 font-semibold text-white transition-colors w-full sm:w-auto"
+          type="button"
+          className="
+            primary-btn
+            flex
+            items-center
+            justify-center
+            gap-2
+          "
         >
-          <Plus size={20} />
-          Add Shop Area
+          <Plus size={18} />
+          Add Service
         </button>
+
       </div>
 
-      {success && (
-        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          ✓ {success}
-        </div>
-      )}
+      {/* ========================================================
+          SUMMARY CARDS
+      ======================================================== */}
 
-      {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 flex gap-2 items-start text-sm text-red-700">
-          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-      {loading ? (
-        <div className="rounded-2xl border border-pink-100 bg-white p-6 text-center text-sm text-[#92737c]">
-          Loading shop areas...
-        </div>
-      ) : areas.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-pink-200 bg-white p-8 text-center">
-          <MapPin size={40} className="mx-auto mb-3 text-[#c18c2d]" />
-          <p className="text-sm text-[#92737c]">No shop areas yet.</p>
-          <button
-            onClick={() => handleOpenModal()}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-2 font-semibold text-white transition-colors"
-          >
-            <Plus size={18} />
-            Create First Area
-          </button>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {areas.map((area) => (
-            <div
-              key={area.id}
-              className="rounded-2xl border border-pink-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-[#4b343b]">{area.name}</h3>
-                <span
-                  className={`inline-block mt-2 rounded-full px-2 py-1 text-xs font-semibold uppercase ${
-                    area.status === 'active'
-                      ? 'bg-green-50 text-green-600'
-                      : 'bg-gray-50 text-gray-600'
-                  }`}
-                >
-                  {area.status}
-                </span>
-              </div>
+        {/* TOTAL SERVICES */}
 
-              <div className="space-y-3 text-sm text-[#80656d]">
-                {area.address && (
-                  <div className="flex gap-3 items-start">
-                    <MapPin size={16} className="text-[#c18c2d] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-[#4b343b]">Exact Location</p>
-                      <p>{area.address}</p>
-                    </div>
-                  </div>
-                )}
+        <div className="pink-card">
 
-                {area.contact && (
-                  <div className="flex gap-3 items-start">
-                    <Phone size={16} className="text-[#c18c2d] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-[#4b343b]">Contact</p>
-                      <p>{area.contact}</p>
-                    </div>
-                  </div>
-                )}
+          <div className="flex items-center gap-3">
 
-                {area.operatingHours && (
-                  <div className="flex gap-3 items-start">
-                    <Clock size={16} className="text-[#c18c2d] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-[#4b343b]">Operating Hours</p>
-                      <p>{area.operatingHours}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-5 flex gap-2">
-                <button
-                  onClick={() => handleOpenModal(area)}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#fff5f8] hover:bg-[#ffd4e0] px-3 py-2 font-semibold text-[#4b343b] transition-colors"
-                >
-                  <Edit2 size={16} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(area)}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 px-3 py-2 font-semibold text-red-600 transition-colors"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ADD/EDIT MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50 p-4">
-          <div className="rounded-3xl bg-white max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 flex items-center justify-between bg-[#fff5f8] px-6 py-4 border-b border-pink-100">
-              <h2 className="text-lg font-bold text-[#4b343b]">
-                {isEditing ? 'Edit Shop Area' : 'Add New Shop Area'}
-              </h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-[#92737c] hover:text-[#4b343b]"
-              >
-                <X size={24} />
-              </button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2df] text-[#c18c2d]">
+              <Sparkles size={20} />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
+            <div>
 
-              <div>
-                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
-                  Shop Area Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Main Branch - Area A"
-                  className="w-full rounded-lg border border-pink-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
-                  required
-                />
-              </div>
+              <p className="text-xs text-[#92737c]">
+                Total Services
+              </p>
 
-              <div>
-                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
-                  Exact Location (Address) *
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 123 Main Street, Building A, Ground Floor, City, Country, ZIP Code"
-                  rows={3}
-                  className="w-full rounded-lg border border-pink-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d] resize-none"
-                  required
-                />
-              </div>
+              <p className="text-2xl font-bold text-[#4b343b]">
+                {totalServices}
+              </p>
 
-              <div>
-                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
-                  Contact Number
-                </label>
-                <input
-                  type="tel"
-                  name="contact"
-                  value={formData.contact}
-                  onChange={handleInputChange}
-                  placeholder="e.g., +63 (123) 456-7890"
-                  className="w-full rounded-lg border border-pink-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
-                />
-              </div>
+            </div>
 
-              <div>
-                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
-                  Operating Hours
-                </label>
-                <input
-                  type="text"
-                  name="operatingHours"
-                  value={formData.operatingHours}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Mon-Fri 9AM-6PM, Sat 10AM-4PM"
-                  className="w-full rounded-lg border border-pink-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-pink-100">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg bg-gray-100 hover:bg-gray-200 px-4 py-2 font-semibold text-[#4b343b]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-2 font-semibold text-white disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Area' : 'Create Area'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
 
-      {/* CONFIRMATION MODAL */}
-      {confirmAction && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4">
-          <div className="rounded-3xl bg-white max-w-md w-full shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                  <AlertCircle size={24} className="text-red-600" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-bold text-[#4b343b]">
-                    {confirmAction.title}
-                  </h2>
-                  <p className="mt-2 text-sm text-[#80656d]">
-                    {confirmAction.message}
-                  </p>
-                </div>
-              </div>
+        </div>
+
+        {/* PRODUCTS */}
+
+        <div className="pink-card">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
+              <Package size={20} />
             </div>
 
-            <div className="flex gap-3 border-t border-pink-100 bg-white p-6">
+            <div>
+
+              <p className="text-xs text-[#92737c]">
+                Products
+              </p>
+
+              <p className="text-2xl font-bold text-[#4b343b]">
+                {totalProducts}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* CATEGORIES */}
+
+        <div className="pink-card">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3ecff] text-[#8666a8]">
+              <Flower2 size={20} />
+            </div>
+
+            <div>
+
+              <p className="text-xs text-[#92737c]">
+                Categories
+              </p>
+
+              <p className="text-2xl font-bold text-[#4b343b]">
+                {categories.length - 1}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ACTIVE */}
+
+        <div className="pink-card">
+
+          <div className="flex items-center gap-3">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf8f2] text-[#4d9a72]">
+              <Heart size={20} />
+            </div>
+
+            <div>
+
+              <p className="text-xs text-[#92737c]">
+                Active
+              </p>
+
+              <p className="text-2xl font-bold text-[#4b343b]">
+                {totalActive}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ========================================================
+          FILTERS
+      ======================================================== */}
+
+      <div className="mt-6 rounded-2xl border border-pink-100 bg-white p-4 shadow-sm">
+
+        <div className="grid gap-4 md:grid-cols-3">
+
+          {/* SEARCH */}
+
+          <div className="relative">
+
+            <Search
+              size={18}
+              className="
+                absolute
+                left-3
+                top-1/2
+                -translate-y-1/2
+                text-[#b49aa2]
+              "
+            />
+
+            <input
+              type="text"
+              placeholder="Search services or products..."
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              className="
+                input-field
+                w-full
+                pl-10
+              "
+            />
+
+          </div>
+
+          {/* CATEGORY */}
+
+          <select
+            value={category}
+            onChange={(event) =>
+              setCategory(event.target.value)
+            }
+            className="input-field w-full"
+          >
+            {categories.map((item) => (
+              <option
+                key={item}
+                value={item}
+              >
+                {item}
+              </option>
+            ))}
+          </select>
+
+          {/* TYPE */}
+
+          <select
+            value={type}
+            onChange={(event) =>
+              setType(event.target.value)
+            }
+            className="input-field w-full"
+          >
+            <option value="All">
+              All Types
+            </option>
+
+            <option value="Service">
+              Services
+            </option>
+
+            <option value="Product">
+              Products
+            </option>
+          </select>
+
+        </div>
+
+      </div>
+
+      {/* ========================================================
+          SERVICE LIST
+      ======================================================== */}
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm">
+
+        {/* ======================================================
+            DESKTOP TABLE
+        ====================================================== */}
+
+        <div className="hidden overflow-x-auto md:block">
+
+          <table className="w-full text-left">
+
+            <thead className="border-b border-pink-100 bg-[#fff8fa]">
+
+              <tr>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Service / Product
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Category
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Type
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Price
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Duration
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Status
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                  Action
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {filteredServices.map((service) => (
+
+                <tr
+                  key={service.id}
+                  className="
+                    border-b
+                    border-pink-50
+                    last:border-0
+                    hover:bg-[#fffafa]
+                  "
+                >
+
+                  {/* SERVICE */}
+
+                  <td className="px-5 py-4">
+
+                    <div className="flex items-center gap-3">
+
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
+
+                        {service.type === 'Product' ? (
+                          <Package size={18} />
+                        ) : (
+                          <Sparkles size={18} />
+                        )}
+
+                      </div>
+
+                      <div>
+
+                        <p className="font-semibold text-[#4b343b]">
+                          {service.name}
+                        </p>
+
+                        <p className="mt-1 max-w-xs text-xs text-[#92737c]">
+                          {service.description}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  </td>
+
+                  {/* CATEGORY */}
+
+                  <td className="px-5 py-4 text-sm text-[#6d4a54]">
+                    {service.category}
+                  </td>
+
+                  {/* TYPE */}
+
+                  <td className="px-5 py-4">
+
+                    <span
+                      className={`
+                        rounded-full
+                        px-3
+                        py-1
+                        text-xs
+                        font-semibold
+                        ${
+                          service.type === 'Service'
+                            ? 'bg-[#fff2f4] text-[#d77992]'
+                            : 'bg-[#fff2df] text-[#b88a2c]'
+                        }
+                      `}
+                    >
+                      {service.type}
+                    </span>
+
+                  </td>
+
+                  {/* PRICE */}
+
+                  <td className="px-5 py-4 text-sm font-bold text-[#c18c2d]">
+                    ₱{service.price.toLocaleString()}
+                  </td>
+
+                  {/* DURATION */}
+
+                  <td className="px-5 py-4">
+
+                    <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
+
+                      {service.duration !== '-' && (
+                        <Clock3 size={15} />
+                      )}
+
+                      {service.duration}
+
+                    </div>
+
+                  </td>
+
+                  {/* STATUS */}
+
+                  <td className="px-5 py-4">
+
+                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+                      {service.status}
+                    </span>
+
+                  </td>
+
+                  {/* ACTION */}
+
+                  <td className="px-5 py-4">
+
+                    <div className="flex gap-2">
+
+                      {/* EDIT */}
+
+                      <button
+                        type="button"
+                        className="
+                          rounded-lg
+                          bg-[#fff5f8]
+                          p-2
+                          text-[#d77992]
+                          transition
+                          hover:bg-[#ffdce6]
+                        "
+                        title="Edit"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+
+                      {/* DELETE */}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteClick(service)
+                        }
+                        className="
+                          rounded-lg
+                          bg-red-50
+                          p-2
+                          text-red-500
+                          transition
+                          hover:bg-red-100
+                        "
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        {/* ======================================================
+            MOBILE CARDS
+        ====================================================== */}
+
+        <div className="space-y-3 p-4 md:hidden">
+
+          {filteredServices.map((service) => (
+
+            <div
+              key={service.id}
+              className="
+                rounded-xl
+                border
+                border-pink-100
+                p-4
+              "
+            >
+
+              <div className="flex items-start justify-between gap-3">
+
+                <div className="flex items-center gap-3">
+
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
+
+                    {service.type === 'Product' ? (
+                      <Package size={18} />
+                    ) : (
+                      <Sparkles size={18} />
+                    )}
+
+                  </div>
+
+                  <div>
+
+                    <p className="font-semibold text-[#4b343b]">
+                      {service.name}
+                    </p>
+
+                    <p className="text-xs text-[#92737c]">
+                      {service.category}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <span className="rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-600">
+                  {service.status}
+                </span>
+
+              </div>
+
+              <p className="mt-3 text-sm text-[#80656d]">
+                {service.description}
+              </p>
+
+              <div className="mt-4 flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-lg font-bold text-[#c18c2d]">
+                    ₱{service.price.toLocaleString()}
+                  </p>
+
+                  {service.duration !== '-' && (
+                    <p className="mt-1 flex items-center gap-1 text-xs text-[#92737c]">
+                      <Clock3 size={13} />
+                      {service.duration}
+                    </p>
+                  )}
+
+                </div>
+
+                <div className="flex gap-2">
+
+                  {/* EDIT */}
+
+                  <button
+                    type="button"
+                    className="
+                      rounded-lg
+                      bg-[#fff5f8]
+                      p-2
+                      text-[#d77992]
+                    "
+                    title="Edit"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+
+                  {/* DELETE */}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDeleteClick(service)
+                    }
+                    className="
+                      rounded-lg
+                      bg-red-50
+                      p-2
+                      text-red-500
+                    "
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+        {/* ======================================================
+            NO RESULTS
+        ====================================================== */}
+
+        {filteredServices.length === 0 && (
+
+          <div className="p-10 text-center">
+
+            <Scissors
+              size={36}
+              className="mx-auto text-[#d9b9c2]"
+            />
+
+            <p className="mt-3 font-semibold text-[#4b343b]">
+              No services or products found
+            </p>
+
+            <p className="mt-1 text-sm text-[#92737c]">
+              Try changing your search or filters.
+            </p>
+
+          </div>
+
+        )}
+
+      </div>
+
+      {/* ========================================================
+          FOOTER COUNT
+      ======================================================== */}
+
+      <p className="mt-4 text-xs text-[#92737c]">
+        Showing {filteredServices.length} of{' '}
+        {services.length} services and products
+      </p>
+
+      {/* ========================================================
+          DELETE CONFIRMATION MODAL
+      ======================================================== */}
+
+      {deleteTarget && (
+
+        <div
+          className="
+            fixed
+            inset-0
+            z-[9999]
+            flex
+            items-center
+            justify-center
+            bg-black/40
+            px-4
+          "
+          onClick={() => {
+            if (!isDeleting) {
+              setDeleteTarget(null);
+            }
+          }}
+        >
+
+          <div
+            className="
+              w-full
+              max-w-[360px]
+              rounded-2xl
+              bg-white
+              px-6
+              py-5
+              text-center
+              shadow-2xl
+            "
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            {/* ==================================================
+                TRASH ICON
+            ================================================== */}
+
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+
+              <Trash2
+                size={52}
+                strokeWidth={1.5}
+                className="text-red-500"
+              />
+
+            </div>
+
+            {/* ==================================================
+                TITLE
+            ================================================== */}
+
+            <h2 className="text-[17px] font-bold leading-6 text-[#172033]">
+
+              Are you sure you want to
+              <br />
+              delete this service?
+
+            </h2>
+
+            {/* ==================================================
+                SERVICE NAME
+            ================================================== */}
+
+            <p className="mt-3 break-words text-[12px] text-[#6f7785]">
+
+              "{deleteTarget.name}"
+
+            </p>
+
+            {/* ==================================================
+                BUTTONS
+            ================================================== */}
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+
+              {/* CANCEL */}
+
               <button
-                onClick={() => setConfirmAction(null)}
-                disabled={isSubmitting}
-                className="flex-1 rounded-xl border-2 border-[#e9b5c3] bg-white hover:bg-[#fff5f8] px-4 py-3 font-semibold text-[#4b343b] transition-colors disabled:opacity-50"
+                type="button"
+                disabled={isDeleting}
+                onClick={() =>
+                  setDeleteTarget(null)
+                }
+                className="
+                  rounded-lg
+                  border
+                  border-[#d9dce2]
+                  bg-white
+                  px-4
+                  py-2.5
+                  text-[13px]
+                  font-medium
+                  text-[#4b5563]
+                  transition
+                  hover:bg-gray-50
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                "
               >
                 Cancel
               </button>
+
+              {/* DELETE */}
+
               <button
-                onClick={confirmAction.action}
-                disabled={isSubmitting}
-                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 px-4 py-3 font-semibold text-white transition-colors disabled:opacity-50"
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDelete}
+                className="
+                  rounded-lg
+                  bg-red-500
+                  px-4
+                  py-2.5
+                  text-[13px]
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-red-600
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
               >
-                {isSubmitting ? 'Deleting...' : 'Delete'}
+                {isDeleting
+                  ? 'Deleting...'
+                  : 'Delete'}
               </button>
+
             </div>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }
 
-export default AdminShopareas;
+export default AdminService;

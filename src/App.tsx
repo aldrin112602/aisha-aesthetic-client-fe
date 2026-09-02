@@ -20,9 +20,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
 
+
 import AdminAppointments from './pages/AdminAppointments';
 import EmployeeManagement from './pages/EmployeeManagement';
 import AdminShopareas from './pages/AdminShopareas';
+import AdminServices from './pages/AdminServices';
 import WalkinManagement from './pages/WalkinManagement';
 import FollowupReminders from './pages/FollowupReminders';
 
@@ -344,6 +346,20 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+        <Route
+                path="/services"
+                element={
+                  <ProtectedRoute
+                    allowedRoles={['admin']}
+                  >
+                    {renderProtectedLayout(
+                      <AdminServices />
+                    )}
+                  </ProtectedRoute>
+                }
+      />
+
 
 
       {/* =================================================
