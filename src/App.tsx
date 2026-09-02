@@ -68,11 +68,15 @@ function App() {
     return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
   }
 
-  const expectedRoute = roleRouteMap[currentUser?.role || 'customer'] || '/customer';
-
   if (location.pathname === '/') {
+    if (!currentUser) {
+      return <Navigate to="/signin" replace />;
+    }
+    const expectedRoute = roleRouteMap[currentUser.role] || '/customer';
     return <Navigate to={expectedRoute} replace />;
   }
+
+  const expectedRoute = roleRouteMap[currentUser?.role || 'customer'] || '/customer';
 
   const renderProtectedLayout = (children: React.ReactNode) => (
     <div className="min-h-screen bg-[#fff8fa]">
