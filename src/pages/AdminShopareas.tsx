@@ -1,1253 +1,1231 @@
+import { useEffect, useState } from 'react';
 import {
-  Plus,
-  Search,
+  MapPin,
+  Phone,
+  Clock,
   Edit2,
   Trash2,
-  Sparkles,
-  Heart,
-  Flower2,
-  Scissors,
-  Package,
-  Clock3,
   X,
+  Plus,
+  AlertCircle,
+  Check,
 } from 'lucide-react';
 
-import { useMemo, useState } from 'react';
-
-type ServiceItem = {
+interface ShopArea {
   id: number;
   name: string;
-  category: string;
-  description: string;
-  price: number;
-  duration: string;
-  type: 'Service' | 'Product';
-  status: 'Active' | 'Inactive';
-};
+  address: string;
+  contact: string;
+  operatingHours: string;
+  status: string;
 
-const initialServices: ServiceItem[] = [
-  // ==========================================
-  // LASH SERVICES
-  // ==========================================
+  // Optional fields for future backend support
+  operatingDays?: string[];
+  openingTime?: string;
+  closingTime?: string;
+}
 
-  {
-    id: 1,
-    name: 'Classic Lashes',
-    category: 'Lash Extensions',
-    description: 'Natural-looking individual lash extensions.',
-    price: 800,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'Hybrid Lashes',
-    category: 'Lash Extensions',
-    description: 'Combination of classic and volume lash extensions.',
-    price: 1000,
-    duration: '1 hr 45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 3,
-    name: 'Russian Lashes',
-    category: 'Lash Extensions',
-    description: 'Full and dramatic lightweight volume lashes.',
-    price: 1200,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 4,
-    name: 'Daily Wear Lashes',
-    category: 'Lash Extensions',
-    description: 'Soft and lightweight lashes suitable for everyday wear.',
-    price: 700,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 5,
-    name: 'Lash Lift',
-    category: 'Lash Care',
-    description: 'Natural lash lifting treatment for a curled appearance.',
-    price: 600,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 6,
-    name: 'Lash Tint',
-    category: 'Lash Care',
-    description: 'Semi-permanent tint for darker and defined lashes.',
-    price: 400,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // NAIL SERVICES
-  // ==========================================
-
-  {
-    id: 7,
-    name: 'Basic Manicure',
-    category: 'Nail Services',
-    description: 'Classic manicure with nail cleaning and shaping.',
-    price: 350,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 8,
-    name: 'Basic Pedicure',
-    category: 'Nail Services',
-    description: 'Classic pedicure with cleaning and nail shaping.',
-    price: 400,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 9,
-    name: 'Gel Manicure',
-    category: 'Nail Services',
-    description: 'Long-lasting gel polish manicure.',
-    price: 650,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 10,
-    name: 'Gel Pedicure',
-    category: 'Nail Services',
-    description: 'Long-lasting gel polish pedicure.',
-    price: 700,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 11,
-    name: 'Soft Gel Extensions',
-    category: 'Nail Extensions',
-    description: 'Natural-looking soft gel nail extensions.',
-    price: 1000,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 12,
-    name: 'Gel Nail Art',
-    category: 'Nail Art',
-    description: 'Customized nail art design using gel polish.',
-    price: 850,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // FACIAL SERVICES
-  // ==========================================
-
-  {
-    id: 13,
-    name: 'Basic Facial',
-    category: 'Facial',
-    description: 'Refreshing facial treatment for basic skin care.',
-    price: 600,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 14,
-    name: 'Deep Cleansing Facial',
-    category: 'Facial',
-    description: 'Deep cleansing treatment for congested and oily skin.',
-    price: 850,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 15,
-    name: 'Hydrating Facial',
-    category: 'Facial',
-    description: 'Moisturizing treatment for dry and dehydrated skin.',
-    price: 900,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 16,
-    name: 'Brightening Facial',
-    category: 'Facial',
-    description: 'Skin brightening treatment for a fresh and glowing appearance.',
-    price: 950,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // WAXING
-  // ==========================================
-
-  {
-    id: 17,
-    name: 'Eyebrow Wax',
-    category: 'Waxing',
-    description: 'Eyebrow shaping and waxing treatment.',
-    price: 250,
-    duration: '20 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 18,
-    name: 'Upper Lip Wax',
-    category: 'Waxing',
-    description: 'Quick and gentle upper lip waxing service.',
-    price: 200,
-    duration: '15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 19,
-    name: 'Underarm Wax',
-    category: 'Waxing',
-    description: 'Underarm hair removal using professional waxing products.',
-    price: 450,
-    duration: '30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 20,
-    name: 'Full Arm Wax',
-    category: 'Waxing',
-    description: 'Complete hair removal for both arms.',
-    price: 700,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 21,
-    name: 'Full Leg Wax',
-    category: 'Waxing',
-    description: 'Complete hair removal treatment for both legs.',
-    price: 1000,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // BROW SERVICES
-  // ==========================================
-
-  {
-    id: 22,
-    name: 'Brow Lamination',
-    category: 'Brows',
-    description: 'Brow styling treatment for fuller-looking brows.',
-    price: 750,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 23,
-    name: 'Brow Tint',
-    category: 'Brows',
-    description: 'Brow tinting treatment for enhanced definition.',
-    price: 450,
-    duration: '30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // MAKEUP
-  // ==========================================
-
-  {
-    id: 24,
-    name: 'Basic Makeup',
-    category: 'Makeup',
-    description: 'Simple makeup application for everyday occasions.',
-    price: 800,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 25,
-    name: 'Event Makeup',
-    category: 'Makeup',
-    description: 'Professional makeup application for special events.',
-    price: 1500,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 26,
-    name: 'Bridal Makeup',
-    category: 'Makeup',
-    description: 'Premium makeup service for brides and weddings.',
-    price: 2500,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // BEAUTY PRODUCTS
-  // ==========================================
-
-  {
-    id: 27,
-    name: 'Lash Shampoo',
-    category: 'Beauty Products',
-    description: 'Gentle cleansing shampoo for lash extensions.',
-    price: 350,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 28,
-    name: 'Lash Extension Sealant',
-    category: 'Beauty Products',
-    description: 'Aftercare product designed to help maintain lash extensions.',
-    price: 450,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 29,
-    name: 'Cuticle Oil',
-    category: 'Nail Care Products',
-    description: 'Moisturizing oil for nails and cuticles.',
-    price: 250,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 30,
-    name: 'Facial Cleanser',
-    category: 'Skin Care Products',
-    description: 'Gentle daily facial cleanser.',
-    price: 450,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 31,
-    name: 'Moisturizing Cream',
-    category: 'Skin Care Products',
-    description: 'Daily moisturizer for hydrated and healthy-looking skin.',
-    price: 550,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
+const DAYS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
 ];
 
-function AdminService() {
-  const [services, setServices] =
-    useState<ServiceItem[]>(initialServices);
+function AdminShopareas() {
+  const [areas, setAreas] = useState<ShopArea[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
-  const [type, setType] = useState('All');
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  // ============================================================
-  // DELETE MODAL STATE
-  // ============================================================
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [deleteTarget, setDeleteTarget] =
-    useState<ServiceItem | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ShopArea | null>(null);
 
-  // ============================================================
-  // CATEGORIES
-  // ============================================================
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    contact: '',
+    operatingHours: '',
+    operatingDays: [] as string[],
+    openingTime: '09:00',
+    closingTime: '18:00',
+  });
 
-  const categories = [
-    'All',
-    ...Array.from(
-      new Set(
-        services.map((service) => service.category)
-      )
-    ),
-  ];
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-  // ============================================================
-  // FILTER
-  // ============================================================
-
-  const filteredServices = useMemo(() => {
-    return services.filter((service) => {
-      const searchValue = search.toLowerCase();
-
-      const matchesSearch =
-        service.name
-          .toLowerCase()
-          .includes(searchValue) ||
-        service.category
-          .toLowerCase()
-          .includes(searchValue) ||
-        service.description
-          .toLowerCase()
-          .includes(searchValue);
-
-      const matchesCategory =
-        category === 'All' ||
-        service.category === category;
-
-      const matchesType =
-        type === 'All' ||
-        service.type === type;
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesType
-      );
-    });
-  }, [services, search, category, type]);
+  useEffect(() => {
+    fetchAreas();
+  }, []);
 
   // ============================================================
-  // OPEN DELETE MODAL
+  // FETCH SHOP AREAS
   // ============================================================
 
-  const handleDeleteClick = (
-    service: ServiceItem
-  ) => {
-    setDeleteTarget(service);
-  };
-
-  // ============================================================
-  // CLOSE DELETE MODAL
-  // ============================================================
-
-  const closeDeleteModal = () => {
-    if (isDeleting) return;
-
-    setDeleteTarget(null);
-  };
-
-  // ============================================================
-  // CONFIRM DELETE
-  // ============================================================
-
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-
-    setIsDeleting(true);
+  const fetchAreas = async () => {
+    setLoading(true);
 
     try {
-      // Remove service from the current data
-      setServices((currentServices) =>
-        currentServices.filter(
-          (service) =>
-            service.id !== deleteTarget.id
-        )
-      );
+      const response = await fetch(`${apiBaseUrl}/api/shop-areas`);
 
-      // Close modal
-      setDeleteTarget(null);
+      if (!response.ok) {
+        throw new Error('Failed to load shop areas');
+      }
 
-    } catch (error) {
-      console.error(
-        'Failed to delete service:',
-        error
+      const data = await response.json();
+
+      setAreas(Array.isArray(data) ? data : []);
+      setError('');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load shop areas'
       );
+      setAreas([]);
     } finally {
-      setIsDeleting(false);
+      setLoading(false);
     }
   };
 
   // ============================================================
-  // TOTAL COUNTS
+  // TIME FORMAT
   // ============================================================
 
-  const totalServices = services.filter(
-    (item) => item.type === 'Service'
-  ).length;
+  const formatTime = (time: string) => {
+    if (!time) return '';
 
-  const totalProducts = services.filter(
-    (item) => item.type === 'Product'
-  ).length;
+    const [hours, minutes] = time.split(':');
+    const hour = Number(hours);
 
-  const totalActive = services.filter(
-    (item) => item.status === 'Active'
-  ).length;
+    if (Number.isNaN(hour)) return time;
+
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+
+    return `${displayHour}:${minutes} ${period}`;
+  };
+
+  // ============================================================
+  // GENERATE OPERATING HOURS STRING
+  // ============================================================
+
+  const generateOperatingHours = (
+    selectedDays: string[],
+    openingTime: string,
+    closingTime: string
+  ) => {
+    if (selectedDays.length === 0) {
+      return '';
+    }
+
+    const orderedDays = DAYS.filter((day) => selectedDays.includes(day));
+
+    let dayText = '';
+
+    // Monday-Friday
+    if (
+      orderedDays.length === 5 &&
+      orderedDays.every((day) =>
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day)
+      )
+    ) {
+      dayText = 'Monday - Friday';
+    }
+
+    // Monday-Saturday
+    else if (
+      orderedDays.length === 6 &&
+      orderedDays.every((day) =>
+        [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ].includes(day)
+      )
+    ) {
+      dayText = 'Monday - Saturday';
+    }
+
+    // Everyday
+    else if (orderedDays.length === 7) {
+      dayText = 'Everyday';
+    }
+
+    // Custom days
+    else {
+      dayText = orderedDays.join(', ');
+    }
+
+    const timeText =
+      openingTime && closingTime
+        ? ` • ${formatTime(openingTime)} - ${formatTime(closingTime)}`
+        : '';
+
+    return `${dayText}${timeText}`;
+  };
+
+  // ============================================================
+  // HANDLE OPEN MODAL
+  // ============================================================
+
+  const handleOpenModal = (area?: ShopArea) => {
+    if (area) {
+      setIsEditing(true);
+      setEditingId(area.id);
+
+      /*
+       * If backend already supports structured fields,
+       * use them.
+       *
+       * Otherwise, try to determine the schedule from
+       * the existing operatingHours string.
+       */
+
+      let operatingDays: string[] = area.operatingDays || [];
+      let openingTime = area.openingTime || '09:00';
+      let closingTime = area.closingTime || '18:00';
+
+      // Existing backend compatibility
+      if (!area.operatingDays && area.operatingHours) {
+        const hours = area.operatingHours.toLowerCase();
+
+        if (
+          hours.includes('monday - friday') ||
+          hours.includes('mon-fri') ||
+          hours.includes('monday to friday') ||
+          hours.includes('mon to fri')
+        ) {
+          operatingDays = DAYS.slice(0, 5);
+        } else if (
+          hours.includes('monday - saturday') ||
+          hours.includes('mon-sat') ||
+          hours.includes('monday to saturday')
+        ) {
+          operatingDays = DAYS.slice(0, 6);
+        } else if (
+          hours.includes('everyday') ||
+          hours.includes('monday - sunday') ||
+          hours.includes('mon-sun')
+        ) {
+          operatingDays = [...DAYS];
+        } else {
+          operatingDays = DAYS.filter((day) =>
+            hours.includes(day.toLowerCase())
+          );
+        }
+
+        // Try to read AM/PM time from existing string
+        const timeMatches = area.operatingHours.match(
+          /(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\s*-\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i
+        );
+
+        if (timeMatches) {
+          const openHour = Number(timeMatches[1]);
+          const openMinutes = timeMatches[2] || '00';
+          const openPeriod = timeMatches[3].toUpperCase();
+
+          const closeHour = Number(timeMatches[4]);
+          const closeMinutes = timeMatches[5] || '00';
+          const closePeriod = timeMatches[6].toUpperCase();
+
+          let convertedOpenHour = openHour;
+
+          if (openPeriod === 'PM' && openHour !== 12) {
+            convertedOpenHour += 12;
+          }
+
+          if (openPeriod === 'AM' && openHour === 12) {
+            convertedOpenHour = 0;
+          }
+
+          let convertedCloseHour = closeHour;
+
+          if (closePeriod === 'PM' && closeHour !== 12) {
+            convertedCloseHour += 12;
+          }
+
+          if (closePeriod === 'AM' && closeHour === 12) {
+            convertedCloseHour = 0;
+          }
+
+          openingTime = `${String(convertedOpenHour).padStart(
+            2,
+            '0'
+          )}:${openMinutes}`;
+
+          closingTime = `${String(convertedCloseHour).padStart(
+            2,
+            '0'
+          )}:${closeMinutes}`;
+        }
+      }
+
+      setFormData({
+        name: area.name || '',
+        address: area.address || '',
+        contact: area.contact || '',
+        operatingHours: area.operatingHours || '',
+        operatingDays,
+        openingTime,
+        closingTime,
+      });
+    } else {
+      setIsEditing(false);
+      setEditingId(null);
+
+      setFormData({
+        name: '',
+        address: '',
+        contact: '',
+        operatingHours: '',
+        operatingDays: [],
+        openingTime: '09:00',
+        closingTime: '18:00',
+      });
+    }
+
+    setShowModal(true);
+    setError('');
+  };
+
+  // ============================================================
+  // INPUT CHANGE
+  // ============================================================
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // ============================================================
+  // TOGGLE DAY
+  // ============================================================
+
+  const toggleDay = (day: string) => {
+    setFormData((prev) => {
+      const exists = prev.operatingDays.includes(day);
+
+      const operatingDays = exists
+        ? prev.operatingDays.filter((item) => item !== day)
+        : [...prev.operatingDays, day];
+
+      return {
+        ...prev,
+        operatingDays,
+        operatingHours: generateOperatingHours(
+          operatingDays,
+          prev.openingTime,
+          prev.closingTime
+        ),
+      };
+    });
+  };
+
+  // ============================================================
+  // QUICK SELECT
+  // ============================================================
+
+  const selectWeekdays = () => {
+    const selectedDays = DAYS.slice(0, 5);
+
+    setFormData((prev) => ({
+      ...prev,
+      operatingDays: selectedDays,
+      operatingHours: generateOperatingHours(
+        selectedDays,
+        prev.openingTime,
+        prev.closingTime
+      ),
+    }));
+  };
+
+  const selectMondaySaturday = () => {
+    const selectedDays = DAYS.slice(0, 6);
+
+    setFormData((prev) => ({
+      ...prev,
+      operatingDays: selectedDays,
+      operatingHours: generateOperatingHours(
+        selectedDays,
+        prev.openingTime,
+        prev.closingTime
+      ),
+    }));
+  };
+
+  const selectEveryday = () => {
+    const selectedDays = [...DAYS];
+
+    setFormData((prev) => ({
+      ...prev,
+      operatingDays: selectedDays,
+      operatingHours: generateOperatingHours(
+        selectedDays,
+        prev.openingTime,
+        prev.closingTime
+      ),
+    }));
+  };
+
+  const clearDays = () => {
+    setFormData((prev) => ({
+      ...prev,
+      operatingDays: [],
+      operatingHours: '',
+    }));
+  };
+
+  // ============================================================
+  // TIME CHANGE
+  // ============================================================
+
+  const handleOpeningTimeChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      openingTime: value,
+      operatingHours: generateOperatingHours(
+        prev.operatingDays,
+        value,
+        prev.closingTime
+      ),
+    }));
+  };
+
+  const handleClosingTimeChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      closingTime: value,
+      operatingHours: generateOperatingHours(
+        prev.operatingDays,
+        prev.openingTime,
+        value
+      ),
+    }));
+  };
+
+  // ============================================================
+  // HANDLE SUBMIT
+  // ============================================================
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setError('');
+    setIsSubmitting(true);
+
+    if (!formData.name.trim() || !formData.address.trim()) {
+      setError(
+        'Please fill in all required fields (Name and Exact Location)'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.operatingDays.length === 0) {
+      setError('Please select at least one operating day.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.openingTime || !formData.closingTime) {
+      setError('Please select both opening and closing time.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.openingTime >= formData.closingTime) {
+      setError('Closing time must be later than opening time.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const operatingHours = generateOperatingHours(
+      formData.operatingDays,
+      formData.openingTime,
+      formData.closingTime
+    );
+
+    try {
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const url = isEditing
+        ? `${apiBaseUrl}/api/shop-areas/${editingId}`
+        : `${apiBaseUrl}/api/shop-areas`;
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          address: formData.address.trim(),
+          contact: formData.contact.trim(),
+
+          // Existing backend field
+          operatingHours,
+
+          // These can be used once backend supports structured schedule
+          operatingDays: formData.operatingDays,
+          openingTime: formData.openingTime,
+          closingTime: formData.closingTime,
+
+          status: 'active',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          isEditing
+            ? 'Failed to update shop area'
+            : 'Failed to create shop area'
+        );
+      }
+
+      const result = await response.json();
+
+      if (isEditing) {
+        setAreas((prev) =>
+          prev.map((area) =>
+            area.id === editingId
+              ? {
+                  ...result,
+                  operatingHours:
+                    result.operatingHours || operatingHours,
+                  operatingDays:
+                    result.operatingDays || formData.operatingDays,
+                  openingTime:
+                    result.openingTime || formData.openingTime,
+                  closingTime:
+                    result.closingTime || formData.closingTime,
+                }
+              : area
+          )
+        );
+
+        setSuccess('Shop area updated successfully!');
+      } else {
+        setAreas((prev) => [
+          ...prev,
+          {
+            ...result,
+            operatingHours:
+              result.operatingHours || operatingHours,
+            operatingDays:
+              result.operatingDays || formData.operatingDays,
+            openingTime:
+              result.openingTime || formData.openingTime,
+            closingTime:
+              result.closingTime || formData.closingTime,
+          },
+        ]);
+
+        setSuccess('Shop area created successfully!');
+      }
+
+      setShowModal(false);
+
+      setFormData({
+        name: '',
+        address: '',
+        contact: '',
+        operatingHours: '',
+        operatingDays: [],
+        openingTime: '09:00',
+        closingTime: '18:00',
+      });
+
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'An error occurred'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ============================================================
+  // DELETE
+  // ============================================================
+
+  const handleDeleteClick = (area: ShopArea) => {
+    setDeleteTarget(area);
+    setError('');
+  };
+
+  const deleteArea = async () => {
+    if (!deleteTarget) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/api/shop-areas/${deleteTarget.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.message || 'Failed to delete shop area'
+        );
+      }
+
+      // Remove the deleted area from the current UI immediately.
+      setAreas((prev) =>
+        prev.filter((area) => area.id !== deleteTarget.id)
+      );
+
+      const deletedName = deleteTarget.name;
+
+      // Close the confirmation modal.
+      setDeleteTarget(null);
+
+      // Show success message.
+      setSuccess(`"${deletedName}" has been deleted successfully.`);
+
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete shop area'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ============================================================
+  // QUICK BUTTON ACTIVE CHECK
+  // ============================================================
+
+  const isSameDays = (days: string[]) => {
+    if (formData.operatingDays.length !== days.length) {
+      return false;
+    }
+
+    return days.every((day) =>
+      formData.operatingDays.includes(day)
+    );
+  };
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <div className="page-container">
 
-      {/* ========================================================
-          HEADER
-      ======================================================== */}
-
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-
+      {/* HEADER */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="page-title">
-            Services & Products
-          </h1>
+          <h1 className="page-title">Shop Areas</h1>
 
-          <p className="mt-1 text-sm text-[#92737c]">
-            Manage AishaEsthetics services,
-            treatments, and beauty products.
+          <p className="page-subtitle">
+            Manage your shop branches, locations, and operating schedules.
           </p>
         </div>
 
         <button
-          type="button"
-          className="
-            primary-btn
-            flex
-            items-center
-            justify-center
-            gap-2
-          "
+          onClick={() => handleOpenModal()}
+          className="flex items-center justify-center gap-2 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-3 font-semibold text-white transition-colors w-full sm:w-auto"
         >
-          <Plus size={18} />
-          Add Service
+          <Plus size={20} />
+          Add Shop Area
         </button>
-
       </div>
 
-      {/* ========================================================
-          SUMMARY CARDS
-      ======================================================== */}
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        {/* TOTAL SERVICES */}
-
-        <div className="pink-card">
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2df] text-[#c18c2d]">
-              <Sparkles size={20} />
-            </div>
-
-            <div>
-
-              <p className="text-xs text-[#92737c]">
-                Total Services
-              </p>
-
-              <p className="text-2xl font-bold text-[#4b343b]">
-                {totalServices}
-              </p>
-
-            </div>
-
-          </div>
-
+      {/* SUCCESS */}
+      {success && (
+        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          ✓ {success}
         </div>
+      )}
 
-        {/* PRODUCTS */}
+      {/* ERROR */}
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 flex gap-2 items-start text-sm text-red-700">
+          <AlertCircle
+            size={18}
+            className="flex-shrink-0 mt-0.5"
+          />
 
-        <div className="pink-card">
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-              <Package size={20} />
-            </div>
-
-            <div>
-
-              <p className="text-xs text-[#92737c]">
-                Products
-              </p>
-
-              <p className="text-2xl font-bold text-[#4b343b]">
-                {totalProducts}
-              </p>
-
-            </div>
-
-          </div>
-
+          <span>{error}</span>
         </div>
+      )}
 
-        {/* CATEGORIES */}
-
-        <div className="pink-card">
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3ecff] text-[#8666a8]">
-              <Flower2 size={20} />
-            </div>
-
-            <div>
-
-              <p className="text-xs text-[#92737c]">
-                Categories
-              </p>
-
-              <p className="text-2xl font-bold text-[#4b343b]">
-                {categories.length - 1}
-              </p>
-
-            </div>
-
-          </div>
-
+      {/* LOADING */}
+      {loading ? (
+        <div className="rounded-2xl border border-pink-100 bg-white p-6 text-center text-sm text-[#92737c]">
+          Loading shop areas...
         </div>
+      ) : areas.length === 0 ? (
+        /* EMPTY */
+        <div className="rounded-2xl border border-dashed border-pink-200 bg-white p-8 text-center">
+          <MapPin
+            size={40}
+            className="mx-auto mb-3 text-[#c18c2d]"
+          />
 
-        {/* ACTIVE */}
+          <p className="text-sm text-[#92737c]">
+            No shop areas yet.
+          </p>
 
-        <div className="pink-card">
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf8f2] text-[#4d9a72]">
-              <Heart size={20} />
-            </div>
-
-            <div>
-
-              <p className="text-xs text-[#92737c]">
-                Active
-              </p>
-
-              <p className="text-2xl font-bold text-[#4b343b]">
-                {totalActive}
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ========================================================
-          FILTERS
-      ======================================================== */}
-
-      <div className="mt-6 rounded-2xl border border-pink-100 bg-white p-4 shadow-sm">
-
-        <div className="grid gap-4 md:grid-cols-3">
-
-          {/* SEARCH */}
-
-          <div className="relative">
-
-            <Search
-              size={18}
-              className="
-                absolute
-                left-3
-                top-1/2
-                -translate-y-1/2
-                text-[#b49aa2]
-              "
-            />
-
-            <input
-              type="text"
-              placeholder="Search services or products..."
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              className="
-                input-field
-                w-full
-                pl-10
-              "
-            />
-
-          </div>
-
-          {/* CATEGORY */}
-
-          <select
-            value={category}
-            onChange={(event) =>
-              setCategory(event.target.value)
-            }
-            className="input-field w-full"
+          <button
+            onClick={() => handleOpenModal()}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-2 font-semibold text-white transition-colors"
           >
-            {categories.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item}
-              </option>
-            ))}
-          </select>
-
-          {/* TYPE */}
-
-          <select
-            value={type}
-            onChange={(event) =>
-              setType(event.target.value)
-            }
-            className="input-field w-full"
-          >
-            <option value="All">
-              All Types
-            </option>
-
-            <option value="Service">
-              Services
-            </option>
-
-            <option value="Product">
-              Products
-            </option>
-          </select>
-
+            <Plus size={18} />
+            Create First Area
+          </button>
         </div>
-
-      </div>
-
-      {/* ========================================================
-          SERVICE LIST
-      ======================================================== */}
-
-      <div className="mt-6 overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm">
-
-        {/* ======================================================
-            DESKTOP TABLE
-        ====================================================== */}
-
-        <div className="hidden overflow-x-auto md:block">
-
-          <table className="w-full text-left">
-
-            <thead className="border-b border-pink-100 bg-[#fff8fa]">
-
-              <tr>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Service / Product
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Category
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Type
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Price
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Duration
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Status
-                </th>
-
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                  Action
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {filteredServices.map((service) => (
-
-                <tr
-                  key={service.id}
-                  className="
-                    border-b
-                    border-pink-50
-                    last:border-0
-                    hover:bg-[#fffafa]
-                  "
-                >
-
-                  {/* SERVICE */}
-
-                  <td className="px-5 py-4">
-
-                    <div className="flex items-center gap-3">
-
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-
-                        {service.type === 'Product' ? (
-                          <Package size={18} />
-                        ) : (
-                          <Sparkles size={18} />
-                        )}
-
-                      </div>
-
-                      <div>
-
-                        <p className="font-semibold text-[#4b343b]">
-                          {service.name}
-                        </p>
-
-                        <p className="mt-1 max-w-xs text-xs text-[#92737c]">
-                          {service.description}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </td>
-
-                  {/* CATEGORY */}
-
-                  <td className="px-5 py-4 text-sm text-[#6d4a54]">
-                    {service.category}
-                  </td>
-
-                  {/* TYPE */}
-
-                  <td className="px-5 py-4">
-
-                    <span
-                      className={`
-                        rounded-full
-                        px-3
-                        py-1
-                        text-xs
-                        font-semibold
-                        ${
-                          service.type === 'Service'
-                            ? 'bg-[#fff2f4] text-[#d77992]'
-                            : 'bg-[#fff2df] text-[#b88a2c]'
-                        }
-                      `}
-                    >
-                      {service.type}
-                    </span>
-
-                  </td>
-
-                  {/* PRICE */}
-
-                  <td className="px-5 py-4 text-sm font-bold text-[#c18c2d]">
-                    ₱{service.price.toLocaleString()}
-                  </td>
-
-                  {/* DURATION */}
-
-                  <td className="px-5 py-4">
-
-                    <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-
-                      {service.duration !== '-' && (
-                        <Clock3 size={15} />
-                      )}
-
-                      {service.duration}
-
-                    </div>
-
-                  </td>
-
-                  {/* STATUS */}
-
-                  <td className="px-5 py-4">
-
-                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
-                      {service.status}
-                    </span>
-
-                  </td>
-
-                  {/* ACTION */}
-
-                  <td className="px-5 py-4">
-
-                    <div className="flex gap-2">
-
-                      {/* EDIT */}
-
-                      <button
-                        type="button"
-                        className="
-                          rounded-lg
-                          bg-[#fff5f8]
-                          p-2
-                          text-[#d77992]
-                          transition
-                          hover:bg-[#ffdce6]
-                        "
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-
-                      {/* DELETE */}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDeleteClick(service)
-                        }
-                        className="
-                          rounded-lg
-                          bg-red-50
-                          p-2
-                          text-red-500
-                          transition
-                          hover:bg-red-100
-                        "
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-        {/* ======================================================
-            MOBILE CARDS
-        ====================================================== */}
-
-        <div className="space-y-3 p-4 md:hidden">
-
-          {filteredServices.map((service) => (
-
+      ) : (
+        /* AREAS */
+        <div className="grid gap-4 md:grid-cols-2">
+          {areas.map((area) => (
             <div
-              key={service.id}
-              className="
-                rounded-xl
-                border
-                border-pink-100
-                p-4
-              "
+              key={area.id}
+              className="rounded-2xl border border-pink-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-[#4b343b]">
+                  {area.name}
+                </h3>
+
+                <span
+                  className={`inline-block mt-2 rounded-full px-2 py-1 text-xs font-semibold uppercase ${
+                    area.status === 'active'
+                      ? 'bg-green-50 text-green-600'
+                      : 'bg-gray-50 text-gray-600'
+                  }`}
+                >
+                  {area.status}
+                </span>
+              </div>
+
+              <div className="space-y-3 text-sm text-[#80656d]">
+
+                {/* ADDRESS */}
+                {area.address && (
+                  <div className="flex gap-3 items-start">
+                    <MapPin
+                      size={16}
+                      className="text-[#c18c2d] flex-shrink-0 mt-0.5"
+                    />
+
+                    <div>
+                      <p className="font-semibold text-[#4b343b]">
+                        Exact Location
+                      </p>
+
+                      <p>{area.address}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* CONTACT */}
+                {area.contact && (
+                  <div className="flex gap-3 items-start">
+                    <Phone
+                      size={16}
+                      className="text-[#c18c2d] flex-shrink-0 mt-0.5"
+                    />
+
+                    <div>
+                      <p className="font-semibold text-[#4b343b]">
+                        Contact
+                      </p>
+
+                      <p>{area.contact}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* OPERATING HOURS */}
+                {area.operatingHours && (
+                  <div className="flex gap-3 items-start">
+                    <Clock
+                      size={16}
+                      className="text-[#c18c2d] flex-shrink-0 mt-0.5"
+                    />
+
+                    <div>
+                      <p className="font-semibold text-[#4b343b]">
+                        Operating Hours
+                      </p>
+
+                      <p>{area.operatingHours}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ACTIONS */}
+              <div className="mt-5 flex gap-2">
+                <button
+                  onClick={() => handleOpenModal(area)}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#fff5f8] hover:bg-[#ffd4e0] px-3 py-2 font-semibold text-[#4b343b] transition-colors"
+                >
+                  <Edit2 size={16} />
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDeleteClick(area)}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 px-3 py-2 font-semibold text-red-600 transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ========================================================
+          ADD / EDIT MODAL
+      ======================================================== */}
+
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50 p-4">
+
+          <div className="rounded-3xl bg-white max-w-lg w-full shadow-2xl max-h-[92vh] overflow-y-auto">
+
+            {/* MODAL HEADER */}
+            <div className="sticky top-0 z-10 flex items-center justify-between bg-[#fff5f8] px-6 py-4 border-b border-pink-100">
+
+              <h2 className="text-lg font-bold text-[#4b343b]">
+                {isEditing
+                  ? 'Edit Shop Area'
+                  : 'Add New Shop Area'}
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-[#92737c] hover:text-[#4b343b]"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* FORM */}
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-5"
             >
 
-              <div className="flex items-start justify-between gap-3">
+              {/* FORM ERROR */}
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
 
-                <div className="flex items-center gap-3">
+              {/* NAME */}
+              <div>
+                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
+                  Shop Area Name *
+                </label>
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Main Branch - Area A"
+                  className="w-full rounded-lg border border-pink-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
+                  required
+                />
+              </div>
 
-                    {service.type === 'Product' ? (
-                      <Package size={18} />
-                    ) : (
-                      <Sparkles size={18} />
-                    )}
+              {/* ADDRESS */}
+              <div>
+                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
+                  Exact Location (Address) *
+                </label>
 
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 123 Main Street, Building A, Ground Floor, City"
+                  rows={3}
+                  className="w-full rounded-lg border border-pink-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d] resize-none"
+                  required
+                />
+              </div>
+
+              {/* CONTACT */}
+              <div>
+                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
+                  Contact Number
+                </label>
+
+                <input
+                  type="tel"
+                  name="contact"
+                  value={formData.contact}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 0917 123 4567"
+                  className="w-full rounded-lg border border-pink-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
+                />
+              </div>
+
+              {/* ==================================================
+                  OPERATING DAYS
+              ================================================== */}
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-[#4b343b]">
+                    Operating Days *
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={clearDays}
+                    className="text-xs font-semibold text-[#c18c2d] hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                {/* QUICK SELECT */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+
+                  <button
+                    type="button"
+                    onClick={selectWeekdays}
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      isSameDays(DAYS.slice(0, 5))
+                        ? 'border-[#c18c2d] bg-[#fff5e6] text-[#9b6d1e]'
+                        : 'border-pink-200 bg-white text-[#80656d] hover:bg-[#fff5f8]'
+                    }`}
+                  >
+                    Monday - Friday
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={selectMondaySaturday}
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      isSameDays(DAYS.slice(0, 6))
+                        ? 'border-[#c18c2d] bg-[#fff5e6] text-[#9b6d1e]'
+                        : 'border-pink-200 bg-white text-[#80656d] hover:bg-[#fff5f8]'
+                    }`}
+                  >
+                    Mon - Sat
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={selectEveryday}
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                      isSameDays(DAYS)
+                        ? 'border-[#c18c2d] bg-[#fff5e6] text-[#9b6d1e]'
+                        : 'border-pink-200 bg-white text-[#80656d] hover:bg-[#fff5f8]'
+                    }`}
+                  >
+                    Everyday
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={clearDays}
+                    className="rounded-lg border border-pink-200 bg-white px-3 py-2 text-xs font-semibold text-[#80656d] hover:bg-[#fff5f8] transition-colors"
+                  >
+                    Custom
+                  </button>
+
+                </div>
+
+                {/* DAYS */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                  {DAYS.map((day) => {
+                    const selected =
+                      formData.operatingDays.includes(day);
+
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(day)}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm transition-all ${
+                          selected
+                            ? 'border-[#c18c2d] bg-[#fff5e6] text-[#4b343b]'
+                            : 'border-pink-200 bg-white text-[#80656d] hover:bg-[#fff5f8]'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-5 w-5 items-center justify-center rounded-md border ${
+                            selected
+                              ? 'border-[#c18c2d] bg-[#c18c2d] text-white'
+                              : 'border-pink-300 bg-white'
+                          }`}
+                        >
+                          {selected && <Check size={13} />}
+                        </span>
+
+                        <span className="text-xs font-medium">
+                          {day}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                </div>
+
+                {/* SELECTED DAYS */}
+                {formData.operatingDays.length > 0 && (
+                  <p className="mt-2 text-xs text-[#92737c]">
+                    Selected:{' '}
+                    <span className="font-semibold text-[#4b343b]">
+                      {DAYS.filter((day) =>
+                        formData.operatingDays.includes(day)
+                      ).join(', ')}
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              {/* ==================================================
+                  OPENING / CLOSING TIME
+              ================================================== */}
+
+              <div>
+                <label className="text-sm font-semibold text-[#4b343b] block mb-2">
+                  Operating Time *
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+
+                  {/* OPENING */}
+                  <div>
+                    <label className="block text-xs text-[#92737c] mb-1">
+                      Opening Time
+                    </label>
+
+                    <input
+                      type="time"
+                      value={formData.openingTime}
+                      onChange={handleOpeningTimeChange}
+                      className="w-full rounded-lg border border-pink-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
+                      required
+                    />
+                  </div>
+
+                  {/* CLOSING */}
+                  <div>
+                    <label className="block text-xs text-[#92737c] mb-1">
+                      Closing Time
+                    </label>
+
+                    <input
+                      type="time"
+                      value={formData.closingTime}
+                      onChange={handleClosingTimeChange}
+                      className="w-full rounded-lg border border-pink-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#c18c2d]"
+                      required
+                    />
+                  </div>
+
+                </div>
+              </div>
+
+              {/* ==================================================
+                  SCHEDULE PREVIEW
+              ================================================== */}
+
+              <div className="rounded-xl border border-[#e9d3a8] bg-[#fffaf0] p-4">
+
+                <div className="flex items-start gap-3">
+
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#f5e6c8]">
+                    <Clock
+                      size={18}
+                      className="text-[#c18c2d]"
+                    />
                   </div>
 
                   <div>
-
-                    <p className="font-semibold text-[#4b343b]">
-                      {service.name}
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#92737c]">
+                      Schedule Preview
                     </p>
 
-                    <p className="text-xs text-[#92737c]">
-                      {service.category}
+                    <p className="mt-1 text-sm font-bold text-[#4b343b]">
+                      {formData.operatingDays.length > 0
+                        ? generateOperatingHours(
+                            formData.operatingDays,
+                            formData.openingTime,
+                            formData.closingTime
+                          )
+                        : 'No operating days selected'}
                     </p>
-
                   </div>
 
                 </div>
 
-                <span className="rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-600">
-                  {service.status}
-                </span>
+              </div>
+
+              {/* ==================================================
+                  BUTTONS
+              ================================================== */}
+
+              <div className="flex gap-3 pt-4 border-t border-pink-100">
+
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 rounded-lg bg-gray-100 hover:bg-gray-200 px-4 py-2.5 font-semibold text-[#4b343b] transition-colors"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-2.5 font-semibold text-white disabled:opacity-50 transition-colors"
+                >
+                  {isSubmitting
+                    ? 'Saving...'
+                    : isEditing
+                    ? 'Update Area'
+                    : 'Create Area'}
+                </button>
 
               </div>
 
-              <p className="mt-3 text-sm text-[#80656d]">
-                {service.description}
-              </p>
-
-              <div className="mt-4 flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-lg font-bold text-[#c18c2d]">
-                    ₱{service.price.toLocaleString()}
-                  </p>
-
-                  {service.duration !== '-' && (
-                    <p className="mt-1 flex items-center gap-1 text-xs text-[#92737c]">
-                      <Clock3 size={13} />
-                      {service.duration}
-                    </p>
-                  )}
-
-                </div>
-
-                <div className="flex gap-2">
-
-                  {/* EDIT */}
-
-                  <button
-                    type="button"
-                    className="
-                      rounded-lg
-                      bg-[#fff5f8]
-                      p-2
-                      text-[#d77992]
-                    "
-                    title="Edit"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-
-                  {/* DELETE */}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeleteClick(service)
-                    }
-                    className="
-                      rounded-lg
-                      bg-red-50
-                      p-2
-                      text-red-500
-                    "
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
-
-        {/* ======================================================
-            NO RESULTS
-        ====================================================== */}
-
-        {filteredServices.length === 0 && (
-
-          <div className="p-10 text-center">
-
-            <Scissors
-              size={36}
-              className="mx-auto text-[#d9b9c2]"
-            />
-
-            <p className="mt-3 font-semibold text-[#4b343b]">
-              No services or products found
-            </p>
-
-            <p className="mt-1 text-sm text-[#92737c]">
-              Try changing your search or filters.
-            </p>
-
+            </form>
           </div>
-
-        )}
-
-      </div>
-
-      {/* ========================================================
-          FOOTER COUNT
-      ======================================================== */}
-
-      <p className="mt-4 text-xs text-[#92737c]">
-        Showing {filteredServices.length} of{' '}
-        {services.length} services and products
-      </p>
+        </div>
+      )}
 
       {/* ========================================================
           DELETE CONFIRMATION MODAL
       ======================================================== */}
 
       {deleteTarget && (
-
         <div
-          className="
-            fixed
-            inset-0
-            z-[9999]
-            flex
-            items-center
-            justify-center
-            bg-black/40
-            px-4
-          "
-          onClick={() => {
-            if (!isDeleting) {
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isSubmitting) {
               setDeleteTarget(null);
             }
           }}
         >
-
           <div
-            className="
-              w-full
-              max-w-[360px]
-              rounded-2xl
-              bg-white
-              px-6
-              py-5
-              text-center
-              shadow-2xl
-            "
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onMouseDown={(e) => e.stopPropagation()}
           >
+            {/* HEADER */}
+            <div className="border-b border-pink-100 bg-[#fff5f8] px-6 py-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                  <Trash2
+                    size={22}
+                    className="text-red-600"
+                  />
+                </div>
 
-            {/* ==================================================
-                TRASH ICON
-            ================================================== */}
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-[#4b343b]">
+                    Delete Shop Area?
+                  </h2>
 
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center">
+                  <p className="mt-1 text-sm text-[#80656d]">
+                    Are you sure you want to delete this shop area?
+                  </p>
+                </div>
 
-              <Trash2
-                size={52}
-                strokeWidth={1.5}
-                className="text-red-500"
-              />
-
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isSubmitting}
+                  className="text-[#92737c] transition-colors hover:text-[#4b343b] disabled:opacity-50"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
-            {/* ==================================================
-                TITLE
-            ================================================== */}
+            {/* BODY */}
+            <div className="px-6 py-5">
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-4">
+                <p className="text-xs font-medium text-red-600">
+                  You are about to delete:
+                </p>
 
-            <h2 className="text-[17px] font-bold leading-6 text-[#172033]">
+                <p className="mt-1 break-words text-base font-bold text-[#4b343b]">
+                  "{deleteTarget.name}"
+                </p>
 
-              Are you sure you want to
-              <br />
-              delete this service?
+                <p className="mt-2 text-xs text-red-600">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
 
-            </h2>
-
-            {/* ==================================================
-                SERVICE NAME
-            ================================================== */}
-
-            <p className="mt-3 break-words text-[12px] text-[#6f7785]">
-
-              "{deleteTarget.name}"
-
-            </p>
-
-            {/* ==================================================
-                BUTTONS
-            ================================================== */}
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-
-              {/* CANCEL */}
+            {/* BUTTONS */}
+            <div className="flex gap-3 border-t border-pink-100 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl border border-pink-200 bg-white px-4 py-3 text-sm font-semibold text-[#4b343b] transition-colors hover:bg-[#fff5f8] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                No
+              </button>
 
               <button
                 type="button"
-                disabled={isDeleting}
-                onClick={() =>
-                  setDeleteTarget(null)
-                }
-                className="
-                  rounded-lg
-                  border
-                  border-[#d9dce2]
-                  bg-white
-                  px-4
-                  py-2.5
-                  text-[13px]
-                  font-medium
-                  text-[#4b5563]
-                  transition
-                  hover:bg-gray-50
-                  disabled:cursor-not-allowed
-                  disabled:opacity-50
-                "
+                onClick={deleteArea}
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Cancel
+                {isSubmitting ? 'Deleting...' : 'Yes, Delete'}
               </button>
-
-              {/* DELETE */}
-
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={confirmDelete}
-                className="
-                  rounded-lg
-                  bg-red-500
-                  px-4
-                  py-2.5
-                  text-[13px]
-                  font-semibold
-                  text-white
-                  transition
-                  hover:bg-red-600
-                  disabled:cursor-not-allowed
-                  disabled:opacity-60
-                "
-              >
-                {isDeleting
-                  ? 'Deleting...'
-                  : 'Delete'}
-              </button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }
 
-export default AdminService;
+export default AdminShopareas;
