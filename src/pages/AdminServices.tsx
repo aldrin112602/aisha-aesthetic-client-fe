@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
 type ServiceItem = {
@@ -22,382 +22,24 @@ type ServiceItem = {
   category: string;
   description: string;
   price: number;
-  duration: string;
-  type: 'Service' | 'Product';
-  status: 'Active' | 'Inactive';
+  duration: string | null;
+  type?: 'Service' | 'Product';
+  status: 'active' | 'inactive';
 };
 
-const defaultServices: ServiceItem[] = [
-  // ==========================================
-  // LASH SERVICES
-  // ==========================================
-
-  {
-    id: 1,
-    name: 'Classic Lashes',
-    category: 'Lash Extensions',
-    description: 'Natural-looking individual lash extensions.',
-    price: 800,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'Hybrid Lashes',
-    category: 'Lash Extensions',
-    description: 'Combination of classic and volume lash extensions.',
-    price: 1000,
-    duration: '1 hr 45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 3,
-    name: 'Russian Lashes',
-    category: 'Lash Extensions',
-    description: 'Full and dramatic lightweight volume lashes.',
-    price: 1200,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 4,
-    name: 'Daily Wear Lashes',
-    category: 'Lash Extensions',
-    description: 'Soft and lightweight lashes suitable for everyday wear.',
-    price: 700,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 5,
-    name: 'Lash Lift',
-    category: 'Lash Care',
-    description: 'Natural lash lifting treatment for a curled appearance.',
-    price: 600,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 6,
-    name: 'Lash Tint',
-    category: 'Lash Care',
-    description: 'Semi-permanent tint for darker and defined lashes.',
-    price: 400,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // NAIL SERVICES
-  // ==========================================
-
-  {
-    id: 7,
-    name: 'Basic Manicure',
-    category: 'Nail Services',
-    description: 'Classic manicure with nail cleaning and shaping.',
-    price: 350,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 8,
-    name: 'Basic Pedicure',
-    category: 'Nail Services',
-    description: 'Classic pedicure with cleaning and nail shaping.',
-    price: 400,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 9,
-    name: 'Gel Manicure',
-    category: 'Nail Services',
-    description: 'Long-lasting gel polish manicure.',
-    price: 650,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 10,
-    name: 'Gel Pedicure',
-    category: 'Nail Services',
-    description: 'Long-lasting gel polish pedicure.',
-    price: 700,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 11,
-    name: 'Soft Gel Extensions',
-    category: 'Nail Extensions',
-    description: 'Natural-looking soft gel nail extensions.',
-    price: 1000,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 12,
-    name: 'Gel Nail Art',
-    category: 'Nail Art',
-    description: 'Customized nail art design using gel polish.',
-    price: 850,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // FACIAL SERVICES
-  // ==========================================
-
-  {
-    id: 13,
-    name: 'Basic Facial',
-    category: 'Facial',
-    description: 'Refreshing facial treatment for basic skin care.',
-    price: 600,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 14,
-    name: 'Deep Cleansing Facial',
-    category: 'Facial',
-    description: 'Deep cleansing treatment for congested and oily skin.',
-    price: 850,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 15,
-    name: 'Hydrating Facial',
-    category: 'Facial',
-    description: 'Moisturizing treatment for dry and dehydrated skin.',
-    price: 900,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 16,
-    name: 'Brightening Facial',
-    category: 'Facial',
-    description: 'Skin brightening treatment for a fresh and glowing appearance.',
-    price: 950,
-    duration: '1 hr 15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // WAXING
-  // ==========================================
-
-  {
-    id: 17,
-    name: 'Eyebrow Wax',
-    category: 'Waxing',
-    description: 'Eyebrow shaping and waxing treatment.',
-    price: 250,
-    duration: '20 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 18,
-    name: 'Upper Lip Wax',
-    category: 'Waxing',
-    description: 'Quick and gentle upper lip waxing service.',
-    price: 200,
-    duration: '15 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 19,
-    name: 'Underarm Wax',
-    category: 'Waxing',
-    description: 'Underarm hair removal using professional waxing products.',
-    price: 450,
-    duration: '30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 20,
-    name: 'Full Arm Wax',
-    category: 'Waxing',
-    description: 'Complete hair removal for both arms.',
-    price: 700,
-    duration: '45 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 21,
-    name: 'Full Leg Wax',
-    category: 'Waxing',
-    description: 'Complete hair removal treatment for both legs.',
-    price: 1000,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // BROW SERVICES
-  // ==========================================
-
-  {
-    id: 22,
-    name: 'Brow Lamination',
-    category: 'Brows',
-    description: 'Brow styling treatment for fuller-looking brows.',
-    price: 750,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 23,
-    name: 'Brow Tint',
-    category: 'Brows',
-    description: 'Brow tinting treatment for enhanced definition.',
-    price: 450,
-    duration: '30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // MAKEUP
-  // ==========================================
-
-  {
-    id: 24,
-    name: 'Basic Makeup',
-    category: 'Makeup',
-    description: 'Simple makeup application for everyday occasions.',
-    price: 800,
-    duration: '1 hr',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 25,
-    name: 'Event Makeup',
-    category: 'Makeup',
-    description: 'Professional makeup application for special events.',
-    price: 1500,
-    duration: '1 hr 30 min',
-    type: 'Service',
-    status: 'Active',
-  },
-  {
-    id: 26,
-    name: 'Bridal Makeup',
-    category: 'Makeup',
-    description: 'Premium makeup service for brides and weddings.',
-    price: 2500,
-    duration: '2 hrs',
-    type: 'Service',
-    status: 'Active',
-  },
-
-  // ==========================================
-  // BEAUTY PRODUCTS
-  // ==========================================
-
-  {
-    id: 27,
-    name: 'Lash Shampoo',
-    category: 'Beauty Products',
-    description: 'Gentle cleansing shampoo for lash extensions.',
-    price: 350,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 28,
-    name: 'Lash Extension Sealant',
-    category: 'Beauty Products',
-    description: 'Aftercare product designed to help maintain lash extensions.',
-    price: 450,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 29,
-    name: 'Cuticle Oil',
-    category: 'Nail Care Products',
-    description: 'Moisturizing oil for nails and cuticles.',
-    price: 250,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 30,
-    name: 'Facial Cleanser',
-    category: 'Skin Care Products',
-    description: 'Gentle daily facial cleanser.',
-    price: 450,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-  {
-    id: 31,
-    name: 'Moisturizing Cream',
-    category: 'Skin Care Products',
-    description: 'Daily moisturizer for hydrated and healthy-looking skin.',
-    price: 550,
-    duration: '-',
-    type: 'Product',
-    status: 'Active',
-  },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 function AdminService() {
-  const STORAGE_KEY = 'aisha_services';
-
-  const [services, setServices] = useState<ServiceItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // Use the default catalog when localStorage contains invalid data.
-    }
-    return defaultServices;
-  });
-
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [type, setType] = useState('All');
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ServiceItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const emptyForm = {
     name: '',
@@ -406,14 +48,31 @@ function AdminService() {
     price: '',
     duration: '',
     type: 'Service' as 'Service' | 'Product',
-    status: 'Active' as 'Active' | 'Inactive',
+    status: 'active' as 'active' | 'inactive',
   };
 
   const [form, setForm] = useState(emptyForm);
 
-  const saveServices = (nextServices: ServiceItem[]) => {
-    setServices(nextServices);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextServices));
+  // Fetch services on component mount
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_URL}/api/services`);
+      if (!response.ok) throw new Error('Failed to fetch services');
+      const data = await response.json();
+      setServices(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load services';
+      setError(message);
+      Swal.fire('Error', message, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const categories = [
@@ -434,7 +93,7 @@ function AdminService() {
         category === 'All' || service.category === category;
 
       const matchesType =
-        type === 'All' || service.type === type;
+        type === 'All' || (service.type || 'Service') === type;
 
       return matchesSearch && matchesCategory && matchesType;
     });
@@ -453,9 +112,9 @@ function AdminService() {
       category: service.category,
       description: service.description,
       price: String(service.price),
-      duration: service.duration === '-' ? '' : service.duration,
-      type: service.type,
-      status: service.status,
+      duration: service.duration || '',
+      type: service.type || 'Service',
+      status: service.status as 'active' | 'inactive',
     });
     setShowModal(true);
   };
@@ -476,12 +135,12 @@ function AdminService() {
         field === 'type'
           ? (value as 'Service' | 'Product')
           : field === 'status'
-            ? (value as 'Active' | 'Inactive')
+            ? (value as 'active' | 'inactive')
             : value,
     }));
   };
 
-  const handleSave = (event: FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const name = form.name.trim();
@@ -490,39 +149,58 @@ function AdminService() {
     const price = Number(form.price);
 
     if (!name || !categoryValue || !form.price || Number.isNaN(price) || price < 0) {
-      alert('Please complete the required fields and enter a valid price.');
+      Swal.fire('Validation Error', 'Please complete the required fields and enter a valid price.', 'warning');
       return;
     }
 
     if (form.type === 'Service' && !form.duration.trim()) {
-      alert('Please enter the service duration.');
+      Swal.fire('Validation Error', 'Please enter the service duration.', 'warning');
       return;
     }
 
-    const item: ServiceItem = {
-      id: editingId ?? (
-        services.length > 0
-          ? Math.max(...services.map((service) => service.id)) + 1
-          : 1
-      ),
-      name,
-      category: categoryValue,
-      description,
-      price,
-      duration: form.type === 'Product' ? '-' : form.duration.trim(),
-      type: form.type,
-      status: form.status,
-    };
+    try {
+      setIsSaving(true);
+      const method = editingId === null ? 'POST' : 'PUT';
+      const endpoint = editingId === null
+        ? `${API_URL}/api/services`
+        : `${API_URL}/api/services/${editingId}`;
 
-    const nextServices =
-      editingId === null
-        ? [item, ...services]
-        : services.map((service) =>
-            service.id === editingId ? item : service
-          );
+      const payload = {
+        name,
+        category: categoryValue,
+        description,
+        price,
+        duration: form.type === 'Service' ? form.duration.trim() : null,
+        shopArea: '',
+        status: form.status,
+        type: form.type,
+      };
 
-    saveServices(nextServices);
-    closeModal();
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save service');
+      }
+
+      await fetchServices();
+      closeModal();
+
+      Swal.fire(
+        'Success',
+        `Service ${editingId === null ? 'created' : 'updated'} successfully!`,
+        'success'
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save service';
+      Swal.fire('Error', message, 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -536,38 +214,76 @@ function AdminService() {
       showCancelButton: true,
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
-    }).then((result) => {
+    }).then(async (result) => {
       if (!result.isConfirmed) return;
 
-      const nextServices = services.filter(
-        (item) => item.id !== service.id
-      );
+      try {
+        const response = await fetch(`${API_URL}/api/services/${id}`, {
+          method: 'DELETE',
+        });
 
-      saveServices(nextServices);
+        if (!response.ok) {
+          throw new Error('Failed to delete service');
+        }
 
-      Swal.fire({
-        title: 'Deleted!',
-        text: `"${service.name}" has been deleted.`,
-        icon: 'success',
-      });
+        await fetchServices();
+
+        Swal.fire({
+          title: 'Deleted!',
+          text: `"${service.name}" has been deleted.`,
+          icon: 'success',
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete service';
+        Swal.fire('Error', message, 'error');
+      }
     });
   };
 
-  const toggleStatus = (id: number) => {
-    saveServices(
-      services.map((service) =>
-        service.id === id
-          ? {
-              ...service,
-              status:
-                service.status === 'Active'
-                  ? 'Inactive'
-                  : 'Active',
-            }
-          : service
-      )
-    );
+  const toggleStatus = async (id: number) => {
+    const service = services.find((item) => item.id === id);
+    if (!service) return;
+
+    const newStatus = service.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      const response = await fetch(`${API_URL}/api/services/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: service.name,
+          category: service.category,
+          description: service.description,
+          price: service.price,
+          duration: service.duration,
+          status: newStatus,
+          type: service.type || 'Service',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      await fetchServices();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update status';
+      Swal.fire('Error', message, 'error');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-pink-500"></div>
+            <p className="mt-3 text-sm text-[#92737c]">Loading services...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -600,7 +316,7 @@ function AdminService() {
             <div>
               <p className="text-xs text-[#92737c]">Total Services</p>
               <p className="text-2xl font-bold text-[#4b343b]">
-                {services.filter((item) => item.type === 'Service').length}
+                {services.filter((item) => !item.type || item.type === 'Service').length}
               </p>
             </div>
           </div>
@@ -642,7 +358,7 @@ function AdminService() {
             <div>
               <p className="text-xs text-[#92737c]">Active</p>
               <p className="text-2xl font-bold text-[#4b343b]">
-                {services.filter((item) => item.status === 'Active').length}
+                {services.filter((item) => item.status === 'active').length}
               </p>
             </div>
           </div>
@@ -729,7 +445,7 @@ function AdminService() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-                        {service.type === 'Product' ? (
+                        {(service.type || 'Service') === 'Product' ? (
                           <Package size={18} />
                         ) : (
                           <Sparkles size={18} />
@@ -753,12 +469,12 @@ function AdminService() {
                   <td className="px-5 py-4">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        service.type === 'Service'
+                        (service.type || 'Service') === 'Service'
                           ? 'bg-[#fff2f4] text-[#d77992]'
                           : 'bg-[#fff2df] text-[#b88a2c]'
                       }`}
                     >
-                      {service.type}
+                      {service.type || 'Service'}
                     </span>
                   </td>
 
@@ -768,8 +484,8 @@ function AdminService() {
 
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                      {service.duration !== '-' && <Clock3 size={15} />}
-                      {service.duration}
+                      {service.duration && <Clock3 size={15} />}
+                      {service.duration || '-'}
                     </div>
                   </td>
 
@@ -778,13 +494,13 @@ function AdminService() {
                       type="button"
                       onClick={() => toggleStatus(service.id)}
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        service.status === 'Active'
+                        service.status === 'active'
                           ? 'bg-green-50 text-green-600'
                           : 'bg-gray-100 text-gray-500'
                       }`}
                       title="Click to change status"
                     >
-                      {service.status}
+                      {service.status === 'active' ? 'Active' : 'Inactive'}
                     </button>
                   </td>
 
@@ -825,7 +541,7 @@ function AdminService() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-                    {service.type === 'Product' ? (
+                    {(service.type || 'Service') === 'Product' ? (
                       <Package size={18} />
                     ) : (
                       <Sparkles size={18} />
@@ -846,12 +562,12 @@ function AdminService() {
                   type="button"
                   onClick={() => toggleStatus(service.id)}
                   className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                    service.status === 'Active'
+                    service.status === 'active'
                       ? 'bg-green-50 text-green-600'
                       : 'bg-gray-100 text-gray-500'
                   }`}
                 >
-                  {service.status}
+                  {service.status === 'active' ? 'Active' : 'Inactive'}
                 </button>
               </div>
 
@@ -865,7 +581,7 @@ function AdminService() {
                     ₱{service.price.toLocaleString()}
                   </p>
 
-                  {service.duration !== '-' && (
+                  {service.duration && (
                     <p className="mt-1 flex items-center gap-1 text-xs text-[#92737c]">
                       <Clock3 size={13} />
                       {service.duration}
@@ -1043,8 +759,8 @@ function AdminService() {
                     onChange={(event) => handleFormChange('status', event.target.value)}
                     className="input-field w-full"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
@@ -1060,17 +776,17 @@ function AdminService() {
 
                 <button
                   type="submit"
-                  className="primary-btn flex items-center gap-2"
+                  disabled={isSaving}
+                  className="primary-btn flex items-center gap-2 disabled:opacity-50"
                 >
                   <Plus size={17} />
-                  {editingId === null ? 'Save Service' : 'Save Changes'}
+                  {isSaving ? 'Saving...' : (editingId === null ? 'Save Service' : 'Save Changes')}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
