@@ -1,11 +1,7 @@
 import { CalendarDays, Clock3, MapPin } from 'lucide-react';
 
 import StatusBadge from '../../../components/ui/StatusBadge';
-import type { Appointment } from '../../../types';
-
-interface AppointmentCardProps {
-  appointment: Appointment;
-}
+import type { AppointmentCardProps } from '../../../types';
 
 function AppointmentCard({ appointment }: AppointmentCardProps) {
   return (

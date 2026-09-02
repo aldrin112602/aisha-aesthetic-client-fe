@@ -5,12 +5,7 @@ import {
   getCustomerAppointments,
   getEmployeeAppointments,
 } from '../../../api/appointments.api';
-import type { Appointment } from '../../../types';
-
-type AppointmentScope =
-  | { role: 'admin' }
-  | { role: 'customer'; userId: number }
-  | { role: 'employee'; userId: number };
+import type { Appointment, AppointmentScope } from '../../../types';
 
 export function useAppointments(scope: AppointmentScope | null) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);

@@ -40,3 +40,27 @@ export interface BookingPayload {
   area: string;
   price: number;
 }
+
+export type AppointmentScope =
+  | { role: 'admin' }
+  | { role: 'customer'; userId: number }
+  | { role: 'employee'; userId: number };
+
+export type AppointmentListTab = 'upcoming' | 'past';
+
+export interface AppointmentCardProps {
+  appointment: Appointment;
+}
+
+export interface AppointmentEditForm {
+  date: string;
+  time: string;
+}
+
+export interface AppointmentConfirmAction {
+  title: string;
+  message: string;
+  action: () => void;
+  actionLabel: string;
+  isDangerous: boolean;
+}

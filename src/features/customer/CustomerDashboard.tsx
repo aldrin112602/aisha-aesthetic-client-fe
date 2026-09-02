@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, AlertCircle } from 'lucide-react';
+import { AlertCircle, CalendarDays, Clock } from 'lucide-react';
 
-import { getCustomerAppointments } from '../api/appointments.api';
-import type { Appointment } from '../types';
+import { getCustomerAppointments } from '../../api/appointments.api';
+import type { Appointment } from '../../types';
 
 function CustomerDashboard() {
   const navigate = useNavigate();
@@ -25,9 +25,11 @@ function CustomerDashboard() {
         setAppointments(Array.isArray(data) ? data : []);
         setError('');
       })
-      .catch((err) => {
-        console.error('Failed to fetch appointments:', err);
-        setError('Unable to load appointments. Make sure the backend server is running.');
+      .catch((fetchError) => {
+        console.error('Failed to fetch appointments:', fetchError);
+        setError(
+          'Unable to load appointments. Make sure the backend server is running.'
+        );
         setAppointments([]);
       })
       .finally(() => setLoading(false));
@@ -50,13 +52,17 @@ function CustomerDashboard() {
   return (
     <div className="page-container">
       <h1 className="page-title">Customer Dashboard</h1>
-      <p className="page-subtitle">Track your appointments, service history, and reminders.</p>
+      <p className="page-subtitle">
+        Track your appointments, service history, and reminders.
+      </p>
 
       {error && (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 flex gap-3">
-          <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+        <div className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <AlertCircle className="flex-shrink-0 text-red-600" size={20} />
           <div>
-            <p className="text-sm font-semibold text-red-800">Connection Error</p>
+            <p className="text-sm font-semibold text-red-800">
+              Connection Error
+            </p>
             <p className="text-sm text-red-700">{error}</p>
           </div>
         </div>
@@ -73,7 +79,9 @@ function CustomerDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-[#92737c]">{label}</p>
-                <p className="mt-3 text-2xl font-bold text-[#4b343b]">{value}</p>
+                <p className="mt-3 text-2xl font-bold text-[#4b343b]">
+                  {value}
+                </p>
               </div>
               <Icon size={20} className="text-[#c18c2d]" />
             </div>
@@ -86,12 +94,23 @@ function CustomerDashboard() {
           <h2 className="text-lg font-bold text-[#4b343b]">My Appointments</h2>
           <ul className="mt-4 space-y-3 text-sm text-[#6d4a54]">
             {appointments.length === 0 ? (
-              <li className="text-[#92737c]">No bookings yet. <a href="/booking" className="text-[#d77992] font-semibold hover:underline">Book now</a></li>
+              <li className="text-[#92737c]">
+                No bookings yet.{' '}
+                <a
+                  href="/booking"
+                  className="font-semibold text-[#d77992] hover:underline"
+                >
+                  Book now
+                </a>
+              </li>
             ) : (
               appointments.slice(0, 3).map((appointment) => (
                 <li key={appointment.id} className="flex gap-2">
                   <span className="text-[#c18c2d]">•</span>
-                  <span>{appointment.serviceName} — {appointment.date} · {appointment.time} · {appointment.area}</span>
+                  <span>
+                    {appointment.serviceName} - {appointment.date} ·{' '}
+                    {appointment.time} · {appointment.area}
+                  </span>
                 </li>
               ))
             )}

@@ -15,21 +15,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import defaultAvatar from "../assets/img/default_avatar.jpg";
-
-interface UserProfile {
-  id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  role?: string;
-  profileImage?: string;
-}
-
-interface PasswordForm {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+import type { PasswordForm, UserProfile } from "../types";
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();

@@ -1,9 +1,4 @@
-interface StatusFilterProps<TValue extends string> {
-  label?: string;
-  options: TValue[];
-  value: TValue;
-  onChange: (value: TValue) => void;
-}
+import type { StatusFilterProps } from '../../../types';
 
 function StatusFilter<TValue extends string>({
   label = 'Status',

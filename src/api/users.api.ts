@@ -1,13 +1,5 @@
 import { apiRequest } from './client';
-import type { Employee, User } from '../types';
-
-export interface EmployeePayload {
-  name: string;
-  email: string;
-  password?: string;
-  role: string;
-  shopArea: string;
-}
+import type { Employee, EmployeePayload, User } from '../types';
 
 export function getUsers(role?: string) {
   const query = role ? `?role=${encodeURIComponent(role)}` : '';

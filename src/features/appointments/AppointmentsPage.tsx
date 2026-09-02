@@ -16,15 +16,18 @@ import {
   updateAppointment,
   updateAppointmentStatus,
 } from '../../api/appointments.api';
-import type { Appointment as AppointmentItem } from '../../types';
-
-type TabType = 'upcoming' | 'past';
+import type {
+  Appointment as AppointmentItem,
+  AppointmentConfirmAction,
+  AppointmentEditForm,
+  AppointmentListTab,
+} from '../../types';
 
 function Appointments() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<TabType>('upcoming');
+  const [activeTab, setActiveTab] = useState<AppointmentListTab>('upcoming');
 
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
@@ -32,7 +35,7 @@ function Appointments() {
   const [editingAppointment, setEditingAppointment] =
     useState<AppointmentItem | null>(null);
 
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<AppointmentEditForm>({
     date: '',
     time: '',
   });
@@ -41,13 +44,8 @@ function Appointments() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [confirmAction, setConfirmAction] = useState<{
-    title: string;
-    message: string;
-    action: () => void;
-    actionLabel: string;
-    isDangerous: boolean;
-  } | null>(null);
+  const [confirmAction, setConfirmAction] =
+    useState<AppointmentConfirmAction | null>(null);
 
   useEffect(() => {
     fetchAppointments();

@@ -1,7 +1,4 @@
-interface StatusBadgeProps {
-  status: string;
-  className?: string;
-}
+import type { StatusBadgeProps } from '../../types';
 
 const statusClasses: Record<string, string> = {
   active: 'bg-green-50 text-green-700',

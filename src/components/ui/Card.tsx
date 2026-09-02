@@ -1,8 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react';
-
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  children: ReactNode;
-}
+import type { CardProps } from '../../types';
 
 function Card({ children, className = '', ...props }: CardProps) {
   return (

@@ -6,28 +6,15 @@ import {
   deleteUser,
   getEmployees,
   updateUser,
-  type EmployeePayload,
 } from '../../api/users.api';
 import { getShopAreas } from '../../api/shopAreas.api';
-import type { Employee, ShopArea } from '../../types';
-
-// ==========================================
-// TYPES
-// ==========================================
-
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-  shopArea: string;
-}
+import type { Employee, EmployeeFormData, EmployeePayload, ShopArea } from '../../types';
 
 // ==========================================
 // INITIAL FORM
 // ==========================================
 
-const initialFormData: FormData = {
+const initialFormData: EmployeeFormData = {
   name: '',
   email: '',
   password: '',
@@ -78,7 +65,7 @@ function EmployeeManagement() {
   // ==========================================
 
   const [formData, setFormData] =
-    useState<FormData>(initialFormData);
+    useState<EmployeeFormData>(initialFormData);
 
   // ==========================================
   // MESSAGES

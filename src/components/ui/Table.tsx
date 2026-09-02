@@ -1,8 +1,4 @@
-import type { TableHTMLAttributes, ReactNode } from 'react';
-
-interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
-  children: ReactNode;
-}
+import type { TableProps } from '../../types';
 
 function Table({ children, className = '', ...props }: TableProps) {
   return (

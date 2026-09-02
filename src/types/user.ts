@@ -14,3 +14,11 @@ export interface Employee extends User {
   shopArea: string;
   status: string;
 }
+
+export interface EmployeePayload {
+  name: string;
+  email: string;
+  password?: string;
+  role: string;
+  shopArea: string;
+}

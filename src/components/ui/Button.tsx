@@ -1,11 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
-
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  variant?: ButtonVariant;
-}
+import type { ButtonProps, ButtonVariant } from '../../types';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-[#df7f98] text-white hover:bg-[#d66f8c]',
