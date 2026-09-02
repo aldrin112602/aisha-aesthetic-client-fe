@@ -4,6 +4,7 @@ import { AlertCircle, CalendarDays, Clock } from 'lucide-react';
 
 import { getCustomerAppointments } from '../../api/appointments.api';
 import type { Appointment } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 
 function CustomerDashboard() {
   const navigate = useNavigate();
@@ -12,10 +13,9 @@ function CustomerDashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('aisha_user');
-    const currentUser = savedUser ? JSON.parse(savedUser) : null;
+    const currentUser = getCurrentUser();
 
-    if (!currentUser) {
+    if (!currentUser?.id) {
       navigate('/signin');
       return;
     }

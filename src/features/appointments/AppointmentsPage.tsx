@@ -22,6 +22,7 @@ import type {
   AppointmentEditForm,
   AppointmentListTab,
 } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 
 function Appointments() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
@@ -107,16 +108,14 @@ function Appointments() {
   }, []);
 
   const fetchAppointments = useCallback(async () => {
-    const savedUser = localStorage.getItem('aisha_user');
+    const currentUser = getCurrentUser();
 
-    if (!savedUser) {
+    if (!currentUser?.id) {
       setLoading(false);
       return;
     }
 
     try {
-      const currentUser = JSON.parse(savedUser);
-
       const data = await getCustomerAppointments(currentUser.id);
 
       setAppointments(Array.isArray(data) ? data : []);

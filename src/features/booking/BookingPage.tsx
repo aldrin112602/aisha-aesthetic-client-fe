@@ -36,6 +36,7 @@ import footMassageImage from '../../assets/img/footmassage.png';
 import { createBooking } from '../../api/appointments.api';
 import { getShopAreas } from '../../api/shopAreas.api';
 import type { ShopArea } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 
 // import gelPolishImage from '../../assets/img/gelpolish.png';
 // import gelRemovalImage from '../../assets/img/gelremoval.png';
@@ -403,15 +404,7 @@ function Booking() {
     // CURRENT USER
     // ==========================================
 
-    const savedUser =
-      localStorage.getItem(
-        'aisha_user'
-      );
-
-    const currentUser =
-      savedUser
-        ? JSON.parse(savedUser)
-        : null;
+    const currentUser = getCurrentUser();
 
     if (!currentUser?.id) {
       alert(

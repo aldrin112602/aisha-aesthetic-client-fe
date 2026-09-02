@@ -8,6 +8,7 @@ import {
   Sparkles,
   UserCog,
   Users,
+  X,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clearCurrentUser, getCurrentUser } from '../utils/auth';
@@ -119,7 +120,13 @@ const navigationByRole: Record<
   ],
 };
 
-function Sidebar() {
+function Sidebar({
+  isMobileOpen = false,
+  onMobileClose,
+}: {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -141,12 +148,37 @@ function Sidebar() {
     navigate('/signin');
   };
 
+  const renderNavigation = (onItemClick?: () => void) => (
+    <nav className="space-y-2">
+      {navigation.map((item) => {
+        const Icon = item.icon;
+        const isActive = location.pathname === item.path;
+
+        return (
+          <Link
+            key={item.name}
+            to={item.path}
+            onClick={onItemClick}
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+              isActive
+                ? 'bg-gradient-to-r from-[#f9dce3] to-[#fff1f4] text-[#c26c84]'
+                : 'text-[#80636d] hover:bg-[#fff5f7]'
+            }`}
+          >
+            <Icon size={19} />
+            <span>{item.name}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <>
       {/* =====================================================
           DESKTOP SIDEBAR
       ===================================================== */}
-      <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[250px] flex-col border-r border-pink-100 bg-white px-4 py-6 md:flex">
+      <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[250px] flex-col overflow-y-auto overscroll-contain border-r border-pink-100 bg-white px-4 py-6 [scrollbar-color:#e2a0b1_#fff4f6] [scrollbar-width:thin] md:flex">
 
         {/* BRAND / ROLE */}
         <div className="mb-8 flex items-center gap-3 px-3">
@@ -166,30 +198,7 @@ function Sidebar() {
         </div>
 
         {/* NAVIGATION */}
-        <nav className="space-y-2">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-
-            const isActive =
-              location.pathname === item.path;
-
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-gradient-to-r from-[#f9dce3] to-[#fff1f4] text-[#c26c84]'
-                    : 'text-[#80636d] hover:bg-[#fff5f7]'
-                }`}
-              >
-                <Icon size={19} />
-
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        {renderNavigation()}
 
         {/* LOGOUT */}
         <div className="mt-auto border-t border-pink-100 pt-4">
@@ -205,35 +214,57 @@ function Sidebar() {
         </div>
       </aside>
 
-      {/* =====================================================
-          MOBILE BOTTOM NAVIGATION
-      ===================================================== */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 bg-white px-2 py-2 md:hidden">
-        <div className="flex items-center justify-around">
-          {navigation.map((item) => {
-            const Icon = item.icon;
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/35"
+            aria-label="Close navigation menu"
+            onClick={onMobileClose}
+          />
 
-            const isActive =
-              location.pathname === item.path;
+          <aside className="relative flex h-full w-[min(82vw,320px)] flex-col overflow-y-auto overscroll-contain border-r border-pink-100 bg-white px-4 py-5 shadow-2xl [scrollbar-color:#e2a0b1_#fff4f6] [scrollbar-width:thin]">
+            <div className="mb-6 flex items-center justify-between gap-3 px-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff0d8] text-[#b88a2c]">
+                  <Sparkles size={21} />
+                </div>
 
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[10px] ${
-                  isActive
-                    ? 'text-[#d77992]'
-                    : 'text-[#987b84]'
-                }`}
+                <div>
+                  <h2 className="font-bold text-[#49343a]">
+                    Aisha
+                  </h2>
+                  <p className="text-xs text-[#b88a2c] capitalize">
+                    {role} Access
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onMobileClose}
+                className="rounded-xl p-2 text-[#70535d] hover:bg-pink-50"
+                aria-label="Close navigation menu"
               >
-                <Icon size={19} />
+                <X size={21} />
+              </button>
+            </div>
 
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+            {renderNavigation(onMobileClose)}
+
+            <div className="mt-auto border-t border-pink-100 pt-4">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-[#c66b83] transition hover:bg-pink-50"
+              >
+                <LogOut size={19} />
+                <span>Logout</span>
+              </button>
+            </div>
+          </aside>
         </div>
-      </nav>
+      )}
     </>
   );
 }

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Clock, MapPin, Phone, Smartphone, User } from 'lucide-react';
 
 import { getServices } from '../../api/services.api';
+import { getShopAreas } from '../../api/shopAreas.api';
 import { createWalkin, getWalkins } from '../../api/walkins.api';
-import type { Service, WalkinRecord } from '../../types';
+import type { Service, ShopArea, WalkinRecord } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 
 const defaultFormData = {
   name: '',
@@ -11,7 +13,7 @@ const defaultFormData = {
   serviceId: '',
   serviceName: '',
   category: '',
-  area: 'Main Branch - Area A',
+  area: '',
   price: 0,
   notes: '',
 };
@@ -19,8 +21,10 @@ const defaultFormData = {
 function WalkinManagement() {
   const [services, setServices] = useState<Service[]>([]);
   const [walkins, setWalkins] = useState<WalkinRecord[]>([]);
+  const [shopAreas, setShopAreas] = useState<ShopArea[]>([]);
   const [loading, setLoading] = useState(false);
   const [servicesLoading, setServicesLoading] = useState(true);
+  const [shopAreasLoading, setShopAreasLoading] = useState(true);
   const [formData, setFormData] = useState(defaultFormData);
 
   const fetchServices = useCallback(async () => {
@@ -45,12 +49,31 @@ function WalkinManagement() {
     }
   }, []);
 
+  const fetchShopAreas = useCallback(async () => {
+    try {
+      setShopAreasLoading(true);
+      const data = await getShopAreas();
+      const areas = Array.isArray(data) ? data : [];
+
+      setShopAreas(areas);
+      setFormData((current) => ({
+        ...current,
+        area: current.area || areas[0]?.name || '',
+      }));
+    } catch {
+      setShopAreas([]);
+    } finally {
+      setShopAreasLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     queueMicrotask(() => {
       void fetchServices();
       void fetchWalkins();
+      void fetchShopAreas();
     });
-  }, [fetchServices, fetchWalkins]);
+  }, [fetchServices, fetchWalkins, fetchShopAreas]);
 
   const handleInputChange = (
     event: React.ChangeEvent<
@@ -110,8 +133,7 @@ function WalkinManagement() {
     setLoading(true);
 
     try {
-      const savedUser = localStorage.getItem('aisha_user');
-      const currentUser = savedUser ? JSON.parse(savedUser) : null;
+      const currentUser = getCurrentUser();
 
       const data = await createWalkin({
         name: formData.name,
@@ -125,7 +147,10 @@ function WalkinManagement() {
       });
 
       setWalkins((current) => [data, ...current]);
-      setFormData(defaultFormData);
+      setFormData({
+        ...defaultFormData,
+        area: shopAreas[0]?.name || '',
+      });
       alert('Walk-in recorded successfully!');
     } catch (error) {
       const message =
@@ -233,10 +258,19 @@ function WalkinManagement() {
                 value={formData.area}
                 onChange={handleInputChange}
                 className="input-field w-full"
+                disabled={shopAreasLoading || shopAreas.length === 0}
               >
-                <option value="Main Branch - Area A">Main Branch - Area A</option>
-                <option value="Main Branch - Area B">Main Branch - Area B</option>
-                <option value="VIP Treatment Room">VIP Treatment Room</option>
+                {shopAreasLoading ? (
+                  <option value="">Loading shop areas...</option>
+                ) : shopAreas.length === 0 ? (
+                  <option value="">No shop area available</option>
+                ) : (
+                  shopAreas.map((area) => (
+                    <option key={area.id} value={area.name}>
+                      {area.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 

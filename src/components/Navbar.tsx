@@ -9,7 +9,11 @@ import {
   useLocation,
 } from "react-router-dom";
 
-function Navbar() {
+function Navbar({
+  onMenuClick,
+}: {
+  onMenuClick?: () => void;
+}) {
   const location = useLocation();
 
   const getPageTitle = () => {
@@ -49,7 +53,9 @@ function Navbar() {
 
           <button
             type="button"
+            onClick={onMenuClick}
             className="rounded-xl p-2 text-[#70535d] hover:bg-pink-50 md:hidden"
+            aria-label="Open navigation menu"
           >
             <Menu size={22} />
           </button>

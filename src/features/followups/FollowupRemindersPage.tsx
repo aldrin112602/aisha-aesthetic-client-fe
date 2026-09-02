@@ -7,6 +7,7 @@ import {
   updateFollowupStatus,
 } from '../../api/followups.api';
 import type { Followup } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 
 function FollowupReminders() {
   const [followups, setFollowups] = useState<Followup[]>([]);
@@ -17,8 +18,7 @@ function FollowupReminders() {
     notes: '',
   });
 
-  const savedUser = localStorage.getItem('aisha_user');
-  const currentUser = savedUser ? JSON.parse(savedUser) : null;
+  const currentUser = getCurrentUser();
   const isCustomer = currentUser?.role === 'customer';
 
   useEffect(() => {
@@ -35,6 +35,11 @@ function FollowupReminders() {
 
   const handleScheduleFollowup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!currentUser?.id) {
+      alert('Please sign in before scheduling a follow-up.');
+      return;
+    }
 
     if (!formData.date) {
       alert('Please select a follow-up date.');
