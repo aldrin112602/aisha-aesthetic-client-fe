@@ -26,9 +26,6 @@ function History() {
     <div className="page-container">
       <div className="mb-6">
         <h1 className="page-title">Appointment History</h1>
-        <p className="page-subtitle">
-          Review your previous treatments and visits.
-        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

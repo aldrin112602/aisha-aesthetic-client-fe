@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CalendarDays,
   Check,
@@ -36,6 +36,15 @@ import footMassageImage from '../assets/img/footmassage.png';
 // import gelPolishImage from '../assets/img/gelpolish.png';
 // import gelRemovalImage from '../assets/img/gelremoval.png';
 // import softGelNailImage from '../assets/img/softgelnailext.jpg';
+
+// ==========================================
+// TYPES
+// ==========================================
+
+interface ShopArea {
+  id: number;
+  name: string;
+}
 
 // ==========================================
 // SERVICES
@@ -230,11 +239,102 @@ function Booking() {
   const [selectedTime, setSelectedTime] =
     useState<string>('');
 
+  // ==========================================
+  // SHOP AREAS
+  // ==========================================
+
+  const [shopAreas, setShopAreas] =
+    useState<ShopArea[]>([]);
+
   const [selectedArea, setSelectedArea] =
-    useState<string>('Main Branch - Area A');
+    useState<string>('');
+
+  const [isLoadingAreas, setIsLoadingAreas] =
+    useState<boolean>(true);
+
+  // ==========================================
+  // SUBMITTING
+  // ==========================================
 
   const [isSubmitting, setIsSubmitting] =
     useState<boolean>(false);
+
+  // ==========================================
+  // LOAD SHOP AREAS
+  // ==========================================
+
+  useEffect(() => {
+    const loadShopAreas = async () => {
+      try {
+        const apiBaseUrl =
+          import.meta.env.VITE_API_BASE_URL ||
+          'http://localhost:3001';
+
+        const response = await fetch(
+          `${apiBaseUrl}/api/shop-areas`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            'Failed to load shop areas.'
+          );
+        }
+
+        const data = await response.json();
+
+        console.log(
+          'Loaded shop areas:',
+          data
+        );
+
+        /*
+         * Support both:
+         *
+         * [
+         *   {
+         *     id: 1,
+         *     name: 'Main Branch - Area A'
+         *   }
+         * ]
+         *
+         * and an API response like:
+         *
+         * {
+         *   shopAreas: [...]
+         * }
+         */
+
+        const areas = Array.isArray(data)
+          ? data
+          : Array.isArray(data.shopAreas)
+            ? data.shopAreas
+            : [];
+
+        setShopAreas(areas);
+
+        // Automatically select the first area
+        if (areas.length > 0) {
+          setSelectedArea(
+            areas[0].name
+          );
+        } else {
+          setSelectedArea('');
+        }
+      } catch (error) {
+        console.error(
+          'Failed to load shop areas:',
+          error
+        );
+
+        setShopAreas([]);
+        setSelectedArea('');
+      } finally {
+        setIsLoadingAreas(false);
+      }
+    };
+
+    loadShopAreas();
+  }, []);
 
   // ==========================================
   // SELECTED SERVICE
@@ -268,17 +368,25 @@ function Booking() {
 
     setSelectedDate(date);
 
-    console.log('Selected Date:', date);
+    console.log(
+      'Selected Date:',
+      date
+    );
   };
 
   // ==========================================
   // HANDLE TIME
   // ==========================================
 
-  const handleTimeChange = (time: string) => {
+  const handleTimeChange = (
+    time: string
+  ) => {
     setSelectedTime(time);
 
-    console.log('Selected Time:', time);
+    console.log(
+      'Selected Time:',
+      time
+    );
   };
 
   // ==========================================
@@ -292,7 +400,10 @@ function Booking() {
 
     setSelectedArea(area);
 
-    console.log('Selected Area:', area);
+    console.log(
+      'Selected Area:',
+      area
+    );
   };
 
   // ==========================================
@@ -301,72 +412,136 @@ function Booking() {
 
   const handleBooking = async () => {
     if (!service) {
-      alert('Please select a service.');
+      alert(
+        'Please select a service.'
+      );
       return;
     }
 
     if (!selectedDate) {
-      alert('Please select an appointment date.');
+      alert(
+        'Please select an appointment date.'
+      );
       return;
     }
 
     if (!selectedTime) {
-      alert('Please select an available time.');
+      alert(
+        'Please select an available time.'
+      );
       return;
     }
 
     if (!selectedArea) {
-      alert('Please select a shop area.');
+      alert(
+        'Please select a shop area.'
+      );
       return;
     }
 
-    const savedUser = localStorage.getItem('aisha_user');
-    const currentUser = savedUser ? JSON.parse(savedUser) : null;
+    // ==========================================
+    // CURRENT USER
+    // ==========================================
+
+    const savedUser =
+      localStorage.getItem(
+        'aisha_user'
+      );
+
+    const currentUser =
+      savedUser
+        ? JSON.parse(savedUser)
+        : null;
 
     if (!currentUser?.id) {
-      alert('Please sign in before booking an appointment.');
+      alert(
+        'Please sign in before booking an appointment.'
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiBaseUrl}/api/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          customerId: currentUser.id,
-          serviceId: service.id,
-          serviceName: service.name,
-          category: service.category,
-          date: selectedDate,
-          time: selectedTime,
-          area: selectedArea,
-          price: service.price,
-        }),
-      });
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL ||
+        'http://localhost:3001';
 
-      const data = await response.json();
+      const response = await fetch(
+        `${apiBaseUrl}/api/bookings`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            customerId:
+              currentUser.id,
+
+            serviceId:
+              service.id,
+
+            serviceName:
+              service.name,
+
+            category:
+              service.category,
+
+            date:
+              selectedDate,
+
+            time:
+              selectedTime,
+
+            area:
+              selectedArea,
+
+            price:
+              service.price,
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Unable to book appointment.');
+        throw new Error(
+          data.message ||
+            'Unable to book appointment.'
+        );
       }
 
       alert(
-        `Appointment booked successfully!\n\nService: ${service.name}\nDate: ${selectedDate}\nTime: ${selectedTime}\nArea: ${selectedArea}\nPrice: ₱${service.price.toLocaleString()}`
+        `Appointment booked successfully!\n\n` +
+        `Service: ${service.name}\n` +
+        `Date: ${selectedDate}\n` +
+        `Time: ${selectedTime}\n` +
+        `Area: ${selectedArea}\n` +
+        `Price: ₱${service.price.toLocaleString()}`
       );
+
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Something went wrong.';
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong.';
 
-      alert(`Booking failed: ${message}`);
+      alert(
+        `Booking failed: ${message}`
+      );
+
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <div className="page-container w-full min-w-0 overflow-x-hidden">
@@ -400,7 +575,6 @@ function Booking() {
         </p>
 
       </div>
-
 
       {/* ==========================================
           MAIN BOOKING LAYOUT
@@ -449,7 +623,6 @@ function Booking() {
 
             </div>
 
-
             {/* ==========================================
                 SERVICE CARDS
             ========================================== */}
@@ -473,7 +646,9 @@ function Booking() {
                     type="button"
                     key={item.id}
                     onClick={() =>
-                      setSelectedService(item.id)
+                      setSelectedService(
+                        item.id
+                      )
                     }
                     className={`group relative min-w-0 overflow-hidden rounded-2xl border text-left transition-all duration-200 ${
                       active
@@ -494,7 +669,6 @@ function Booking() {
 
                       </div>
                     )}
-
 
                     {/* IMAGE */}
 
@@ -533,7 +707,6 @@ function Booking() {
 
                     </div>
 
-
                     {/* CONTENT */}
 
                     <div className="p-4">
@@ -545,7 +718,6 @@ function Booking() {
                       <p className="mt-2 min-h-[40px] text-xs leading-5 text-[#92737c]">
                         {item.description}
                       </p>
-
 
                       <div
                         className="
@@ -586,7 +758,6 @@ function Booking() {
 
           </section>
 
-
           {/* ==========================================
               STEP 2 - DATE & TIME
           ========================================== */}
@@ -612,7 +783,6 @@ function Booking() {
               </div>
 
             </div>
-
 
             {/* ==========================================
                 DATE + SHOP AREA
@@ -647,7 +817,6 @@ function Booking() {
 
                 </label>
 
-
                 <input
                   id="appointment-date"
                   type="date"
@@ -663,7 +832,6 @@ function Booking() {
                 />
 
               </div>
-
 
               {/* ========================================
                   SHOP AREA
@@ -685,37 +853,56 @@ function Booking() {
 
                 </label>
 
-
                 <select
                   id="shop-area"
                   value={selectedArea}
                   onChange={handleAreaChange}
+                  disabled={
+                    isLoadingAreas ||
+                    shopAreas.length === 0
+                  }
                   className="
                     input-field
                     w-full
                     min-w-0
                     cursor-pointer
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                   "
                 >
 
-                  <option value="Main Branch - Area A">
-                    Main Branch - Area A
-                  </option>
+                  {isLoadingAreas ? (
 
-                  <option value="Main Branch - Area B">
-                    Main Branch - Area B
-                  </option>
+                    <option value="">
+                      Loading shop areas...
+                    </option>
 
-                  <option value="VIP Treatment Room">
-                    VIP Treatment Room
-                  </option>
+                  ) : shopAreas.length === 0 ? (
+
+                    <option value="">
+                      No shop area available
+                    </option>
+
+                  ) : (
+
+                    shopAreas.map((area) => (
+
+                      <option
+                        key={area.id}
+                        value={area.name}
+                      >
+                        {area.name}
+                      </option>
+
+                    ))
+
+                  )}
 
                 </select>
 
               </div>
 
             </div>
-
 
             {/* ==========================================
                 AVAILABLE TIME
@@ -733,7 +920,6 @@ function Booking() {
                 Available Time
 
               </label>
-
 
               <div
                 className="
@@ -756,7 +942,9 @@ function Booking() {
                       type="button"
                       key={time}
                       onClick={() =>
-                        handleTimeChange(time)
+                        handleTimeChange(
+                          time
+                        )
                       }
                       className={`min-w-0 rounded-xl border px-2 py-3 text-xs font-medium transition sm:px-4 sm:text-sm ${
                         active
@@ -764,9 +952,7 @@ function Booking() {
                           : 'border-pink-100 bg-[#fffafb] text-[#73555f] hover:border-[#e2a0b1] hover:bg-[#fff4f6]'
                       }`}
                     >
-
                       {time}
-
                     </button>
                   );
 
@@ -779,7 +965,6 @@ function Booking() {
           </section>
 
         </div>
-
 
         {/* ==========================================
             BOOKING SUMMARY
@@ -796,7 +981,6 @@ function Booking() {
             border-pink-100
             bg-white
             shadow-sm
-
             xl:order-none
             xl:sticky
             xl:top-24
@@ -840,7 +1024,6 @@ function Booking() {
 
               </div>
 
-
               <div className="min-w-0">
 
                 <h2 className="text-base font-bold text-[#4b343b] sm:text-lg">
@@ -857,26 +1040,17 @@ function Booking() {
 
           </div>
 
-
           {/* ==========================================
               SUMMARY CONTENT
-
-              MOBILE:
-              NORMAL PAGE FLOW
-
-              DESKTOP:
-              SCROLLABLE
           ========================================== */}
 
           <div
             className="
               p-4
               sm:p-6
-
               xl:max-h-[calc(100vh-13rem)]
               xl:overflow-y-auto
               xl:overscroll-contain
-
               [scrollbar-color:#e2a0b1_#fff4f6]
               [scrollbar-width:thin]
             "
@@ -921,7 +1095,6 @@ function Booking() {
 
             )}
 
-
             {/* ==========================================
                 NO SERVICE
             ========================================== */}
@@ -964,16 +1137,13 @@ function Booking() {
 
             )}
 
-
             {/* ==========================================
                 APPOINTMENT DETAILS
             ========================================== */}
 
             <div className="space-y-4">
 
-              {/* ========================================
-                  SERVICE
-              ======================================== */}
+              {/* SERVICE */}
 
               <div className="border-b border-pink-100 pb-4">
 
@@ -988,10 +1158,7 @@ function Booking() {
 
               </div>
 
-
-              {/* ========================================
-                  DATE
-              ======================================== */}
+              {/* DATE */}
 
               <div className="border-b border-pink-100 pb-4">
 
@@ -1007,10 +1174,7 @@ function Booking() {
 
               </div>
 
-
-              {/* ========================================
-                  TIME
-              ======================================== */}
+              {/* TIME */}
 
               <div className="border-b border-pink-100 pb-4">
 
@@ -1026,10 +1190,7 @@ function Booking() {
 
               </div>
 
-
-              {/* ========================================
-                  SHOP AREA
-              ======================================== */}
+              {/* SHOP AREA */}
 
               <div className="border-b border-pink-100 pb-4">
 
@@ -1038,15 +1199,13 @@ function Booking() {
                 </p>
 
                 <p className="mt-1 break-words font-semibold text-[#4b343b]">
-                  {selectedArea}
+                  {selectedArea ||
+                    'No shop area available'}
                 </p>
 
               </div>
 
-
-              {/* ========================================
-                  PRICE
-              ======================================== */}
+              {/* PRICE */}
 
               <div>
 
@@ -1065,7 +1224,6 @@ function Booking() {
 
             </div>
 
-
             {/* ==========================================
                 CONFIRM BOOKING
             ========================================== */}
@@ -1073,7 +1231,11 @@ function Booking() {
             <button
               type="button"
               onClick={handleBooking}
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                isLoadingAreas ||
+                shopAreas.length === 0
+              }
               className="
                 primary-btn
                 mt-7
@@ -1082,9 +1244,12 @@ function Booking() {
                 disabled:opacity-70
               "
             >
-              {isSubmitting ? 'Booking...' : 'Confirm Booking'}
-            </button>
 
+              {isSubmitting
+                ? 'Booking...'
+                : 'Confirm Booking'}
+
+            </button>
 
             {/* ==========================================
                 REMINDER
