@@ -1,12 +1,4 @@
-import {
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from 'react-router-dom';
-
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Dashboard from './pages/Dashboard';
 import Booking from './pages/Booking';
@@ -15,500 +7,206 @@ import History from './pages/History';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Profile from './pages/profile';
-
 import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import CustomerDashboard from './pages/CustomerDashboard';
-
-
 import AdminAppointments from './pages/AdminAppointments';
 import EmployeeManagement from './pages/EmployeeManagement';
 import AdminShopareas from './pages/AdminShopareas';
 import AdminServices from './pages/AdminServices';
 import WalkinManagement from './pages/WalkinManagement';
 import FollowupReminders from './pages/FollowupReminders';
+import ProtectedRoute from './routes/ProtectedRoute';
+import PublicRoute from './routes/PublicRoute';
+import ProtectedLayout from './layouts/ProtectedLayout';
+import { getCurrentUser, getRoleDestination } from './utils/auth';
 
-
-/* =========================================================
-   ROLE ROUTE MAP
-========================================================= */
-
-const roleRouteMap: Record<string, string> = {
-  admin: '/admin',
-  employee: '/employee',
-  customer: '/customer',
-};
-
-
-/* =========================================================
-   GET CURRENT USER
-========================================================= */
-
-function getCurrentUser() {
-  const savedUser = localStorage.getItem('aisha_user');
-
-  if (!savedUser) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(savedUser);
-  } catch {
-    localStorage.removeItem('aisha_user');
-    return null;
-  }
-}
-
-
-/* =========================================================
-   PROTECTED ROUTE
-========================================================= */
-
-function ProtectedRoute({
-  allowedRoles,
-  children,
-}: {
-  allowedRoles: string[];
-  children: React.ReactNode;
-}) {
-  const location = useLocation();
-  const currentUser = getCurrentUser();
-
-
-  /* -----------------------------------------
-     USER IS NOT LOGGED IN
-  ----------------------------------------- */
-
-  if (!currentUser) {
-    return (
-      <Navigate
-        to="/signin"
-        replace
-        state={{
-          from: location.pathname,
-        }}
-      />
-    );
-  }
-
-
-  /* -----------------------------------------
-     USER HAS WRONG ROLE
-  ----------------------------------------- */
-
-  if (!allowedRoles.includes(currentUser.role)) {
-    const fallback =
-      roleRouteMap[currentUser.role] || '/signin';
-
-    return (
-      <Navigate
-        to={fallback}
-        replace
-      />
-    );
-  }
-
-
-  /* -----------------------------------------
-     USER IS AUTHORIZED
-  ----------------------------------------- */
-
-  return <>{children}</>;
-}
-
-
-/* =========================================================
-   APP
-========================================================= */
 
 function App() {
   const location = useLocation();
   const currentUser = getCurrentUser();
 
-
-  /* =======================================================
-     PROTECTED LAYOUT
-  ======================================================= */
-
-  const renderProtectedLayout = (
-    children: React.ReactNode
-  ) => {
-    return (
-      <div className="min-h-screen bg-[#fff8fa]">
-
-        <Navbar />
-
-        <div className="flex">
-
-          <Sidebar />
-
-          <main className="min-h-[calc(100vh-73px)] flex-1 pb-24 md:pb-8">
-            {children}
-          </main>
-
-        </div>
-
-      </div>
-    );
-  };
-
-
-  /* =======================================================
-     ROOT ROUTE
-     
-     NOT LOGGED IN:
-       / → /signin
-     
-     LOGGED IN:
-       admin    → /admin
-       employee → /employee
-       customer → /customer
-  ======================================================= */
-
   if (location.pathname === '/') {
-
-    if (!currentUser) {
-      return (
-        <Navigate
-          to="/signin"
-          replace
-        />
-      );
-    }
-
-    const destination =
-      roleRouteMap[currentUser.role] || '/signin';
-
-    return (
-      <Navigate
-        to={destination}
-        replace
-      />
-    );
+    return <Navigate to={getRoleDestination(currentUser)} replace />;
   }
-
-
-  /* =======================================================
-     ROUTES
-  ======================================================= */
 
   return (
     <Routes>
-
-      {/* =================================================
-          SIGN IN
-          
-          http://localhost:5173/signin
-          
-          IMPORTANT:
-          This is now directly accessible.
-      ================================================= */}
-
+      {/* AUTH */}
       <Route
         path="/signin"
-        element={<Signin />}
+        element={
+          <PublicRoute>
+            <Signin />
+          </PublicRoute>
+        }
       />
-
-
-      {/* =================================================
-          SIGN UP
-          
-          http://localhost:5173/signup
-      ================================================= */}
-
       <Route
         path="/signup"
-        element={<Signup />}
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
       />
 
-
-      {/* =================================================
-          ADMIN DASHBOARD
-      ================================================= */}
-
+      {/* ROLE DASHBOARDS */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute
-            allowedRoles={['admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
               <AdminDashboard />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          EMPLOYEE DASHBOARD
-      ================================================= */}
-
       <Route
         path="/employee"
         element={
-          <ProtectedRoute
-            allowedRoles={['employee']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['employee']}>
+            <ProtectedLayout>
               <EmployeeDashboard />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          CUSTOMER DASHBOARD
-      ================================================= */}
-
       <Route
         path="/customer"
         element={
-          <ProtectedRoute
-            allowedRoles={['customer']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['customer']}>
+            <ProtectedLayout>
               <CustomerDashboard />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
 
-
-      {/* =================================================
-          ADMIN DASHBOARD / LEGACY
-      ================================================= */}
-
+      {/* LEGACY ADMIN DASHBOARD */}
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute
-            allowedRoles={['admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
               <Dashboard />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
 
-
-      {/* =================================================
-          ADMIN APPOINTMENTS
-      ================================================= */}
-
+      {/* ADMIN TOOLS */}
       <Route
         path="/admin-appointments"
         element={
-          <ProtectedRoute
-            allowedRoles={['admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
               <AdminAppointments />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          EMPLOYEE MANAGEMENT
-      ================================================= */}
-
       <Route
         path="/employee-management"
         element={
-          <ProtectedRoute
-            allowedRoles={['admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
               <EmployeeManagement />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          SHOP AREAS
-      ================================================= */}
-
       <Route
         path="/shop-areas"
         element={
-          <ProtectedRoute
-            allowedRoles={['admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
               <AdminShopareas />
-            )}
+            </ProtectedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
+              <AdminServices />
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
 
-        <Route
-                path="/services"
-                element={
-                  <ProtectedRoute
-                    allowedRoles={['admin']}
-                  >
-                    {renderProtectedLayout(
-                      <AdminServices />
-                    )}
-                  </ProtectedRoute>
-                }
-      />
-
-
-
-      {/* =================================================
-          WALK-IN MANAGEMENT
-      ================================================= */}
-
+      {/* SHARED (ADMIN + EMPLOYEE) */}
       <Route
         path="/walkins"
         element={
-          <ProtectedRoute
-            allowedRoles={['employee', 'admin']}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['employee', 'admin']}>
+            <ProtectedLayout>
               <WalkinManagement />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
 
-
-      {/* =================================================
-          NOTIFICATIONS
-      ================================================= */}
-
+      {/* SHARED (ALL ROLES) */}
       <Route
         path="/notifications"
         element={
-          <ProtectedRoute
-            allowedRoles={[
-              'admin',
-              'employee',
-              'customer',
-            ]}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            <ProtectedLayout>
               <FollowupReminders />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          CUSTOMER BOOKING
-      ================================================= */}
-
-      <Route
-        path="/booking"
-        element={
-          <ProtectedRoute
-            allowedRoles={['customer']}
-          >
-            {renderProtectedLayout(
-              <Booking />
-            )}
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* =================================================
-          APPOINTMENTS
-      ================================================= */}
-
       <Route
         path="/appointments"
         element={
-          <ProtectedRoute
-            allowedRoles={[
-              'admin',
-              'employee',
-              'customer',
-            ]}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            <ProtectedLayout>
               <Appointments />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
-
-
-      {/* =================================================
-          CUSTOMER HISTORY
-      ================================================= */}
-
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute
-            allowedRoles={['customer']}
-          >
-            {renderProtectedLayout(
-              <History />
-            )}
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* =================================================
-          PROFILE
-      ================================================= */}
-
       <Route
         path="/profile"
         element={
-          <ProtectedRoute
-            allowedRoles={[
-              'admin',
-              'employee',
-              'customer',
-            ]}
-          >
-            {renderProtectedLayout(
+          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+            <ProtectedLayout>
               <Profile />
-            )}
+            </ProtectedLayout>
           </ProtectedRoute>
         }
       />
 
-
-      {/* =================================================
-          UNKNOWN ROUTE
-          
-          Example:
-          /something-that-does-not-exist
-      ================================================= */}
-
+      {/* CUSTOMER ONLY */}
       <Route
-        path="*"
+        path="/booking"
         element={
-          currentUser ? (
-            <Navigate
-              to={
-                roleRouteMap[currentUser.role] ||
-                '/signin'
-              }
-              replace
-            />
-          ) : (
-            <Navigate
-              to="/signin"
-              replace
-            />
-          )
+          <ProtectedRoute allowedRoles={['customer']}>
+            <ProtectedLayout>
+              <Booking />
+            </ProtectedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <ProtectedLayout>
+              <History />
+            </ProtectedLayout>
+          </ProtectedRoute>
         }
       />
 
+      {/* UNKNOWN ROUTE */}
+      <Route
+        path="*"
+        element={<Navigate to={getRoleDestination(currentUser)} replace />}
+      />
     </Routes>
   );
 }
