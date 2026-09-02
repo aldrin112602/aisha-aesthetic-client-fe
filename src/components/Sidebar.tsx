@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { clearCurrentUser, getCurrentUser } from '../utils/auth';
 
 const navigationByRole: Record<
   string,
@@ -125,15 +126,7 @@ function Sidebar() {
   // =========================================================
   // GET CURRENT USER
   // =========================================================
-  const savedUser = localStorage.getItem('aisha_user');
-
-  let currentUser = null;
-
-  try {
-    currentUser = savedUser ? JSON.parse(savedUser) : null;
-  } catch {
-    localStorage.removeItem('aisha_user');
-  }
+  const currentUser = getCurrentUser();
 
   const role = currentUser?.role || 'customer';
 
@@ -144,7 +137,7 @@ function Sidebar() {
   // LOGOUT
   // =========================================================
   const handleLogout = () => {
-    localStorage.removeItem('aisha_user');
+    clearCurrentUser();
     navigate('/signin');
   };
 

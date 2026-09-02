@@ -18,6 +18,7 @@ import type {
   DashboardAppointmentTab,
   DashboardStatusFilter,
 } from '../../types';
+import { getCurrentUser } from '../../utils/auth';
 import EmployeeAppointmentDetailsModal from './components/EmployeeAppointmentDetailsModal';
 import EmployeeAppointmentList from './components/EmployeeAppointmentList';
 import EmployeeStatCard from './components/EmployeeStatCard';
@@ -26,23 +27,8 @@ import {
   parseAppointmentDate,
 } from './utils/appointmentDashboard';
 
-const getStoredEmployee = (): CurrentUser | null => {
-  const savedUser = localStorage.getItem('aisha_user');
-
-  if (!savedUser) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(savedUser) as CurrentUser;
-  } catch {
-    localStorage.removeItem('aisha_user');
-    return null;
-  }
-};
-
 function EmployeeDashboard() {
-  const currentUser = useMemo(() => getStoredEmployee(), []);
+  const currentUser = useMemo(() => getCurrentUser() as CurrentUser | null, []);
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);

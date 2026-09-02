@@ -10,6 +10,11 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { login } from '../api/auth.api';
 import beautyWoman from '../assets/img/beauty.png';
+import {
+  getRoleDestination,
+  normalizeCurrentUser,
+  saveCurrentUser,
+} from '../utils/auth';
 
 function Signin() {
   const navigate = useNavigate();
@@ -30,16 +35,10 @@ function Signin() {
 
     try {
       const data = await login({ email, password });
+      const currentUser = normalizeCurrentUser(data.user);
 
-      localStorage.setItem('aisha_user', JSON.stringify(data.user));
-
-      const routeMap: Record<string, string> = {
-        admin: '/admin',
-        employee: '/employee',
-        customer: '/customer',
-      };
-
-      navigate(routeMap[data.user.role] || '/customer');
+      saveCurrentUser(currentUser);
+      navigate(getRoleDestination(currentUser), { replace: true });
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : 'Login failed.';
