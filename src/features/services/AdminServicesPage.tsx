@@ -9,9 +9,19 @@ import {
   Scissors,
   Package,
   Clock3,
+  ImagePlus,
+  X,
 } from 'lucide-react';
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react';
+
 import Swal from 'sweetalert2';
 
 import {
@@ -19,19 +29,31 @@ import {
   deleteService,
   getServices,
   updateService,
+  uploadServiceImage,
 } from '../../api/services.api';
-import type { Service as ServiceItem } from '../../types';
+
+import type {
+  Service as ServiceItem,
+  ServiceType,
+  ServiceStatus,
+} from '../../types';
 
 function AdminService() {
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [type, setType] = useState('All');
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const emptyForm = {
     name: '',
@@ -39,36 +61,62 @@ function AdminService() {
     description: '',
     price: '',
     duration: '',
-    type: 'Service' as 'Service' | 'Product',
-    status: 'active' as 'active' | 'inactive',
+    type: 'Service' as ServiceType,
+    status: 'active' as ServiceStatus,
+    image: '',
   };
 
   const [form, setForm] = useState(emptyForm);
 
+  /*
+   * ---------------------------------------------------------
+   * FETCH SERVICES
+   * ---------------------------------------------------------
+   */
+
   const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
+
       const data = await getServices();
+
       setServices(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load services';
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to load services';
+
       Swal.fire('Error', message, 'error');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Fetch services on component mount
   useEffect(() => {
     queueMicrotask(() => {
       void fetchServices();
     });
   }, [fetchServices]);
 
+  /*
+   * ---------------------------------------------------------
+   * CATEGORIES
+   * ---------------------------------------------------------
+   */
+
   const categories = [
     'All',
-    ...Array.from(new Set(services.map((service) => service.category))),
+    ...Array.from(
+      new Set(services.map((service) => service.category))
+    ),
   ];
+
+  /*
+   * ---------------------------------------------------------
+   * FILTER SERVICES
+   * ---------------------------------------------------------
+   */
 
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
@@ -80,14 +128,26 @@ function AdminService() {
         service.description.toLowerCase().includes(searchText);
 
       const matchesCategory =
-        category === 'All' || service.category === category;
+        category === 'All' ||
+        service.category === category;
 
       const matchesType =
-        type === 'All' || (service.type || 'Service') === type;
+        type === 'All' ||
+        (service.type || 'Service') === type;
 
-      return matchesSearch && matchesCategory && matchesType;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesType
+      );
     });
   }, [services, search, category, type]);
+
+  /*
+   * ---------------------------------------------------------
+   * MODAL
+   * ---------------------------------------------------------
+   */
 
   const openAddModal = () => {
     setEditingId(null);
@@ -97,6 +157,7 @@ function AdminService() {
 
   const openEditModal = (service: ServiceItem) => {
     setEditingId(service.id);
+
     setForm({
       name: service.name,
       category: service.category,
@@ -104,16 +165,28 @@ function AdminService() {
       price: String(service.price),
       duration: service.duration || '',
       type: service.type || 'Service',
-      status: service.status as 'active' | 'inactive',
+      status: service.status,
+      image: service.image || '',
     });
+
     setShowModal(true);
   };
 
   const closeModal = () => {
+    if (isSaving || isUploadingImage) {
+      return;
+    }
+
     setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
   };
+
+  /*
+   * ---------------------------------------------------------
+   * FORM CHANGE
+   * ---------------------------------------------------------
+   */
 
   const handleFormChange = (
     field: keyof typeof emptyForm,
@@ -123,14 +196,126 @@ function AdminService() {
       ...current,
       [field]:
         field === 'type'
-          ? (value as 'Service' | 'Product')
+          ? (value as ServiceType)
           : field === 'status'
-            ? (value as 'active' | 'inactive')
+            ? (value as ServiceStatus)
             : value,
     }));
   };
 
-  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+  /*
+   * ---------------------------------------------------------
+   * IMAGE UPLOAD
+   * ---------------------------------------------------------
+   */
+
+  const handleImageChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    // Reset file input so selecting same image again works
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    // Allowed file types
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire(
+        'Invalid Image',
+        'Please upload a JPG, JPEG, PNG, or WEBP image.',
+        'warning'
+      );
+
+      return;
+    }
+
+    // 5MB limit
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      Swal.fire(
+        'Image Too Large',
+        'Please upload an image smaller than 5MB.',
+        'warning'
+      );
+
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+
+      const result = await uploadServiceImage(file);
+
+      setForm((current) => ({
+        ...current,
+        image: result.image,
+      }));
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to upload image.';
+
+      Swal.fire('Upload Error', message, 'error');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * REMOVE IMAGE
+   * ---------------------------------------------------------
+   */
+
+  const removeImage = () => {
+    setForm((current) => ({
+      ...current,
+      image: '',
+    }));
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * IMAGE URL
+   * ---------------------------------------------------------
+   */
+
+  const getImageUrl = (image?: string | null) => {
+    if (!image) {
+      return '';
+    }
+
+    if (
+      image.startsWith('http://') ||
+      image.startsWith('https://')
+    ) {
+      return image;
+    }
+
+    return `${apiBaseUrl}${image.startsWith('/') ? '' : '/'}${image}`;
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * SAVE SERVICE / PRODUCT
+   * ---------------------------------------------------------
+   */
+
+  const handleSave = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
     const name = form.name.trim();
@@ -138,27 +323,51 @@ function AdminService() {
     const description = form.description.trim();
     const price = Number(form.price);
 
-    if (!name || !categoryValue || !form.price || Number.isNaN(price) || price < 0) {
-      Swal.fire('Validation Error', 'Please complete the required fields and enter a valid price.', 'warning');
+    if (
+      !name ||
+      !categoryValue ||
+      !form.price ||
+      Number.isNaN(price) ||
+      price < 0
+    ) {
+      Swal.fire(
+        'Validation Error',
+        'Please complete the required fields and enter a valid price.',
+        'warning'
+      );
+
       return;
     }
 
-    if (form.type === 'Service' && !form.duration.trim()) {
-      Swal.fire('Validation Error', 'Please enter the service duration.', 'warning');
+    if (
+      form.type === 'Service' &&
+      !form.duration.trim()
+    ) {
+      Swal.fire(
+        'Validation Error',
+        'Please enter the service duration.',
+        'warning'
+      );
+
       return;
     }
 
     try {
       setIsSaving(true);
+
       const payload = {
         name,
         category: categoryValue,
         description,
         price,
-        duration: form.type === 'Service' ? form.duration.trim() : null,
+        duration:
+          form.type === 'Service'
+            ? form.duration.trim()
+            : null,
         shopArea: '',
         status: form.status,
         type: form.type,
+        image: form.image || null,
       };
 
       if (editingId === null) {
@@ -168,24 +377,49 @@ function AdminService() {
       }
 
       await fetchServices();
-      closeModal();
+
+      setShowModal(false);
+      setEditingId(null);
+      setForm(emptyForm);
 
       Swal.fire(
         'Success',
-        `Service ${editingId === null ? 'created' : 'updated'} successfully!`,
+        `${form.type} ${editingId === null
+          ? 'created'
+          : 'updated'
+        } successfully!`,
         'success'
       );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save service';
-      Swal.fire('Error', message, 'error');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to save service';
+
+      Swal.fire(
+        'Error',
+        message,
+        'error'
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
+  /*
+   * ---------------------------------------------------------
+   * DELETE
+   * ---------------------------------------------------------
+   */
+
   const handleDelete = (id: number) => {
-    const service = services.find((item) => item.id === id);
-    if (!service) return;
+    const service = services.find(
+      (item) => item.id === id
+    );
+
+    if (!service) {
+      return;
+    }
 
     Swal.fire({
       title: 'Are you sure?',
@@ -195,7 +429,9 @@ function AdminService() {
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel',
     }).then(async (result) => {
-      if (!result.isConfirmed) return;
+      if (!result.isConfirmed) {
+        return;
+      }
 
       try {
         await deleteService(id);
@@ -208,17 +444,39 @@ function AdminService() {
           icon: 'success',
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to delete service';
-        Swal.fire('Error', message, 'error');
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Failed to delete service';
+
+        Swal.fire(
+          'Error',
+          message,
+          'error'
+        );
       }
     });
   };
 
-  const toggleStatus = async (id: number) => {
-    const service = services.find((item) => item.id === id);
-    if (!service) return;
+  /*
+   * ---------------------------------------------------------
+   * TOGGLE STATUS
+   * ---------------------------------------------------------
+   */
 
-    const newStatus = service.status === 'active' ? 'inactive' : 'active';
+  const toggleStatus = async (id: number) => {
+    const service = services.find(
+      (item) => item.id === id
+    );
+
+    if (!service) {
+      return;
+    }
+
+    const newStatus =
+      service.status === 'active'
+        ? 'inactive'
+        : 'active';
 
     try {
       await updateService(id, {
@@ -229,14 +487,29 @@ function AdminService() {
         duration: service.duration,
         status: newStatus,
         type: service.type || 'Service',
+        image: service.image || null,
       });
 
       await fetchServices();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update status';
-      Swal.fire('Error', message, 'error');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to update status';
+
+      Swal.fire(
+        'Error',
+        message,
+        'error'
+      );
     }
   };
+
+  /*
+   * ---------------------------------------------------------
+   * LOADING
+   * ---------------------------------------------------------
+   */
 
   if (loading) {
     return (
@@ -244,19 +517,33 @@ function AdminService() {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-pink-500"></div>
-            <p className="mt-3 text-sm text-[#92737c]">Loading services...</p>
+
+            <p className="mt-3 text-sm text-[#92737c]">
+              Loading services...
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
+  /*
+   * ---------------------------------------------------------
+   * PAGE
+   * ---------------------------------------------------------
+   */
+
   return (
     <div className="page-container">
+
       {/* HEADER */}
+
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="page-title">Services & Products</h1>
+          <h1 className="page-title">
+            Services & Products
+          </h1>
+
           <p className="mt-1 text-sm text-[#92737c]">
             Manage AishaEsthetics services, treatments, and beauty products.
           </p>
@@ -273,88 +560,144 @@ function AdminService() {
       </div>
 
       {/* SUMMARY */}
+
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
         <div className="pink-card">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2df] text-[#c18c2d]">
               <Sparkles size={20} />
             </div>
+
             <div>
-              <p className="text-xs text-[#92737c]">Total Services</p>
+              <p className="text-xs text-[#92737c]">
+                Total Services
+              </p>
+
               <p className="text-2xl font-bold text-[#4b343b]">
-                {services.filter((item) => !item.type || item.type === 'Service').length}
+                {
+                  services.filter(
+                    (item) =>
+                      !item.type ||
+                      item.type === 'Service'
+                  ).length
+                }
               </p>
             </div>
+
           </div>
         </div>
 
         <div className="pink-card">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
               <Package size={20} />
             </div>
+
             <div>
-              <p className="text-xs text-[#92737c]">Products</p>
+              <p className="text-xs text-[#92737c]">
+                Products
+              </p>
+
               <p className="text-2xl font-bold text-[#4b343b]">
-                {services.filter((item) => item.type === 'Product').length}
+                {
+                  services.filter(
+                    (item) =>
+                      item.type === 'Product'
+                  ).length
+                }
               </p>
             </div>
+
           </div>
         </div>
 
         <div className="pink-card">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3ecff] text-[#8666a8]">
               <Flower2 size={20} />
             </div>
+
             <div>
-              <p className="text-xs text-[#92737c]">Categories</p>
+              <p className="text-xs text-[#92737c]">
+                Categories
+              </p>
+
               <p className="text-2xl font-bold text-[#4b343b]">
                 {Math.max(categories.length - 1, 0)}
               </p>
             </div>
+
           </div>
         </div>
 
         <div className="pink-card">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf8f2] text-[#4d9a72]">
               <Heart size={20} />
             </div>
+
             <div>
-              <p className="text-xs text-[#92737c]">Active</p>
+              <p className="text-xs text-[#92737c]">
+                Active
+              </p>
+
               <p className="text-2xl font-bold text-[#4b343b]">
-                {services.filter((item) => item.status === 'active').length}
+                {
+                  services.filter(
+                    (item) =>
+                      item.status === 'active'
+                  ).length
+                }
               </p>
             </div>
+
           </div>
         </div>
+
       </div>
 
       {/* FILTERS */}
+
       <div className="mt-6 rounded-2xl border border-pink-100 bg-white p-4 shadow-sm">
+
         <div className="grid gap-4 md:grid-cols-3">
+
           <div className="relative">
+
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#b49aa2]"
             />
+
             <input
               type="text"
               placeholder="Search services or products..."
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
               className="input-field w-full pl-10"
             />
+
           </div>
 
           <select
             value={category}
-            onChange={(event) => setCategory(event.target.value)}
+            onChange={(event) =>
+              setCategory(event.target.value)
+            }
             className="input-field w-full"
           >
             {categories.map((item) => (
-              <option key={item} value={item}>
+              <option
+                key={item}
+                value={item}
+              >
                 {item}
               </option>
             ))}
@@ -362,397 +705,782 @@ function AdminService() {
 
           <select
             value={type}
-            onChange={(event) => setType(event.target.value)}
+            onChange={(event) =>
+              setType(event.target.value)
+            }
             className="input-field w-full"
           >
-            <option value="All">All Types</option>
-            <option value="Service">Services</option>
-            <option value="Product">Products</option>
+            <option value="All">
+              All Types
+            </option>
+
+            <option value="Service">
+              Services
+            </option>
+
+            <option value="Product">
+              Products
+            </option>
           </select>
+
         </div>
+
       </div>
 
       {/* SERVICE LIST */}
+
       <div className="mt-6 overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm">
+
+        {/* DESKTOP TABLE */}
+
         <div className="hidden overflow-x-auto md:block">
+
           <table className="w-full text-left">
+
             <thead className="border-b border-pink-100 bg-[#fff8fa]">
+
               <tr>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Service / Product
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Category
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Type
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Price
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Duration
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Status
                 </th>
+
                 <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
                   Action
                 </th>
+
               </tr>
+
             </thead>
 
             <tbody>
-              {filteredServices.map((service) => (
-                <tr
-                  key={service.id}
-                  className="border-b border-pink-50 last:border-0 hover:bg-[#fffafa]"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-                        {(service.type || 'Service') === 'Product' ? (
-                          <Package size={18} />
-                        ) : (
-                          <Sparkles size={18} />
+
+              {filteredServices.map((service) => {
+
+                const imageUrl = getImageUrl(
+                  service.image
+                );
+
+                const isProduct =
+                  (service.type || 'Service') ===
+                  'Product';
+
+                return (
+                  <tr
+                    key={service.id}
+                    className="border-b border-pink-50 last:border-0 hover:bg-[#fffafa]"
+                  >
+
+                    {/* SERVICE / PRODUCT */}
+
+                    <td className="px-5 py-4">
+
+                      <div className="flex items-center gap-3">
+
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#fff2f4]">
+
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={service.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[#d77992]">
+                              {isProduct ? (
+                                <Package size={18} />
+                              ) : (
+                                <Sparkles size={18} />
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+
+                        <div>
+
+                          <p className="font-semibold text-[#4b343b]">
+                            {service.name}
+                          </p>
+
+                          <p className="mt-1 max-w-xs text-xs text-[#92737c]">
+                            {service.description ||
+                              'No description'}
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+                    {/* CATEGORY */}
+
+                    <td className="px-5 py-4 text-sm text-[#6d4a54]">
+                      {service.category}
+                    </td>
+
+                    {/* TYPE */}
+
+                    <td className="px-5 py-4">
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${!isProduct
+                            ? 'bg-[#fff2f4] text-[#d77992]'
+                            : 'bg-[#fff2df] text-[#b88a2c]'
+                          }`}
+                      >
+                        {service.type || 'Service'}
+                      </span>
+
+                    </td>
+
+                    {/* PRICE */}
+
+                    <td className="px-5 py-4 text-sm font-bold text-[#c18c2d]">
+                      ₱
+                      {service.price.toLocaleString()}
+                    </td>
+
+                    {/* DURATION */}
+
+                    <td className="px-5 py-4">
+
+                      <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
+
+                        {service.duration && (
+                          <Clock3 size={15} />
                         )}
+
+                        {service.duration || '-'}
+
                       </div>
-                      <div>
-                        <p className="font-semibold text-[#4b343b]">
-                          {service.name}
-                        </p>
-                        <p className="mt-1 max-w-xs text-xs text-[#92737c]">
-                          {service.description || 'No description'}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
 
-                  <td className="px-5 py-4 text-sm text-[#6d4a54]">
-                    {service.category}
-                  </td>
+                    </td>
 
-                  <td className="px-5 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        (service.type || 'Service') === 'Service'
-                          ? 'bg-[#fff2f4] text-[#d77992]'
-                          : 'bg-[#fff2df] text-[#b88a2c]'
-                      }`}
-                    >
-                      {service.type || 'Service'}
-                    </span>
-                  </td>
+                    {/* STATUS */}
 
-                  <td className="px-5 py-4 text-sm font-bold text-[#c18c2d]">
-                    ₱{service.price.toLocaleString()}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                      {service.duration && <Clock3 size={15} />}
-                      {service.duration || '-'}
-                    </div>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <button
-                      type="button"
-                      onClick={() => toggleStatus(service.id)}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        service.status === 'active'
-                          ? 'bg-green-50 text-green-600'
-                          : 'bg-gray-100 text-gray-500'
-                      }`}
-                      title="Click to change status"
-                    >
-                      {service.status === 'active' ? 'Active' : 'Inactive'}
-                    </button>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(service)}
-                        className="rounded-lg bg-[#fff5f8] p-2 text-[#d77992] transition hover:bg-[#ffdce6]"
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
+                    <td className="px-5 py-4">
 
                       <button
                         type="button"
-                        onClick={() => handleDelete(service.id)}
-                        className="rounded-lg bg-red-50 p-2 text-red-500 transition hover:bg-red-100"
-                        title="Delete"
+                        onClick={() =>
+                          toggleStatus(service.id)
+                        }
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${service.status === 'active'
+                            ? 'bg-green-50 text-green-600'
+                            : 'bg-gray-100 text-gray-500'
+                          }`}
+                        title="Click to change status"
                       >
-                        <Trash2 size={16} />
+                        {service.status === 'active'
+                          ? 'Active'
+                          : 'Inactive'}
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+
+                    </td>
+
+                    {/* ACTION */}
+
+                    <td className="px-5 py-4">
+
+                      <div className="flex gap-2">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openEditModal(service)
+                          }
+                          className="rounded-lg bg-[#fff5f8] p-2 text-[#d77992] transition hover:bg-[#ffdce6]"
+                          title="Edit"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(service.id)
+                          }
+                          className="rounded-lg bg-red-50 p-2 text-red-500 transition hover:bg-red-100"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+                );
+              })}
+
             </tbody>
+
           </table>
+
         </div>
 
         {/* MOBILE CARDS */}
+
         <div className="space-y-3 p-4 md:hidden">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className="rounded-xl border border-pink-100 p-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff2f4] text-[#d77992]">
-                    {(service.type || 'Service') === 'Product' ? (
-                      <Package size={18} />
-                    ) : (
-                      <Sparkles size={18} />
-                    )}
+
+          {filteredServices.map((service) => {
+
+            const imageUrl = getImageUrl(
+              service.image
+            );
+
+            const isProduct =
+              (service.type || 'Service') ===
+              'Product';
+
+            return (
+              <div
+                key={service.id}
+                className="rounded-xl border border-pink-100 p-4"
+              >
+
+                <div className="flex items-start justify-between gap-3">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#fff2f4]">
+
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={service.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[#d77992]">
+                          {isProduct ? (
+                            <Package size={18} />
+                          ) : (
+                            <Sparkles size={18} />
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div>
+
+                      <p className="font-semibold text-[#4b343b]">
+                        {service.name}
+                      </p>
+
+                      <p className="text-xs text-[#92737c]">
+                        {service.category}
+                      </p>
+
+                    </div>
+
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toggleStatus(service.id)
+                    }
+                    className={`rounded-full px-2 py-1 text-[10px] font-semibold ${service.status === 'active'
+                        ? 'bg-green-50 text-green-600'
+                        : 'bg-gray-100 text-gray-500'
+                      }`}
+                  >
+                    {service.status === 'active'
+                      ? 'Active'
+                      : 'Inactive'}
+                  </button>
+
+                </div>
+
+                <p className="mt-3 text-sm text-[#80656d]">
+                  {service.description ||
+                    'No description'}
+                </p>
+
+                <div className="mt-4 flex items-center justify-between">
 
                   <div>
-                    <p className="font-semibold text-[#4b343b]">
-                      {service.name}
+
+                    <p className="text-lg font-bold text-[#c18c2d]">
+                      ₱
+                      {service.price.toLocaleString()}
                     </p>
-                    <p className="text-xs text-[#92737c]">
-                      {service.category}
-                    </p>
+
+                    {service.duration && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-[#92737c]">
+                        <Clock3 size={13} />
+                        {service.duration}
+                      </p>
+                    )}
+
                   </div>
+
+                  <div className="flex gap-2">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openEditModal(service)
+                      }
+                      className="rounded-lg bg-[#fff5f8] p-2 text-[#d77992]"
+                      title="Edit"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDelete(service.id)
+                      }
+                      className="rounded-lg bg-red-50 p-2 text-red-500"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                  </div>
+
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => toggleStatus(service.id)}
-                  className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                    service.status === 'active'
-                      ? 'bg-green-50 text-green-600'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {service.status === 'active' ? 'Active' : 'Inactive'}
-                </button>
               </div>
+            );
+          })}
 
-              <p className="mt-3 text-sm text-[#80656d]">
-                {service.description || 'No description'}
-              </p>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-bold text-[#c18c2d]">
-                    ₱{service.price.toLocaleString()}
-                  </p>
-
-                  {service.duration && (
-                    <p className="mt-1 flex items-center gap-1 text-xs text-[#92737c]">
-                      <Clock3 size={13} />
-                      {service.duration}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(service)}
-                    className="rounded-lg bg-[#fff5f8] p-2 text-[#d77992]"
-                    title="Edit"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(service.id)}
-                    className="rounded-lg bg-red-50 p-2 text-red-500"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
+
+        {/* EMPTY */}
 
         {filteredServices.length === 0 && (
           <div className="p-10 text-center">
-            <Scissors size={36} className="mx-auto text-[#d9b9c2]" />
+
+            <Scissors
+              size={36}
+              className="mx-auto text-[#d9b9c2]"
+            />
+
             <p className="mt-3 font-semibold text-[#4b343b]">
               No services or products found
             </p>
+
             <p className="mt-1 text-sm text-[#92737c]">
               Try changing your search or filters.
             </p>
+
           </div>
         )}
+
       </div>
 
       <p className="mt-4 text-xs text-[#92737c]">
-        Showing {filteredServices.length} of {services.length} services and products
+        Showing {filteredServices.length} of{' '}
+        {services.length} services and products
       </p>
 
-      {/* ADD / EDIT MODAL */}
+      {/* =====================================================
+          ADD / EDIT MODAL
+      ===================================================== */}
+
       {showModal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeModal();
+            if (
+              event.target === event.currentTarget
+            ) {
+              closeModal();
+            }
           }}
         >
+
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+
+            {/* MODAL HEADER */}
+
             <div className="flex items-center justify-between border-b border-pink-100 px-6 py-4">
+
               <div>
+
                 <h2 className="text-lg font-bold text-[#49343a]">
-                  {editingId === null ? 'Add Service / Product' : 'Edit Service / Product'}
+                  {editingId === null
+                    ? 'Add Service / Product'
+                    : 'Edit Service / Product'}
                 </h2>
+
                 <p className="mt-1 text-xs text-[#92737c]">
                   Enter the details below and save your changes.
                 </p>
+
               </div>
 
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-lg px-3 py-2 text-xl text-[#92737c] hover:bg-[#fff5f7]"
+                disabled={
+                  isSaving ||
+                  isUploadingImage
+                }
+                className="rounded-lg px-3 py-2 text-xl text-[#92737c] hover:bg-[#fff5f7] disabled:opacity-40"
                 aria-label="Close"
               >
                 ×
               </button>
+
             </div>
 
-            <form onSubmit={handleSave} className="space-y-5 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
-                    Service / Product *
-                  </label>
-                  <input
-                    required
-                    value={form.name}
-                    onChange={(event) => handleFormChange('name', event.target.value)}
-                    className="input-field w-full"
-                    placeholder="e.g. Lash Lift"
-                  />
-                </div>
+            {/* FORM */}
 
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
-                    Category *
-                  </label>
-                  <input
-                    required
-                    value={form.category}
-                    onChange={(event) => handleFormChange('category', event.target.value)}
-                    className="input-field w-full"
-                    placeholder="e.g. Lash Care"
-                  />
-                </div>
-              </div>
+            <form
+              onSubmit={handleSave}
+              className="space-y-5 p-6"
+            >
+
+              {/* IMAGE UPLOAD */}
+
+              {/* IMAGE UPLOAD */}
 
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
-                  Description
+                  Service / Product Image
                 </label>
-                <textarea
-                  rows={3}
-                  value={form.description}
-                  onChange={(event) => handleFormChange('description', event.target.value)}
-                  className="input-field w-full resize-none"
-                  placeholder="Describe the service or product..."
-                />
+
+                <div className="flex items-center gap-4">
+
+                  {/* IMAGE PREVIEW */}
+
+                  <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-pink-200 bg-[#fff8fa]">
+
+                    {form.image ? (
+                      <>
+                        <img
+                          src={getImageUrl(form.image)}
+                          alt="Service / Product Preview"
+                          className="h-full w-full object-cover"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          disabled={isUploadingImage || isSaving}
+                          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-red-500 shadow-sm hover:bg-red-50 disabled:opacity-50"
+                          title="Remove image"
+                        >
+                          <X size={15} />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[#d77992]">
+                        <ImagePlus size={32} />
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* ONE UPLOAD BUTTON */}
+
+                  <div>
+                    <label
+                      htmlFor="service-image-upload"
+                      className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border border-pink-200 bg-[#fff8fa] px-4 py-2.5 text-sm font-semibold text-[#d77992] transition hover:bg-[#fff0f4] ${isUploadingImage || isSaving
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                        }`}
+                    >
+                      <ImagePlus size={17} />
+
+                      {isUploadingImage
+                        ? 'Uploading...'
+                        : form.image
+                          ? 'Change Image'
+                          : 'Upload Image'}
+                    </label>
+
+                    <input
+                      id="service-image-upload"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageChange}
+                      disabled={isUploadingImage || isSaving}
+                      className="hidden"
+                    />
+
+                    <p className="mt-2 text-xs text-[#92737c]">
+                      JPG, PNG, or WEBP • Maximum 5MB
+                    </p>
+                  </div>
+
+                </div>
               </div>
 
+              {/* NAME + CATEGORY */}
+
               <div className="grid gap-4 md:grid-cols-2">
+
                 <div>
+
                   <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
-                    Type *
+                    Service / Product *
                   </label>
-                  <select
+
+                  <input
                     required
-                    value={form.type}
-                    onChange={(event) => handleFormChange('type', event.target.value)}
+                    value={form.name}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'name',
+                        event.target.value
+                      )
+                    }
                     className="input-field w-full"
-                  >
-                    <option value="Service">Service</option>
-                    <option value="Product">Product</option>
-                  </select>
+                    placeholder="e.g. Lash Lift"
+                  />
+
                 </div>
 
                 <div>
+
+                  <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
+                    Category *
+                  </label>
+
+                  <input
+                    required
+                    value={form.category}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'category',
+                        event.target.value
+                      )
+                    }
+                    className="input-field w-full"
+                    placeholder="e.g. Lash Care"
+                  />
+
+                </div>
+
+              </div>
+
+              {/* DESCRIPTION */}
+
+              <div>
+
+                <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
+                  Description
+                </label>
+
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={(event) =>
+                    handleFormChange(
+                      'description',
+                      event.target.value
+                    )
+                  }
+                  className="input-field w-full resize-none"
+                  placeholder="Describe the service or product..."
+                />
+
+              </div>
+
+              {/* TYPE + PRICE */}
+
+              <div className="grid gap-4 md:grid-cols-2">
+
+                <div>
+
+                  <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
+                    Type *
+                  </label>
+
+                  <select
+                    required
+                    value={form.type}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'type',
+                        event.target.value
+                      )
+                    }
+                    className="input-field w-full"
+                  >
+                    <option value="Service">
+                      Service
+                    </option>
+
+                    <option value="Product">
+                      Product
+                    </option>
+                  </select>
+
+                </div>
+
+                <div>
+
                   <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
                     Price *
                   </label>
+
                   <input
                     required
                     min="0"
                     step="0.01"
                     type="number"
                     value={form.price}
-                    onChange={(event) => handleFormChange('price', event.target.value)}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'price',
+                        event.target.value
+                      )
+                    }
                     className="input-field w-full"
                     placeholder="0.00"
                   />
+
                 </div>
+
               </div>
 
+              {/* DURATION + STATUS */}
+
               <div className="grid gap-4 md:grid-cols-2">
+
                 <div>
+
                   <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
-                    Duration {form.type === 'Service' ? '*' : ''}
+                    Duration{' '}
+                    {form.type === 'Service'
+                      ? '*'
+                      : ''}
                   </label>
+
                   <input
-                    required={form.type === 'Service'}
-                    disabled={form.type === 'Product'}
+                    required={
+                      form.type === 'Service'
+                    }
+                    disabled={
+                      form.type === 'Product'
+                    }
                     value={form.duration}
-                    onChange={(event) => handleFormChange('duration', event.target.value)}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'duration',
+                        event.target.value
+                      )
+                    }
                     className="input-field w-full disabled:bg-gray-100 disabled:text-gray-400"
-                    placeholder={form.type === 'Product' ? 'Not applicable' : 'e.g. 1 hr 30 min'}
+                    placeholder={
+                      form.type === 'Product'
+                        ? 'Not applicable'
+                        : 'e.g. 1 hr 30 min'
+                    }
                   />
+
                 </div>
 
                 <div>
+
                   <label className="mb-1.5 block text-sm font-semibold text-[#5d424a]">
                     Status *
                   </label>
+
                   <select
                     required
                     value={form.status}
-                    onChange={(event) => handleFormChange('status', event.target.value)}
+                    onChange={(event) =>
+                      handleFormChange(
+                        'status',
+                        event.target.value
+                      )
+                    }
                     className="input-field w-full"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+
+                    <option value="active">
+                      Active
+                    </option>
+
+                    <option value="inactive">
+                      Inactive
+                    </option>
+
                   </select>
+
                 </div>
+
               </div>
 
+              {/* BUTTONS */}
+
               <div className="flex justify-end gap-3 border-t border-pink-100 pt-5">
+
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-xl border border-pink-100 px-5 py-2.5 text-sm font-semibold text-[#80636d] hover:bg-[#fff5f7]"
+                  disabled={
+                    isSaving ||
+                    isUploadingImage
+                  }
+                  className="rounded-xl border border-pink-100 px-5 py-2.5 text-sm font-semibold text-[#80636d] hover:bg-[#fff5f7] disabled:opacity-50"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={
+                    isSaving ||
+                    isUploadingImage
+                  }
                   className="primary-btn flex items-center gap-2 disabled:opacity-50"
                 >
+
                   <Plus size={17} />
-                  {isSaving ? 'Saving...' : (editingId === null ? 'Save Service' : 'Save Changes')}
+
+                  {isSaving
+                    ? 'Saving...'
+                    : editingId === null
+                      ? form.type === 'Product'
+                        ? 'Save Product'
+                        : 'Save Service'
+                      : 'Save Changes'}
+
                 </button>
+
               </div>
+
             </form>
+
           </div>
+
         </div>
       )}
+
     </div>
   );
 }

@@ -10,6 +10,7 @@ export interface Service {
   duration: string | null;
   type?: ServiceType;
   status: ServiceStatus;
+  image?: string | null;
 }
 
 export type ServicePayload = Omit<Service, 'id'>;
