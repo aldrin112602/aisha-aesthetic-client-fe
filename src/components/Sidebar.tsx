@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clearCurrentUser, getCurrentUser } from '../utils/auth';
+import Swal from 'sweetalert2';
 
 const navigationByRole: Record<
   string,
@@ -143,9 +144,31 @@ function Sidebar({
   // =========================================================
   // LOGOUT
   // =========================================================
+
   const handleLogout = () => {
-    clearCurrentUser();
-    navigate('/signin');
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out of your account.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        clearCurrentUser();
+        navigate('/signin');
+      
+        Swal.fire({
+          title: 'Logged Out!',
+          text: 'You have been successfully logged out.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    });
   };
 
   const renderNavigation = (onItemClick?: () => void) => (
