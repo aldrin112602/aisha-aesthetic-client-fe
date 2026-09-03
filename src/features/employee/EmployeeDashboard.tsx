@@ -9,35 +9,46 @@ import {
 } from 'lucide-react';
 
 import {
+  assignAppointment,
   getEmployeeAppointments,
   updateAppointmentStatus as saveAppointmentStatus,
 } from '../../api/appointments.api';
+
 import type {
   Appointment,
   CurrentUser,
   DashboardAppointmentTab,
   DashboardStatusFilter,
 } from '../../types';
+
 import { getCurrentUser } from '../../utils/auth';
+
 import EmployeeAppointmentDetailsModal from './components/EmployeeAppointmentDetailsModal';
 import EmployeeAppointmentList from './components/EmployeeAppointmentList';
 import EmployeeStatCard from './components/EmployeeStatCard';
+
 import {
   isUpcomingAppointment,
   parseAppointmentDate,
 } from './utils/appointmentDashboard';
 
 function EmployeeDashboard() {
-  const currentUser = useMemo(() => getCurrentUser() as CurrentUser | null, []);
+  const currentUser = useMemo(
+    () => getCurrentUser() as CurrentUser | null,
+    []
+  );
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+
   const [activeTab, setActiveTab] =
     useState<DashboardAppointmentTab>('upcoming');
+
   const [statusFilter, setStatusFilter] =
     useState<DashboardStatusFilter>('all');
+
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
 
@@ -50,12 +61,21 @@ function EmployeeDashboard() {
 
     try {
       setError('');
+
       const data = await getEmployeeAppointments(currentUser.id);
+
       setAppointments(Array.isArray(data) ? data : []);
       setCurrentTime(Date.now());
     } catch (loadError) {
-      console.error('Failed to load employee appointments:', loadError);
-      setError('Unable to load appointments. Please try again.');
+      console.error(
+        'Failed to load employee appointments:',
+        loadError
+      );
+
+      setError(
+        'Unable to load appointments. Please try again.'
+      );
+
       setAppointments([]);
     } finally {
       setLoading(false);
@@ -68,41 +88,90 @@ function EmployeeDashboard() {
     });
   }, [loadAppointments]);
 
+  /**
+   * Appointments visible to this employee.
+   *
+   * Backend already filters these, but we keep a frontend
+   * safety check as well.
+   *
+   * Employee can see:
+   * - appointments assigned to them
+   * - pending unassigned appointments in their shop area
+   */
   const employeeAppointments = useMemo(() => {
     if (!currentUser?.id) {
       return [];
     }
 
-    return appointments.filter(
-      (appointment) => Number(appointment.employeeId) === Number(currentUser.id)
-    );
+    return appointments.filter((appointment) => {
+      const assignedToMe =
+        Number(appointment.employeeId) ===
+        Number(currentUser.id);
+
+      const unassigned =
+        appointment.employeeId === null ||
+        appointment.employeeId === undefined;
+
+      const sameShopArea =
+        String(appointment.area || '')
+          .trim()
+          .toLowerCase() ===
+        String(currentUser.shopArea || '')
+          .trim()
+          .toLowerCase();
+
+      const availableForMe =
+        unassigned &&
+        appointment.status?.toLowerCase() === 'pending' &&
+        sameShopArea;
+
+      return assignedToMe || availableForMe;
+    });
   }, [appointments, currentUser]);
 
   const upcomingAppointments = useMemo(() => {
     return employeeAppointments
-      .filter((appointment) => isUpcomingAppointment(appointment, currentTime))
-      .sort((a, b) => compareAppointments(a, b, 'asc'));
+      .filter((appointment) =>
+        isUpcomingAppointment(
+          appointment,
+          currentTime
+        )
+      )
+      .sort((a, b) =>
+        compareAppointments(a, b, 'asc')
+      );
   }, [currentTime, employeeAppointments]);
 
   const pastAppointments = useMemo(() => {
     return employeeAppointments
       .filter((appointment) => {
-        if (appointment.status?.toLowerCase() === 'cancelled') {
+        if (
+          appointment.status?.toLowerCase() ===
+          'cancelled'
+        ) {
           return true;
         }
 
-        const appointmentDate = parseAppointmentDate(
-          appointment.date,
-          appointment.time
-        );
+        const appointmentDate =
+          parseAppointmentDate(
+            appointment.date,
+            appointment.time
+          );
 
-        return !appointmentDate || appointmentDate.getTime() < currentTime;
+        return (
+          !appointmentDate ||
+          appointmentDate.getTime() < currentTime
+        );
       })
-      .sort((a, b) => compareAppointments(a, b, 'desc'));
+      .sort((a, b) =>
+        compareAppointments(a, b, 'desc')
+      );
   }, [currentTime, employeeAppointments]);
 
   const activeAppointments =
-    activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
+    activeTab === 'upcoming'
+      ? upcomingAppointments
+      : pastAppointments;
 
   const filteredAppointments = useMemo(() => {
     if (statusFilter === 'all') {
@@ -110,40 +179,168 @@ function EmployeeDashboard() {
     }
 
     return activeAppointments.filter(
-      (appointment) => appointment.status?.toLowerCase() === statusFilter
+      (appointment) =>
+        appointment.status?.toLowerCase() ===
+        statusFilter
     );
   }, [activeAppointments, statusFilter]);
 
   const statusCounts = useMemo(
     () => ({
-      pending: countByStatus(employeeAppointments, 'pending'),
-      confirmed: countByStatus(employeeAppointments, 'confirmed'),
-      cancelled: countByStatus(employeeAppointments, 'cancelled'),
+      pending: countByStatus(
+        employeeAppointments,
+        'pending'
+      ),
+
+      confirmed: countByStatus(
+        employeeAppointments,
+        'confirmed'
+      ),
+
+      cancelled: countByStatus(
+        employeeAppointments,
+        'cancelled'
+      ),
     }),
     [employeeAppointments]
   );
 
-  const updateAppointmentStatus = async (
-    appointmentId: number,
-    status: 'confirmed' | 'cancelled'
+  /**
+   * ACCEPT APPOINTMENT
+   *
+   * This is different from simply changing status.
+   *
+   * It assigns the appointment to the logged-in employee
+   * AND changes status to confirmed.
+   */
+  const acceptAppointment = async (
+    appointmentId: number
   ) => {
+    if (!currentUser?.id) {
+      return;
+    }
+
     try {
       setError('');
-      await saveAppointmentStatus(appointmentId, status);
+
+      await assignAppointment(
+        appointmentId,
+        Number(currentUser.id)
+      );
+
       await loadAppointments();
 
       setSelectedAppointment((current) =>
         current?.id === appointmentId
           ? {
               ...current,
-              status,
+              employeeId: Number(currentUser.id),
+              status: 'confirmed',
             }
           : current
       );
     } catch (updateError) {
-      console.error('Update appointment status error:', updateError);
-      setError('Failed to update appointment status.');
+      console.error(
+        'Accept appointment error:',
+        updateError
+      );
+
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : 'Failed to accept appointment.'
+      );
     }
+  };
+
+  /**
+   * DECLINE APPOINTMENT
+   *
+   * For an unassigned appointment, declining should NOT
+   * assign it to the employee.
+   *
+   * We only cancel an appointment if it is already assigned
+   * to the current employee.
+   */
+  const declineAppointment = async (
+    appointmentId: number
+  ) => {
+    if (!currentUser?.id) {
+      return;
+    }
+
+    const appointment = employeeAppointments.find(
+      (item) => item.id === appointmentId
+    );
+
+    if (!appointment) {
+      return;
+    }
+
+    const assignedToMe =
+      Number(appointment.employeeId) ===
+      Number(currentUser.id);
+
+    try {
+      setError('');
+
+      if (assignedToMe) {
+        await saveAppointmentStatus(
+          appointmentId,
+          'cancelled'
+        );
+      } else {
+        /**
+         * The appointment is still unassigned.
+         *
+         * We intentionally do NOT cancel it here because
+         * another employee in the same shop area should still
+         * be able to accept it.
+         */
+        setSelectedAppointment(null);
+        return;
+      }
+
+      await loadAppointments();
+
+      setSelectedAppointment((current) =>
+        current?.id === appointmentId
+          ? {
+              ...current,
+              status: 'cancelled',
+            }
+          : current
+      );
+    } catch (updateError) {
+      console.error(
+        'Decline appointment error:',
+        updateError
+      );
+
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : 'Failed to decline appointment.'
+      );
+    }
+  };
+
+  /**
+   * This function is passed to the modal.
+   *
+   * Accept = assign + confirm
+   * Cancel = cancel only if already assigned to employee
+   */
+  const updateAppointmentStatus = async (
+    appointmentId: number,
+    status: 'confirmed' | 'cancelled'
+  ) => {
+    if (status === 'confirmed') {
+      await acceptAppointment(appointmentId);
+      return;
+    }
+
+    await declineAppointment(appointmentId);
   };
 
   if (loading) {
@@ -153,6 +350,7 @@ function EmployeeDashboard() {
           <div className="flex min-h-[500px] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-pink-500" />
+
               <p className="text-sm text-gray-500">
                 Loading employee dashboard...
               </p>
@@ -168,10 +366,15 @@ function EmployeeDashboard() {
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-            <AlertCircle size={35} className="mx-auto mb-3 text-red-500" />
+            <AlertCircle
+              size={35}
+              className="mx-auto mb-3 text-red-500"
+            />
+
             <h2 className="text-lg font-bold text-red-700">
               Employee account not found
             </h2>
+
             <p className="mt-1 text-sm text-red-600">
               Please login again to continue.
             </p>
@@ -184,24 +387,33 @@ function EmployeeDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="mx-auto max-w-7xl">
+
+        {/* HEADER */}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-medium text-pink-500">
               Employee Dashboard
             </p>
+
             <h1 className="mt-1 text-2xl font-bold text-gray-800 md:text-3xl">
-              Welcome, {currentUser.name || 'Employee'}
+              Welcome, {currentUser.name}!
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Manage your assigned customer appointments.
-            </p>
+
+            {currentUser.shopArea && (
+              <p className="mt-1 text-xs font-medium text-pink-500">
+                Shop Area: {currentUser.shopArea}
+              </p>
+            )}
           </div>
         </div>
 
+        {/* ERROR */}
         {error && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <AlertCircle size={18} />
+
             <span>{error}</span>
+
             <button
               type="button"
               onClick={() => setError('')}
@@ -212,17 +424,23 @@ function EmployeeDashboard() {
           </div>
         )}
 
+        {/* STATS */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
           <EmployeeStatCard
             title="Upcoming"
             value={upcomingAppointments.length}
             icon={<CalendarDays size={22} />}
-            active={activeTab === 'upcoming' && statusFilter === 'all'}
+            active={
+              activeTab === 'upcoming' &&
+              statusFilter === 'all'
+            }
             onClick={() => {
               setActiveTab('upcoming');
               setStatusFilter('all');
             }}
           />
+
           <EmployeeStatCard
             title="Pending"
             value={statusCounts.pending}
@@ -233,6 +451,7 @@ function EmployeeDashboard() {
               setStatusFilter('pending');
             }}
           />
+
           <EmployeeStatCard
             title="Confirmed"
             value={statusCounts.confirmed}
@@ -243,6 +462,7 @@ function EmployeeDashboard() {
               setStatusFilter('confirmed');
             }}
           />
+
           <EmployeeStatCard
             title="Cancelled"
             value={statusCounts.cancelled}
@@ -253,36 +473,59 @@ function EmployeeDashboard() {
               setStatusFilter('cancelled');
             }}
           />
+
         </div>
 
+        {/* APPOINTMENTS */}
         <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
+
           <div className="border-b border-gray-100 px-5 py-5">
+
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
               <div>
                 <h2 className="text-lg font-bold text-gray-800">
                   My Appointments
                 </h2>
+
                 <p className="text-sm text-gray-500">
                   {filteredAppointments.length} appointment
-                  {filteredAppointments.length !== 1 ? 's' : ''}
+                  {filteredAppointments.length !== 1
+                    ? 's'
+                    : ''}
                 </p>
               </div>
 
               <select
                 value={statusFilter}
                 onChange={(event) =>
-                  setStatusFilter(event.target.value as DashboardStatusFilter)
+                  setStatusFilter(
+                    event.target.value as DashboardStatusFilter
+                  )
                 }
                 className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="all">
+                  All Status
+                </option>
+
+                <option value="pending">
+                  Pending
+                </option>
+
+                <option value="confirmed">
+                  Confirmed
+                </option>
+
+                <option value="cancelled">
+                  Cancelled
+                </option>
               </select>
+
             </div>
 
             <div className="mt-5 flex gap-2 rounded-xl bg-gray-100 p-1">
+
               <TabButton
                 active={activeTab === 'upcoming'}
                 count={upcomingAppointments.length}
@@ -292,6 +535,7 @@ function EmployeeDashboard() {
                   setStatusFilter('all');
                 }}
               />
+
               <TabButton
                 active={activeTab === 'past'}
                 count={pastAppointments.length}
@@ -301,6 +545,7 @@ function EmployeeDashboard() {
                   setStatusFilter('all');
                 }}
               />
+
             </div>
           </div>
 
@@ -308,9 +553,11 @@ function EmployeeDashboard() {
             appointments={filteredAppointments}
             onSelectAppointment={setSelectedAppointment}
           />
+
         </div>
       </div>
 
+      {/* DETAILS MODAL */}
       {selectedAppointment && (
         <EmployeeAppointmentDetailsModal
           activeTab={activeTab}
@@ -339,10 +586,13 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-        active ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500'
+        active
+          ? 'bg-white text-pink-600 shadow-sm'
+          : 'text-gray-500'
       }`}
     >
       {label}
+
       <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
         {count}
       </span>
@@ -355,8 +605,15 @@ function compareAppointments(
   b: Appointment,
   direction: 'asc' | 'desc'
 ) {
-  const dateA = parseAppointmentDate(a.date, a.time);
-  const dateB = parseAppointmentDate(b.date, b.time);
+  const dateA = parseAppointmentDate(
+    a.date,
+    a.time
+  );
+
+  const dateB = parseAppointmentDate(
+    b.date,
+    b.time
+  );
 
   if (!dateA || !dateB) {
     return 0;
@@ -367,9 +624,13 @@ function compareAppointments(
     : dateB.getTime() - dateA.getTime();
 }
 
-function countByStatus(appointments: Appointment[], status: string) {
+function countByStatus(
+  appointments: Appointment[],
+  status: string
+) {
   return appointments.filter(
-    (appointment) => appointment.status?.toLowerCase() === status
+    (appointment) =>
+      appointment.status?.toLowerCase() === status
   ).length;
 }
 

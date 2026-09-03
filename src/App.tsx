@@ -11,7 +11,7 @@ import AdminDashboard from './features/admin/AdminDashboard';
 import EmployeeDashboard from './features/employee/EmployeeDashboard';
 import CustomerDashboard from './features/customer/CustomerDashboard';
 import AdminAppointments from './features/appointments/AdminAppointments';
-import EmployeeManagement from './features/employees/EmployeeManagementPage';
+import AccountManagement from './features/accounts/AccountManagementPage';
 import AdminShopareas from './features/shop-areas/AdminShopAreasPage';
 import AdminServices from './features/services/AdminServicesPage';
 import WalkinManagement from './features/walkins/WalkinManagementPage';
@@ -106,11 +106,11 @@ function App() {
         }
       />
       <Route
-        path="/employee-management"
+        path="/account-management"
         element={
           <ProtectedRoute allowedRoles={['admin']}>
             <ProtectedLayout>
-              <EmployeeManagement />
+              <AccountManagement />
             </ProtectedLayout>
           </ProtectedRoute>
         }

@@ -36,8 +36,8 @@ const navigationByRole: Record<
       icon: CalendarDays,
     },
     {
-      name: 'Employees',
-      path: '/employee-management',
+      name: 'Manage Accounts',
+      path: '/account-management',
       icon: UserCog,
     },
     {

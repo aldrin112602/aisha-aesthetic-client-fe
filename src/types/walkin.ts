@@ -8,6 +8,8 @@ export interface WalkinRecord {
   price: number;
   status: string;
   createdAt: string;
+  notes?: string | null;
+  
 }
 
 export interface WalkinPayload {
