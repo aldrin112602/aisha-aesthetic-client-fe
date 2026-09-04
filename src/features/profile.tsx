@@ -16,10 +16,20 @@ import {
 import { useNavigate } from "react-router-dom";
 import defaultAvatar from "../assets/img/default_avatar.jpg";
 import type { PasswordForm, UserProfile } from "../types";
+import {
+  getCurrentUser,
+  saveCurrentUser,
+  clearCurrentUser,
+} from "../utils/auth";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:3001";
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const uploadFileRef = useRef<HTMLInputElement>(null);
+
 
   const [profile, setProfile] = useState<UserProfile>({
     id: 0,
@@ -58,14 +68,12 @@ const Profile: React.FC = () => {
   */
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
+    const loadCurrentUser = () => {
+      const user = getCurrentUser();
 
-    if (!savedUser) {
-      return;
-    }
-
-    try {
-      const user = JSON.parse(savedUser);
+      if (!user) {
+        return;
+      }
 
       const userData: UserProfile = {
         id: user.id,
@@ -76,13 +84,23 @@ const Profile: React.FC = () => {
         profileImage: user.profileImage || "",
       };
 
-      queueMicrotask(() => {
-        setProfile(userData);
-        setEditForm(userData);
-      });
-    } catch (error) {
-      console.error("Unable to load saved user:", error);
-    }
+      setProfile(userData);
+      setEditForm(userData);
+    };
+
+    loadCurrentUser();
+
+    window.addEventListener(
+      "user-updated",
+      loadCurrentUser
+    );
+
+    return () => {
+      window.removeEventListener(
+        "user-updated",
+        loadCurrentUser
+      );
+    };
   }, []);
 
   /*
@@ -124,41 +142,83 @@ const Profile: React.FC = () => {
     const formData = new FormData();
     formData.append("image", file);
 
-    try {
-      const response = await fetch(`http://localhost:3001/api/users/${profile.id}/upload-avatar`, {
-        method: "POST",
-        body: formData,
-      });
+  try {
+  const response = await fetch(
+    `${API_BASE_URL}/api/users/${profile.id}/profile-image`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
 
-      const data = await response.json();
+      const responseText = await response.text();
+
+      let data: any = null;
+
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        console.error(
+          "Profile upload returned a non-JSON response:",
+          responseText
+        );
+
+        throw new Error(
+          `Server returned an invalid response (HTTP ${response.status}).`
+        );
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to upload avatar.");
+        throw new Error(
+          data?.message ||
+          `Failed to upload profile picture (HTTP ${response.status}).`
+        );
       }
 
       // Backend returns relative url: /uploads/profiles/filename.jpg
-      const fullImageUrl = `http://localhost:3001${data.image}`;
+      const imagePath = data?.image || data?.profileImage || data?.user?.profileImage;
 
-      setProfile((previous) => {
-        const updatedProfile: UserProfile = {
-          ...previous,
-          profileImage: fullImageUrl,
-        };
+      if (!imagePath) {
+        throw new Error(
+          "Image uploaded but the server did not return the image path."
+        );
+      }
 
-        // Maintain lightweight metadata in storage without base64 blob
-        const saved = localStorage.getItem("user");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          localStorage.setItem("user", JSON.stringify({ ...parsed, profileImage: fullImageUrl }));
-        }
+      const fullImageUrl =
+        imagePath.startsWith("http://") ||
+        imagePath.startsWith("https://") ||
+        imagePath.startsWith("data:")
+          ? imagePath
+          : `${API_BASE_URL}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
 
-        return updatedProfile;
-      });
+      const currentUser = getCurrentUser();
+
+      if (!currentUser) {
+        throw new Error(
+          "User session not found. Please log in again."
+        );
+      }
+
+      const updatedUser = {
+        ...currentUser,
+        profileImage: fullImageUrl,
+      };
+
+      saveCurrentUser(updatedUser);
+
+      setProfile((previous) => ({
+        ...previous,
+        profileImage: fullImageUrl,
+      }));
 
       setEditForm((previous) => ({
         ...previous,
         profileImage: fullImageUrl,
       }));
+
+      window.dispatchEvent(
+        new Event("user-updated")
+      );
 
       alert("Profile picture updated successfully!");
     } catch (error: any) {
@@ -204,7 +264,7 @@ const Profile: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${profile.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${profile.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -218,14 +278,27 @@ const Profile: React.FC = () => {
         throw new Error("Failed to update profile info.");
       }
 
+      const currentUser = getCurrentUser();
+
+      if (currentUser) {
+        saveCurrentUser({
+          ...currentUser,
+          name: updatedProfile.name,
+          email: updatedProfile.email,
+          phone: updatedProfile.phone,
+          profileImage:
+            currentUser.profileImage ||
+            updatedProfile.profileImage ||
+            "",
+        });
+      }
+
       setProfile(updatedProfile);
       setEditForm(updatedProfile);
 
-      const saved = localStorage.getItem("user");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        localStorage.setItem("user", JSON.stringify({ ...parsed, name: updatedProfile.name, email: updatedProfile.email }));
-      }
+      window.dispatchEvent(
+        new Event("user-updated")
+      );
 
       setShowEditProfile(false);
     } catch (err: any) {
@@ -304,7 +377,7 @@ const Profile: React.FC = () => {
     }
 
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearCurrentUser();
 
     navigate("/signin");
   };
