@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Plus,
+  X,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -39,6 +41,8 @@ function WalkinManagement() {
   const [shopAreasLoading, setShopAreasLoading] = useState(true);
 
   const [formData, setFormData] = useState(defaultFormData);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // =========================================================
   // FETCH SERVICES
@@ -138,6 +142,44 @@ function WalkinManagement() {
       void fetchShopAreas();
     });
   }, [fetchServices, fetchWalkins, fetchShopAreas]);
+
+  // =========================================================
+  // MODAL OPEN / CLOSE
+  // =========================================================
+
+  const openAddWalkinModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeAddWalkinModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      ...defaultFormData,
+      area: shopAreas[0]?.name || '',
+    });
+  };
+
+  // Close on Escape + lock background scroll while modal is open
+  useEffect(() => {
+    if (!isModalOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeAddWalkinModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
 
   // =========================================================
   // INPUT CHANGE
@@ -347,6 +389,22 @@ function WalkinManagement() {
     try {
       const currentUser = getCurrentUser();
 
+      const now = new Date();
+
+      const currentDate = now.toLocaleDateString('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      const currentTime = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Manila',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
       const data = await createWalkin({
         name: formData.name.trim(),
         phoneNumber: formData.phoneNumber.trim() || null,
@@ -357,16 +415,20 @@ function WalkinManagement() {
         price: formData.price,
         notes: formData.notes.trim(),
         employeeId: currentUser?.id || null,
+        date: currentDate,
+        time: currentTime,
       });
 
       // Add new record to the beginning of the list
       setWalkins((current) => [data, ...current]);
 
-      // Reset form but preserve first shop area
+      // Reset form but preserve first shop area, then close the modal
       setFormData({
         ...defaultFormData,
         area: shopAreas[0]?.name || '',
       });
+
+      setIsModalOpen(false);
 
       // -----------------------------------------------------
       // SUCCESS
@@ -469,31 +531,61 @@ function WalkinManagement() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#d77992] transition hover:bg-[#fff7f9] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <RefreshCw
-            size={16}
-            className={refreshing ? 'animate-spin' : ''}
-          />
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#d77992] transition hover:bg-[#fff7f9] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RefreshCw
+              size={16}
+              className={refreshing ? 'animate-spin' : ''}
+            />
 
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+
+          <button
+            type="button"
+            onClick={openAddWalkinModal}
+            className="primary-btn inline-flex items-center justify-center gap-2"
+          >
+            <Plus size={16} />
+            Add Walk-in
+          </button>
+        </div>
       </div>
 
       {/* =====================================================
-          RECORD NEW WALK-IN
+          RECORD NEW WALK-IN — MODAL
       ====================================================== */}
 
-      <div className="mb-8 rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-lg font-bold text-[#4b343b]">
-          Record New Walk-in
-        </h2>
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={closeAddWalkinModal}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-[#4b343b]">
+                Record New Walk-in
+              </h2>
 
-        <form onSubmit={handleRecordWalkin} className="space-y-4">
+              <button
+                type="button"
+                onClick={closeAddWalkinModal}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#92737c] transition hover:bg-[#fff0f4] hover:text-[#d77992]"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleRecordWalkin} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
 
             {/* CUSTOMER NAME */}
@@ -658,8 +750,10 @@ function WalkinManagement() {
               </>
             )}
           </button>
-        </form>
-      </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* =====================================================
           RECENT WALK-INS

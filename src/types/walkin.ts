@@ -28,6 +28,8 @@ export interface WalkinPayload {
   price: number;
   notes?: string;
   employeeId: number | null;
+  date: string | null;
+  time: string | null;
 }
 
 export interface RecentWalkinsProps {
