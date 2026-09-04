@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -29,28 +30,77 @@ function AdminAppointments() {
   const [loading, setLoading] = useState(true);
 
   // =========================================================
+  // URL / DASHBOARD FILTER
+  // =========================================================
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dashboardFilter = (searchParams.get('filter') || '').toLowerCase();
+
+  const isDashboardFilter = [
+    'today',
+    'upcoming',
+    'pending',
+    'confirmed',
+    'completed',
+    'cancelled',
+    'no-show',
+  ].includes(dashboardFilter);
+
+  const dashboardStatusMap: Record<string, StatusFilter> = {
+    pending: 'Pending',
+    confirmed: 'confirmed',
+    completed: 'completed',
+    cancelled: 'cancelled',
+    'no-show': 'no-show',
+  };
+
+  // =========================================================
   // FILTERS
   // =========================================================
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('appointment');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
+  // When coming from the Admin Dashboard, automatically select
+  // Type = All so BOTH online appointments and walk-ins are included.
+  // For status filters, automatically select the matching status.
+  useEffect(() => {
+    if (!isDashboardFilter) {
+      return;
+    }
+
+    setTypeFilter('all');
+    setStatusFilter(dashboardStatusMap[dashboardFilter] || 'all');
+  }, [dashboardFilter, isDashboardFilter]);
+
+  // Effective values used by the UI and API request.
+  // Dashboard filters always force Type = All.
+  const effectiveTypeFilter: TypeFilter = isDashboardFilter
+    ? 'all'
+    : typeFilter;
+
+  const effectiveStatusFilter: StatusFilter = isDashboardFilter
+    ? dashboardStatusMap[dashboardFilter] || 'all'
+    : statusFilter;
+
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
 
-        // Only send params the backend actually cares about — omit
-        // `type` when it's the default ('appointment') and omit
-        // `status` when it's 'all', so the request stays clean.
         const params: { type?: string; status?: string } = {};
 
-        if (typeFilter !== 'appointment') {
-          params.type = typeFilter;
+        // IMPORTANT:
+        // Dashboard filters must include BOTH online appointments
+        // and walk-ins, so use type=all.
+        if (effectiveTypeFilter !== 'appointment') {
+          params.type = effectiveTypeFilter;
         }
 
-        if (statusFilter !== 'all') {
-          params.status = statusFilter;
+        // For dashboard status filters, let the backend return all types
+        // and apply the status/date filter consistently below.
+        if (!isDashboardFilter && effectiveStatusFilter !== 'all') {
+          params.status = effectiveStatusFilter;
         }
 
         const data = await getAdminAppointments(params);
@@ -73,7 +123,68 @@ function AdminAppointments() {
     };
 
     fetchAppointments();
-  }, [typeFilter, statusFilter]);
+  }, [effectiveTypeFilter, effectiveStatusFilter, isDashboardFilter]);
+
+  const normalizeStatus = (status?: string | null) =>
+    String(status || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[_\s]+/g, '-');
+
+  const getLocalDateString = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const filteredAppointments = useMemo(() => {
+    if (!isDashboardFilter) {
+      return appointments;
+    }
+
+    const today = getLocalDateString();
+
+    return appointments.filter((appointment) => {
+      const status = normalizeStatus(appointment.status);
+      const date = String(appointment.date || '').slice(0, 10);
+
+      switch (dashboardFilter) {
+        case 'today':
+          return (
+            date === today &&
+            status !== 'cancelled' &&
+            status !== 'no-show'
+          );
+
+        case 'upcoming':
+          return (
+            date > today &&
+            status !== 'cancelled' &&
+            status !== 'completed' &&
+            status !== 'no-show'
+          );
+
+        case 'pending':
+          return status === 'pending' || status === 'pending-approval';
+
+        case 'confirmed':
+          return status === 'confirmed';
+
+        case 'completed':
+          return status === 'completed';
+
+        case 'cancelled':
+          return status === 'cancelled';
+
+        case 'no-show':
+          return status === 'no-show';
+
+        default:
+          return true;
+      }
+    });
+  }, [appointments, dashboardFilter, isDashboardFilter]);
 
   // =========================================================
   // PAGINATION
@@ -83,7 +194,7 @@ function AdminAppointments() {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(appointments.length / PAGE_SIZE)
+    Math.ceil(filteredAppointments.length / PAGE_SIZE)
   );
 
   // Reset to page 1 whenever filters change or the data set changes
@@ -91,7 +202,7 @@ function AdminAppointments() {
   // that no longer has data.
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, statusFilter, appointments.length]);
+  }, [typeFilter, statusFilter, appointments.length, dashboardFilter]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -101,14 +212,16 @@ function AdminAppointments() {
 
   const paginatedAppointments = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return appointments.slice(start, start + PAGE_SIZE);
-  }, [appointments, currentPage]);
+    return filteredAppointments.slice(start, start + PAGE_SIZE);
+  }, [filteredAppointments, currentPage]);
 
   const rangeStart =
-    appointments.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    filteredAppointments.length === 0
+      ? 0
+      : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(
     currentPage * PAGE_SIZE,
-    appointments.length
+    filteredAppointments.length
   );
 
   const goToPage = (page: number) => {
@@ -279,11 +392,17 @@ function AdminAppointments() {
   };
 
   const hasActiveFilters =
-    typeFilter !== 'appointment' || statusFilter !== 'all';
+    isDashboardFilter ||
+    typeFilter !== 'appointment' ||
+    statusFilter !== 'all';
 
   const clearFilters = () => {
     setTypeFilter('appointment');
     setStatusFilter('all');
+
+    if (isDashboardFilter) {
+      setSearchParams({}, { replace: true });
+    }
   };
 
   // A small reusable status <select>, shared by both the mobile card
@@ -329,6 +448,24 @@ function AdminAppointments() {
         <p className="page-subtitle">
           Review all appointment records and update status.
         </p>
+
+        {isDashboardFilter && (
+          <div className="mt-2 inline-flex rounded-full bg-[#fff0f4] px-3 py-1.5 text-xs font-semibold text-[#c15d78]">
+            Showing: {dashboardFilter === 'today'
+              ? 'Today’s Appointments'
+              : dashboardFilter === 'upcoming'
+              ? 'Upcoming Appointments'
+              : dashboardFilter === 'pending'
+              ? 'Pending Appointments'
+              : dashboardFilter === 'confirmed'
+              ? 'Confirmed Appointments'
+              : dashboardFilter === 'completed'
+              ? 'Completed Appointments'
+              : dashboardFilter === 'cancelled'
+              ? 'Cancelled Appointments'
+              : 'No Show Appointments'}
+          </div>
+        )}
       </div>
 
       {/* =====================================================
@@ -343,10 +480,13 @@ function AdminAppointments() {
             </label>
 
             <select
-              value={typeFilter}
-              onChange={(event) =>
-                setTypeFilter(event.target.value as TypeFilter)
-              }
+              value={effectiveTypeFilter}
+              onChange={(event) => {
+                if (isDashboardFilter) {
+                  setSearchParams({}, { replace: true });
+                }
+                setTypeFilter(event.target.value as TypeFilter);
+              }}
               className="w-full rounded-lg border border-pink-100 bg-[#fffafb] px-3 py-2 text-sm outline-none transition focus:border-[#df7f98] focus:ring-1 focus:ring-[#df7f98] sm:w-auto sm:min-w-[150px]"
             >
               <option value="appointment">Appointments</option>
@@ -362,10 +502,13 @@ function AdminAppointments() {
             </label>
 
             <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as StatusFilter)
-              }
+              value={effectiveStatusFilter}
+              onChange={(event) => {
+                if (isDashboardFilter) {
+                  setSearchParams({}, { replace: true });
+                }
+                setStatusFilter(event.target.value as StatusFilter);
+              }}
               className="w-full rounded-lg border border-pink-100 bg-[#fffafb] px-3 py-2 text-sm outline-none transition focus:border-[#df7f98] focus:ring-1 focus:ring-[#df7f98] sm:w-auto sm:min-w-[150px]"
             >
               <option value="all">All Statuses</option>
@@ -396,7 +539,7 @@ function AdminAppointments() {
         <div className="rounded-2xl border border-pink-100 bg-white p-10 text-center text-sm text-gray-500 shadow-sm">
           Loading appointments...
         </div>
-      ) : appointments.length === 0 ? (
+      ) : filteredAppointments.length === 0 ? (
         /* ========================================
             EMPTY STATE
         ======================================== */
@@ -611,7 +754,7 @@ function AdminAppointments() {
           {totalPages > 1 && (
             <div className="mt-5 flex flex-col items-center justify-between gap-3 sm:flex-row">
               <p className="text-xs text-[#92737c]">
-                Showing {rangeStart}–{rangeEnd} of {appointments.length}
+                Showing {rangeStart}–{rangeEnd} of {filteredAppointments.length}
               </p>
 
               <div className="flex items-center gap-1">

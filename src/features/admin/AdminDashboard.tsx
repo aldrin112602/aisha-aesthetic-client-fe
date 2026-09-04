@@ -491,7 +491,7 @@ function AdminDashboard() {
         <button
           type="button"
           onClick={() =>
-            navigate('/admin-appointments')
+            navigate('/admin-appointments?filter=today')
           }
           className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
@@ -522,7 +522,7 @@ function AdminDashboard() {
         <button
           type="button"
           onClick={() =>
-            navigate('/admin-appointments')
+            navigate('/admin-appointments?filter=upcoming')
           }
           className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
@@ -553,7 +553,7 @@ function AdminDashboard() {
         <button
           type="button"
           onClick={() =>
-            navigate('/admin-appointments')
+            navigate('/admin-appointments?filter=pending')
           }
           className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
@@ -584,7 +584,7 @@ function AdminDashboard() {
         <button
           type="button"
           onClick={() =>
-            navigate('/admin-appointments')
+            navigate('/admin-appointments?filter=confirmed')
           }
           className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
@@ -631,7 +631,7 @@ function AdminDashboard() {
           <button
             type="button"
             onClick={() =>
-              navigate('/admin-appointments')
+              navigate('/admin-appointments?filter=today')
             }
             className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#d77992] hover:underline sm:self-auto"
           >
@@ -869,7 +869,7 @@ function AdminDashboard() {
             {/* PENDING */}
             <button
               type="button"
-              onClick={() => navigate('/admin-appointments')}
+              onClick={() => navigate('/admin-appointments?filter=pending')}
               className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#fff4e5] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
@@ -885,7 +885,7 @@ function AdminDashboard() {
             {/* CONFIRMED */}
             <button
               type="button"
-              onClick={() => navigate('/admin-appointments')}
+              onClick={() => navigate('/admin-appointments?filter=confirmed')}
               className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#edf9f1] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
@@ -901,7 +901,7 @@ function AdminDashboard() {
             {/* TODAY */}
             <button
               type="button"
-              onClick={() => navigate('/admin-appointments')}
+              onClick={() => navigate('/admin-appointments?filter=upcoming')}
               className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#fff8fa] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
