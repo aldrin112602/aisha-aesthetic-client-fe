@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   Clock,
-  MapPin,
   Phone,
-  Smartphone,
   User,
   CheckCircle2,
   AlertCircle,
@@ -16,6 +14,7 @@ import { getShopAreas } from '../../api/shopAreas.api';
 import { createWalkin, getWalkins } from '../../api/walkins.api';
 import type { Service, ShopArea, WalkinRecord } from '../../types';
 import { getCurrentUser } from '../../utils/auth';
+import RecentWalkins from './components/RecentWalkins';
 
 const defaultFormData = {
   name: '',
@@ -296,15 +295,14 @@ function WalkinManagement() {
             <strong>Customer:</strong> ${formData.name}
           </p>
 
-          ${
-            formData.phoneNumber
-              ? `
+          ${formData.phoneNumber
+          ? `
                 <p style="margin: 5px 0;">
                   <strong>Phone:</strong> ${formData.phoneNumber}
                 </p>
               `
-              : ''
-          }
+          : ''
+        }
 
           <p style="margin: 5px 0;">
             <strong>Service:</strong> ${formData.serviceName}
@@ -352,6 +350,7 @@ function WalkinManagement() {
       const data = await createWalkin({
         name: formData.name.trim(),
         phoneNumber: formData.phoneNumber.trim() || null,
+        serviceId: formData.serviceId ? Number(formData.serviceId) : null,
         serviceName: formData.serviceName,
         category: formData.category,
         area: formData.area,
@@ -381,16 +380,8 @@ function WalkinManagement() {
             The walk-in customer has been recorded successfully.
           </p>
 
-          <p style="
-            font-size: 16px;
-            font-weight: 600;
-            color: #4b343b;
-          ">
-            ${data.name}
-          </p>
-
           <p style="color: #92737c;">
-            ${data.serviceName} • ₱${data.price.toLocaleString()}
+            ${data.serviceName} • ₱${data?.price?.toLocaleString()}
           </p>
         `,
         confirmButtonText: 'Done',
@@ -673,115 +664,9 @@ function WalkinManagement() {
       {/* =====================================================
           RECENT WALK-INS
       ====================================================== */}
+      <RecentWalkins walkins={walkins} />
 
-      <div className="rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-[#4b343b]">
-              Recent Walk-ins
-            </h2>
 
-            <p className="mt-1 text-sm text-[#92737c]">
-              {walkins.length}{' '}
-              {walkins.length === 1 ? 'record' : 'records'}
-            </p>
-          </div>
-        </div>
-
-        {walkins.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-pink-200 bg-[#fffafb] p-8 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#fff0f4] text-[#d77992]">
-              <User size={22} />
-            </div>
-
-            <p className="font-semibold text-[#4b343b]">
-              No walk-in records yet.
-            </p>
-
-            <p className="mt-1 text-sm text-[#92737c]">
-              Recorded walk-in customers will appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {walkins.map((walkin) => (
-              <div
-                key={walkin.id}
-                className="rounded-xl border border-pink-100 p-4 transition hover:border-pink-200 hover:bg-[#fffafb]"
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-
-                  {/* CUSTOMER INFO */}
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <p className="font-semibold text-[#4b343b]">
-                        {walkin.name}
-                      </p>
-
-                      {getStatusBadge(walkin.status)}
-                    </div>
-
-                    <div className="mt-2 grid gap-2 text-sm text-[#745d65] sm:grid-cols-2">
-
-                      {/* SERVICE */}
-                      <p>
-                        <span className="font-semibold">
-                          {walkin.serviceName}
-                        </span>{' '}
-                        ({walkin.category})
-                      </p>
-
-                      {/* PHONE */}
-                      {walkin.phoneNumber && (
-                        <p className="flex items-center gap-1">
-                          <Smartphone size={14} />
-                          {walkin.phoneNumber}
-                        </p>
-                      )}
-
-                      {/* AREA */}
-                      <p className="flex items-center gap-1">
-                        <MapPin size={14} />
-                        {walkin.area}
-                      </p>
-
-                      {/* TIME */}
-                      <p className="flex items-center gap-1">
-                        <Clock size={14} />
-
-                        {new Date(
-                          walkin.createdAt
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-
-                    {/* NOTES */}
-                    {walkin.notes && (
-                      <div className="mt-3 rounded-lg bg-[#fff8fa] px-3 py-2 text-xs text-[#7c5b63]">
-                        <span className="font-semibold">
-                          Notes:
-                        </span>{' '}
-                        {walkin.notes}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* PRICE */}
-                  <div className="shrink-0 text-left md:text-right">
-                    <p className="text-lg font-bold text-[#c18c2d]">
-                      ₱{walkin.price.toLocaleString()}
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#92737c]">
-                      Walk-in service
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

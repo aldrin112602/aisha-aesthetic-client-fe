@@ -11,3 +11,4 @@ export function createWalkin(payload: WalkinPayload) {
     body: payload,
   });
 }
+

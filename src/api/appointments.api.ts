@@ -6,10 +6,23 @@ import type {
   BookingPayload,
 } from '../types';
 
+/**
+ * Get all appointments for Admin.
+ *
+ * IMPORTANT:
+ * Use /api/appointments instead of /api/bookings
+ * because /api/appointments includes:
+ * - customerName
+ * - customerEmail
+ * - employeeName
+ */
 export function getAdminAppointments() {
-  return apiRequest<Appointment[]>('/api/bookings');
+  return apiRequest<Appointment[]>('/api/appointments');
 }
 
+/**
+ * Create a new customer booking.
+ */
 export function createBooking(payload: BookingPayload) {
   return apiRequest<Appointment>('/api/bookings', {
     method: 'POST',
@@ -17,6 +30,9 @@ export function createBooking(payload: BookingPayload) {
   });
 }
 
+/**
+ * Get all appointments for a specific customer.
+ */
 export function getCustomerAppointments(customerId: number) {
   return apiRequest<Appointment[]>(
     `/api/appointments?customerId=${customerId}`
@@ -24,11 +40,12 @@ export function getCustomerAppointments(customerId: number) {
 }
 
 /**
- * Gets appointments available to this employee.
+ * Get appointments available to this employee.
  *
- * Backend will return:
+ * Backend returns:
  * - appointments already assigned to this employee
- * - pending unassigned appointments belonging to the employee's shop area
+ * - pending unassigned appointments belonging
+ *   to the employee's shop area
  */
 export function getEmployeeAppointments(employeeId: number) {
   return apiRequest<Appointment[]>(
@@ -47,11 +64,16 @@ export function assignAppointment(
     `/api/appointments/${appointmentId}/assign`,
     {
       method: 'PATCH',
-      body: { employeeId },
+      body: {
+        employeeId,
+      },
     }
   );
 }
 
+/**
+ * Update appointment status.
+ */
 export function updateAppointmentStatus(
   appointmentId: number,
   status: AppointmentStatusUpdate['status']
@@ -60,11 +82,21 @@ export function updateAppointmentStatus(
     `/api/appointments/${appointmentId}/status`,
     {
       method: 'PATCH',
-      body: { status },
+      body: {
+        status,
+      },
     }
   );
 }
 
+/**
+ * Update appointment details.
+ *
+ * Currently supports:
+ * - date
+ * - time
+ * - status
+ */
 export function updateAppointment(
   appointmentId: number,
   payload: Partial<Pick<Appointment, 'date' | 'time' | 'status'>>
@@ -78,6 +110,9 @@ export function updateAppointment(
   );
 }
 
+/**
+ * Delete an appointment.
+ */
 export function deleteAppointmentById(appointmentId: number) {
   return apiRequest<void>(
     `/api/appointments/${appointmentId}`,

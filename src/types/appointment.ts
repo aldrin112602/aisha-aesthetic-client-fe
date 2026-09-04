@@ -26,6 +26,7 @@ export interface Appointment {
   employeeShopArea?: string | null;
   notes?: string | null;
   createdAt?: string;
+  appointmentType?: string | null;
 }
 
 export type AppointmentStatusUpdate = Pick<Appointment, 'status'>;
