@@ -22,6 +22,7 @@ const Profile: React.FC = () => {
   const uploadFileRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<UserProfile>({
+    id: 0,
     name: "John Doe",
     email: "caballeroaldrin02@gmail.com",
     phone: "09123456789",
@@ -86,7 +87,7 @@ const Profile: React.FC = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | PROFILE IMAGE UPLOAD
+  | PROFILE IMAGE UPLOAD (BACKEND DIRECT API)
   |--------------------------------------------------------------------------
   */
 
@@ -94,7 +95,7 @@ const Profile: React.FC = () => {
     uploadFileRef.current?.click();
   };
 
-  const fileUploadChange = (
+  const fileUploadChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
@@ -115,41 +116,57 @@ const Profile: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
+    if (!profile.id) {
+      alert("User session not found. Please log in again.");
+      return;
+    }
 
-    reader.onload = () => {
-      const imageData = reader.result;
+    const formData = new FormData();
+    formData.append("image", file);
 
-      if (typeof imageData !== "string") {
-        alert("Unable to preview the selected image.");
-        return;
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${profile.id}/upload-avatar`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to upload avatar.");
       }
+
+      // Backend returns relative url: /uploads/profiles/filename.jpg
+      const fullImageUrl = `http://localhost:3001${data.image}`;
 
       setProfile((previous) => {
         const updatedProfile: UserProfile = {
           ...previous,
-          profileImage: imageData,
+          profileImage: fullImageUrl,
         };
 
-        localStorage.setItem("user", JSON.stringify(updatedProfile));
+        // Maintain lightweight metadata in storage without base64 blob
+        const saved = localStorage.getItem("user");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          localStorage.setItem("user", JSON.stringify({ ...parsed, profileImage: fullImageUrl }));
+        }
 
         return updatedProfile;
       });
 
       setEditForm((previous) => ({
         ...previous,
-        profileImage: imageData,
+        profileImage: fullImageUrl,
       }));
-    };
 
-    reader.onerror = () => {
-      alert("Failed to read the selected image.");
-    };
-
-    reader.readAsDataURL(file);
-
-    // Allows the same file to be selected again.
-    event.target.value = "";
+      alert("Profile picture updated successfully!");
+    } catch (error: any) {
+      console.error("Error uploading image:", error);
+      alert(error.message || "Failed to upload image to server.");
+    } finally {
+      event.target.value = "";
+    }
   };
 
   /*
@@ -169,7 +186,7 @@ const Profile: React.FC = () => {
     }));
   };
 
-  const handleSaveProfile = (
+  const handleSaveProfile = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
@@ -179,33 +196,41 @@ const Profile: React.FC = () => {
       name: editForm.name.trim(),
       email: editForm.email.trim(),
       phone: editForm.phone.trim(),
-      profileImage: profile.profileImage || editForm.profileImage || "",
     };
 
-    if (!updatedProfile.name) {
-      alert("Please enter your full name.");
+    if (!updatedProfile.name || !updatedProfile.email || !updatedProfile.phone) {
+      alert("Please fill in all required fields.");
       return;
     }
 
-    if (!updatedProfile.email) {
-      alert("Please enter your email address.");
-      return;
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${profile.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: updatedProfile.name,
+          email: updatedProfile.email,
+          phone: updatedProfile.phone,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile info.");
+      }
+
+      setProfile(updatedProfile);
+      setEditForm(updatedProfile);
+
+      const saved = localStorage.getItem("user");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        localStorage.setItem("user", JSON.stringify({ ...parsed, name: updatedProfile.name, email: updatedProfile.email }));
+      }
+
+      setShowEditProfile(false);
+    } catch (err: any) {
+      alert(err.message || "Error updating profile.");
     }
-
-    if (!updatedProfile.phone) {
-      alert("Please enter your mobile number.");
-      return;
-    }
-
-    setProfile(updatedProfile);
-    setEditForm(updatedProfile);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedProfile)
-    );
-
-    setShowEditProfile(false);
   };
 
   /*
@@ -252,10 +277,6 @@ const Profile: React.FC = () => {
       return;
     }
 
-    /*
-     * This is frontend-only for now.
-     * We will connect this to the Express + SQLite API later.
-     */
     alert("Password changed successfully.");
 
     setPasswordForm({
@@ -288,12 +309,6 @@ const Profile: React.FC = () => {
     navigate("/signin");
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | MODAL CLOSE
-  |--------------------------------------------------------------------------
-  */
-
   const closeEditProfile = () => {
     setEditForm(profile);
     setShowEditProfile(false);
@@ -309,12 +324,6 @@ const Profile: React.FC = () => {
     setShowChangePassword(false);
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | UI
-  |--------------------------------------------------------------------------
-  */
-
   return (
     <div className="min-h-full bg-[#fffafb] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-2xl">
@@ -324,14 +333,11 @@ const Profile: React.FC = () => {
           <h1 className="font-serif text-2xl font-medium text-[#4b343b]">
             Profile
           </h1>
-
-
         </div>
 
         {/* PROFILE HERO */}
         <section className="mb-6 text-center">
           <div className="relative mx-auto mb-3 h-[92px] w-[92px]">
-
             <div className="flex h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#f7e9ed] to-[#efd5dc] text-[#a9687d] shadow-[0_5px_18px_rgba(80,44,56,0.12)]">
               <img
                 src={profile.profileImage || defaultAvatar}
@@ -375,7 +381,6 @@ const Profile: React.FC = () => {
 
         {/* PROFILE ACTIONS */}
         <section className="mb-5 overflow-hidden rounded-xl border border-pink-100 bg-white shadow-[0_4px_16px_rgba(75,43,52,0.045)]">
-
           <button
             type="button"
             onClick={() => {
@@ -392,10 +397,7 @@ const Profile: React.FC = () => {
               Edit Profile
             </span>
 
-            <ChevronRight
-              size={17}
-              className="text-[#b6a5ab]"
-            />
+            <ChevronRight size={17} className="text-[#b6a5ab]" />
           </button>
 
           <button
@@ -411,16 +413,12 @@ const Profile: React.FC = () => {
               Change Password
             </span>
 
-            <ChevronRight
-              size={17}
-              className="text-[#b6a5ab]"
-            />
+            <ChevronRight size={17} className="text-[#b6a5ab]" />
           </button>
         </section>
 
         {/* ACCOUNT INFORMATION */}
         <section className="mb-5 overflow-hidden rounded-xl border border-pink-100 bg-white shadow-[0_4px_16px_rgba(75,43,52,0.045)]">
-
           <div className="border-b border-[#f1e8ea] px-4 py-4">
             <h3 className="text-xs font-semibold text-[#5b484e]">
               Account Information
@@ -433,10 +431,7 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">
-                Full Name
-              </span>
-
+              <span className="text-[10px] text-[#9b898f]">Full Name</span>
               <strong className="text-xs font-medium text-[#4a393f]">
                 {profile.name}
               </strong>
@@ -449,10 +444,7 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">
-                Mobile Number
-              </span>
-
+              <span className="text-[10px] text-[#9b898f]">Mobile Number</span>
               <strong className="text-xs font-medium text-[#4a393f]">
                 {profile.phone || "No mobile number"}
               </strong>
@@ -465,10 +457,7 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">
-                Email Address
-              </span>
-
+              <span className="text-[10px] text-[#9b898f]">Email Address</span>
               <strong className="break-all text-xs font-medium text-[#4a393f]">
                 {profile.email}
               </strong>
@@ -483,15 +472,8 @@ const Profile: React.FC = () => {
           className="flex min-h-[50px] w-full items-center gap-3 rounded-xl border border-[#f0dfe3] bg-white px-4 text-left text-[#c1667d] transition hover:bg-[#fff7f8]"
         >
           <LogOut size={17} />
-
-          <span className="flex-1 text-xs font-medium">
-            Logout
-          </span>
-
-          <ChevronRight
-            size={17}
-            className="text-[#d1a3af]"
-          />
+          <span className="flex-1 text-xs font-medium">Logout</span>
+          <ChevronRight size={17} className="text-[#d1a3af]" />
         </button>
       </div>
 
@@ -506,13 +488,11 @@ const Profile: React.FC = () => {
           }}
         >
           <div className="max-h-[calc(100vh-32px)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-serif text-xl font-medium text-[#3b2b30]">
                   Edit Profile
                 </h2>
-
                 <p className="mt-1 text-xs text-[#97858b]">
                   Update your account information.
                 </p>
@@ -528,12 +508,10 @@ const Profile: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveProfile}>
-
               <div className="mb-4">
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Full Name
                 </label>
-
                 <input
                   type="text"
                   name="name"
@@ -548,7 +526,6 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Mobile Number
                 </label>
-
                 <input
                   type="tel"
                   name="phone"
@@ -563,7 +540,6 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Email Address
                 </label>
-
                 <input
                   type="email"
                   name="email"
@@ -597,13 +573,11 @@ const Profile: React.FC = () => {
           }}
         >
           <div className="max-h-[calc(100vh-32px)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-serif text-xl font-medium text-[#3b2b30]">
                   Change Password
                 </h2>
-
                 <p className="mt-1 text-xs text-[#97858b]">
                   Keep your account secure.
                 </p>
@@ -619,120 +593,71 @@ const Profile: React.FC = () => {
             </div>
 
             <form onSubmit={handleChangePassword}>
-
-              {/* CURRENT PASSWORD */}
               <div className="mb-4">
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Current Password
                 </label>
-
                 <div className="relative">
                   <input
-                    type={
-                      showCurrentPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showCurrentPassword ? "text" : "password"}
                     name="currentPassword"
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
-
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowCurrentPassword(
-                        (previous) => !previous
-                      )
-                    }
+                    onClick={() => setShowCurrentPassword((prev) => !prev)}
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
-                    aria-label="Toggle current password visibility"
                   >
-                    {showCurrentPassword ? (
-                      <EyeOff size={17} />
-                    ) : (
-                      <Eye size={17} />
-                    )}
+                    {showCurrentPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
               </div>
 
-              {/* NEW PASSWORD */}
               <div className="mb-4">
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   New Password
                 </label>
-
                 <div className="relative">
                   <input
-                    type={
-                      showNewPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showNewPassword ? "text" : "password"}
                     name="newPassword"
                     value={passwordForm.newPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
-
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowNewPassword(
-                        (previous) => !previous
-                      )
-                    }
+                    onClick={() => setShowNewPassword((prev) => !prev)}
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
-                    aria-label="Toggle new password visibility"
                   >
-                    {showNewPassword ? (
-                      <EyeOff size={17} />
-                    ) : (
-                      <Eye size={17} />
-                    )}
+                    {showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
               </div>
 
-              {/* CONFIRM PASSWORD */}
               <div className="mb-5">
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Confirm New Password
                 </label>
-
                 <div className="relative">
                   <input
-                    type={
-                      showConfirmPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
-
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowConfirmPassword(
-                        (previous) => !previous
-                      )
-                    }
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
-                    aria-label="Toggle confirm password visibility"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff size={17} />
-                    ) : (
-                      <Eye size={17} />
-                    )}
+                    {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
               </div>

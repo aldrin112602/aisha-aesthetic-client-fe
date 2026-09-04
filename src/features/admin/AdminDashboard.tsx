@@ -12,30 +12,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface Appointment {
-  id: number;
-
-  customerId: number;
-  customerName?: string | null;
-  customerEmail?: string | null;
-
-  employeeId?: number | null;
-  employeeName?: string | null;
-
-  serviceId: number;
-  serviceName: string;
-  category: string;
-
-  date: string;
-  time: string;
-  area: string;
-
-  price: number;
-  status: string;
-
-  notes?: string | null;
-  createdAt?: string;
-}
+import { getAdminAppointments } from '../../api/appointments.api';
+import type { Appointment } from '../../types';
 
 interface DashboardCounts {
   todayAppointments: number;
@@ -69,10 +47,6 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-
-  const apiBaseUrl =
-    import.meta.env.VITE_API_BASE_URL ||
-    'http://localhost:3001';
 
   // =========================================================
   // GET LOCAL DATE
@@ -119,23 +93,22 @@ function AdminDashboard() {
 
   // =========================================================
   // LOAD APPOINTMENTS
+  //
+  // Uses the shared `getAdminAppointments` API helper (same one the
+  // Admin Appointments page uses) instead of a raw fetch() against a
+  // locally-guessed base URL — that mismatch was why no data showed
+  // up here.
   // =========================================================
 
   const loadAppointments = useCallback(async () => {
     try {
       setError('');
 
-      const response = await fetch(
-        `${apiBaseUrl}/api/appointments`
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Failed to fetch appointments.'
-        );
-      }
-
-      const data = await response.json();
+      // The backend excludes walk-ins by default when `type` is
+      // omitted (it falls back to `type=appointment`). The dashboard
+      // needs the full picture — both online appointments and
+      // walk-ins — so we explicitly ask for `all`.
+      const data = await getAdminAppointments({ type: 'all' });
 
       const appointmentData: Appointment[] =
         Array.isArray(data) ? data : [];
@@ -272,7 +245,7 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl]);
+  }, []);
 
   // =========================================================
   // INITIAL LOAD
@@ -461,12 +434,11 @@ function AdminDashboard() {
 
   return (
     <div className="page-container">
-
       {/* =====================================================
           HEADER
       ====================================================== */}
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:mb-8">
         <div>
           <h1 className="page-title">
             Admin Dashboard
@@ -504,7 +476,7 @@ function AdminDashboard() {
 
       {error && (
         <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          <AlertCircle size={18} />
+          <AlertCircle size={18} className="shrink-0" />
 
           <span>{error}</span>
         </div>
@@ -514,34 +486,34 @@ function AdminDashboard() {
           SUMMARY CARDS
       ====================================================== */}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {/* TODAY */}
         <button
           type="button"
           onClick={() =>
             navigate('/admin-appointments')
           }
-          className="pink-card w-full cursor-pointer text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
+          className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-[#92737c]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-[#92737c] sm:text-sm">
                 Today's Appointments
               </p>
 
-              <p className="mt-3 text-3xl font-bold text-[#4b343b]">
+              <p className="mt-2 text-2xl font-bold text-[#4b343b] sm:mt-3 sm:text-3xl">
                 {counts.todayAppointments}
               </p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
-              <CalendarDays size={20} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992] sm:h-10 sm:w-10">
+              <CalendarDays size={18} />
             </div>
           </div>
 
           <p className="mt-3 flex items-center gap-1 text-xs font-medium text-[#d77992]">
-            View appointments
+            <span className="hidden sm:inline">View appointments</span>
+            <span className="sm:hidden">View</span>
             <ChevronRight size={14} />
           </p>
         </button>
@@ -552,26 +524,27 @@ function AdminDashboard() {
           onClick={() =>
             navigate('/admin-appointments')
           }
-          className="pink-card w-full cursor-pointer text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
+          className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-[#92737c]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-[#92737c] sm:text-sm">
                 Upcoming Appointments
               </p>
 
-              <p className="mt-3 text-3xl font-bold text-[#4b343b]">
+              <p className="mt-2 text-2xl font-bold text-[#4b343b] sm:mt-3 sm:text-3xl">
                 {counts.upcomingAppointments}
               </p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
-              <Clock3 size={20} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992] sm:h-10 sm:w-10">
+              <Clock3 size={18} />
             </div>
           </div>
 
           <p className="mt-3 flex items-center gap-1 text-xs font-medium text-[#d77992]">
-            View appointments
+            <span className="hidden sm:inline">View appointments</span>
+            <span className="sm:hidden">View</span>
             <ChevronRight size={14} />
           </p>
         </button>
@@ -582,26 +555,27 @@ function AdminDashboard() {
           onClick={() =>
             navigate('/admin-appointments')
           }
-          className="pink-card w-full cursor-pointer text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
+          className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-[#92737c]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-[#92737c] sm:text-sm">
                 Pending Approval
               </p>
 
-              <p className="mt-3 text-3xl font-bold text-[#4b343b]">
+              <p className="mt-2 text-2xl font-bold text-[#4b343b] sm:mt-3 sm:text-3xl">
                 {counts.pendingApproval}
               </p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff4e5] text-[#b87918]">
-              <AlertCircle size={20} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff4e5] text-[#b87918] sm:h-10 sm:w-10">
+              <AlertCircle size={18} />
             </div>
           </div>
 
           <p className="mt-3 flex items-center gap-1 text-xs font-medium text-[#d77992]">
-            Review bookings
+            <span className="hidden sm:inline">Review bookings</span>
+            <span className="sm:hidden">Review</span>
             <ChevronRight size={14} />
           </p>
         </button>
@@ -612,26 +586,27 @@ function AdminDashboard() {
           onClick={() =>
             navigate('/admin-appointments')
           }
-          className="pink-card w-full cursor-pointer text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
+          className="pink-card flex w-full cursor-pointer flex-col justify-between text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#d77992] active:scale-[0.98]"
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-[#92737c]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs text-[#92737c] sm:text-sm">
                 Confirmed
               </p>
 
-              <p className="mt-3 text-3xl font-bold text-[#4b343b]">
+              <p className="mt-2 text-2xl font-bold text-[#4b343b] sm:mt-3 sm:text-3xl">
                 {counts.confirmed}
               </p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf9f1] text-[#2f7d59]">
-              <UserCheck size={20} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#edf9f1] text-[#2f7d59] sm:h-10 sm:w-10">
+              <UserCheck size={18} />
             </div>
           </div>
 
           <p className="mt-3 flex items-center gap-1 text-xs font-medium text-[#d77992]">
-            View confirmed
+            <span className="hidden sm:inline">View confirmed</span>
+            <span className="sm:hidden">View</span>
             <ChevronRight size={14} />
           </p>
         </button>
@@ -641,8 +616,7 @@ function AdminDashboard() {
           TODAY'S APPOINTMENTS
       ====================================================== */}
 
-      <div className="mt-8 rounded-2xl border border-pink-100 bg-white p-6 shadow-sm">
-
+      <div className="mt-6 rounded-2xl border border-pink-100 bg-white p-4 shadow-sm sm:mt-8 sm:p-6">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-bold text-[#4b343b]">
@@ -659,7 +633,7 @@ function AdminDashboard() {
             onClick={() =>
               navigate('/admin-appointments')
             }
-            className="inline-flex items-center gap-1 text-sm font-semibold text-[#d77992] hover:underline"
+            className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#d77992] hover:underline sm:self-auto"
           >
             View All
             <ChevronRight size={15} />
@@ -681,92 +655,119 @@ function AdminDashboard() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] text-left">
-              <thead>
-                <tr className="border-b border-pink-100 text-xs uppercase tracking-wide text-[#92737c]">
-                  <th className="px-4 py-3 font-semibold">
-                    Time
-                  </th>
+          <>
+            {/* ========================================
+                MOBILE / TABLET: CARD LIST (below md)
+            ======================================== */}
+            <div className="flex flex-col gap-3 md:hidden">
+              {todaysAppointments.map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="rounded-xl border border-pink-100 bg-[#fffafb] p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 font-semibold text-[#4b343b]">
+                      <Clock3 size={15} className="text-[#d77992]" />
+                      {formatTime(appointment.time)}
+                    </div>
 
-                  <th className="px-4 py-3 font-semibold">
-                    Customer
-                  </th>
+                    {renderStatusBadge(appointment.status)}
+                  </div>
 
-                  <th className="px-4 py-3 font-semibold">
-                    Service
-                  </th>
+                  <div className="mt-3">
+                    <p className="font-semibold text-[#4b343b]">
+                      {appointment.customerName || 'Customer'}
+                    </p>
 
-                  <th className="px-4 py-3 font-semibold">
-                    Area
-                  </th>
+                    {appointment.customerEmail && (
+                      <p className="mt-0.5 text-xs text-[#92737c]">
+                        {appointment.customerEmail}
+                      </p>
+                    )}
+                  </div>
 
-                  <th className="px-4 py-3 font-semibold">
-                    Status
-                  </th>
-                </tr>
-              </thead>
+                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                    <div>
+                      <p className="text-[#92737c]">Service</p>
+                      <p className="truncate font-medium text-[#5d424a]">
+                        {appointment.serviceName}
+                      </p>
+                    </div>
 
-              <tbody>
-                {todaysAppointments.map(
-                  (appointment) => (
+                    <div>
+                      <p className="text-[#92737c]">Area</p>
+                      <p className="truncate font-medium text-[#745d65]">
+                        {appointment.area}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ========================================
+                DESKTOP: TABLE (md and up)
+            ======================================== */}
+            <div className="hidden overflow-x-auto rounded-xl border border-pink-100 md:block">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-pink-100 bg-[#fff8fa] text-xs uppercase tracking-wide text-[#92737c]">
+                    <th className="px-4 py-3 font-semibold">Time</th>
+                    <th className="px-4 py-3 font-semibold">Customer</th>
+                    <th className="px-4 py-3 font-semibold">Service</th>
+                    <th className="px-4 py-3 font-semibold">Area</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {todaysAppointments.map((appointment) => (
                     <tr
                       key={appointment.id}
                       className="border-b border-pink-50 last:border-0 hover:bg-[#fffafb]"
                     >
-                      <td className="px-4 py-4">
+                      <td className="whitespace-nowrap px-4 py-3">
                         <div className="flex items-center gap-2 font-semibold text-[#4b343b]">
-                          <Clock3
-                            size={15}
-                            className="text-[#d77992]"
-                          />
-
-                          {formatTime(
-                            appointment.time
-                          )}
+                          <Clock3 size={15} className="text-[#d77992]" />
+                          {formatTime(appointment.time)}
                         </div>
                       </td>
 
-                      <td className="px-4 py-4">
-                        <div>
-                          <p className="font-semibold text-[#4b343b]">
-                            {appointment.customerName ||
-                              'Customer'}
+                      <td className="px-4 py-3">
+                        <p className="max-w-[160px] truncate font-semibold text-[#4b343b]">
+                          {appointment.customerName || 'Customer'}
+                        </p>
+
+                        {appointment.customerEmail && (
+                          <p className="max-w-[160px] truncate text-xs text-[#92737c]">
+                            {appointment.customerEmail}
                           </p>
-
-                          {appointment.customerEmail && (
-                            <p className="mt-0.5 text-xs text-[#92737c]">
-                              {appointment.customerEmail}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </td>
 
-                      <td className="px-4 py-4">
-                        <p className="font-medium text-[#5d424a]">
+                      <td className="px-4 py-3">
+                        <p className="max-w-[150px] truncate font-medium text-[#5d424a]">
                           {appointment.serviceName}
                         </p>
 
-                        <p className="mt-0.5 text-xs text-[#92737c]">
+                        <p className="text-xs text-[#92737c]">
                           {appointment.category}
                         </p>
                       </td>
 
-                      <td className="px-4 py-4 text-sm text-[#745d65]">
+                      <td className="px-4 py-3 text-sm text-[#745d65]">
                         {appointment.area}
                       </td>
 
-                      <td className="px-4 py-4">
-                        {renderStatusBadge(
-                          appointment.status
-                        )}
+                      <td className="px-4 py-3">
+                        {renderStatusBadge(appointment.status)}
                       </td>
                     </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -774,11 +775,10 @@ function AdminDashboard() {
           APPOINTMENT STATUS
       ====================================================== */}
 
-      <div className="mt-8 grid gap-5 xl:grid-cols-2">
-
+      <div className="mt-6 grid gap-4 sm:mt-8 sm:gap-5 xl:grid-cols-2">
         <div className="pink-card">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
               <CalendarDays size={20} />
             </div>
 
@@ -794,67 +794,50 @@ function AdminDashboard() {
           </div>
 
           <div className="mt-5 space-y-3">
-
             {/* COMPLETED */}
-            <div className="flex items-center justify-between rounded-xl bg-[#f8fbff] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#f8fbff] px-4 py-3">
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <CheckCircle2
-                  size={16}
-                  className="text-[#4169a1]"
-                />
-
+                <CheckCircle2 size={16} className="shrink-0 text-[#4169a1]" />
                 Completed Appointments
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.completed}
               </span>
             </div>
 
             {/* CANCELLED */}
-            <div className="flex items-center justify-between rounded-xl bg-red-50/60 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-red-50/60 px-4 py-3">
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <XCircle
-                  size={16}
-                  className="text-red-500"
-                />
-
+                <XCircle size={16} className="shrink-0 text-red-500" />
                 Cancelled Appointments
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.cancelled}
               </span>
             </div>
 
             {/* NO SHOW */}
-            <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-4 py-3">
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <AlertCircle
-                  size={16}
-                  className="text-gray-500"
-                />
-
+                <AlertCircle size={16} className="shrink-0 text-gray-500" />
                 No Show Appointments
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.noShow}
               </span>
             </div>
 
             {/* TOTAL */}
-            <div className="flex items-center justify-between rounded-xl bg-[#fff8fa] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#fff8fa] px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#6d4a54]">
-                <Users
-                  size={16}
-                  className="text-[#d77992]"
-                />
-
+                <Users size={16} className="shrink-0 text-[#d77992]" />
                 Total Bookings
               </div>
 
-              <span className="font-bold text-[#d77992]">
+              <span className="shrink-0 font-bold text-[#d77992]">
                 {appointments.length}
               </span>
             </div>
@@ -867,7 +850,7 @@ function AdminDashboard() {
 
         <div className="pink-card">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0f4] text-[#d77992]">
               <UserCheck size={20} />
             </div>
 
@@ -883,25 +866,18 @@ function AdminDashboard() {
           </div>
 
           <div className="mt-5 space-y-3">
-
             {/* PENDING */}
             <button
               type="button"
-              onClick={() =>
-                navigate('/admin-appointments')
-              }
-              className="flex w-full items-center justify-between rounded-xl bg-[#fff4e5] px-4 py-3 text-left transition hover:brightness-95"
+              onClick={() => navigate('/admin-appointments')}
+              className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#fff4e5] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <AlertCircle
-                  size={16}
-                  className="text-[#b87918]"
-                />
-
+                <AlertCircle size={16} className="shrink-0 text-[#b87918]" />
                 Pending Approval
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.pendingApproval}
               </span>
             </button>
@@ -909,21 +885,15 @@ function AdminDashboard() {
             {/* CONFIRMED */}
             <button
               type="button"
-              onClick={() =>
-                navigate('/admin-appointments')
-              }
-              className="flex w-full items-center justify-between rounded-xl bg-[#edf9f1] px-4 py-3 text-left transition hover:brightness-95"
+              onClick={() => navigate('/admin-appointments')}
+              className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#edf9f1] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <CheckCircle2
-                  size={16}
-                  className="text-[#2f7d59]"
-                />
-
+                <CheckCircle2 size={16} className="shrink-0 text-[#2f7d59]" />
                 Confirmed
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.confirmed}
               </span>
             </button>
@@ -931,21 +901,15 @@ function AdminDashboard() {
             {/* TODAY */}
             <button
               type="button"
-              onClick={() =>
-                navigate('/admin-appointments')
-              }
-              className="flex w-full items-center justify-between rounded-xl bg-[#fff8fa] px-4 py-3 text-left transition hover:brightness-95"
+              onClick={() => navigate('/admin-appointments')}
+              className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#fff8fa] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <CalendarDays
-                  size={16}
-                  className="text-[#d77992]"
-                />
-
+                <CalendarDays size={16} className="shrink-0 text-[#d77992]" />
                 Today's Appointments
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.todayAppointments}
               </span>
             </button>
@@ -953,21 +917,15 @@ function AdminDashboard() {
             {/* UPCOMING */}
             <button
               type="button"
-              onClick={() =>
-                navigate('/admin-appointments')
-              }
-              className="flex w-full items-center justify-between rounded-xl bg-[#fff8fa] px-4 py-3 text-left transition hover:brightness-95"
+              onClick={() => navigate('/admin-appointments')}
+              className="flex w-full items-center justify-between gap-3 rounded-xl bg-[#fff8fa] px-4 py-3 text-left transition hover:brightness-95"
             >
               <div className="flex items-center gap-2 text-sm text-[#6d4a54]">
-                <Clock3
-                  size={16}
-                  className="text-[#d77992]"
-                />
-
+                <Clock3 size={16} className="shrink-0 text-[#d77992]" />
                 Upcoming Appointments
               </div>
 
-              <span className="font-bold text-[#4b343b]">
+              <span className="shrink-0 font-bold text-[#4b343b]">
                 {counts.upcomingAppointments}
               </span>
             </button>

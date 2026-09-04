@@ -6,18 +6,26 @@ import type {
   BookingPayload,
 } from '../types';
 
-/**
- * Get all appointments for Admin.
- *
- * IMPORTANT:
- * Use /api/appointments instead of /api/bookings
- * because /api/appointments includes:
- * - customerName
- * - customerEmail
- * - employeeName
- */
-export function getAdminAppointments() {
-  return apiRequest<Appointment[]>('/api/appointments');
+
+export function getAdminAppointments(params?: {
+  status?: string;
+  type?: string;
+}) {
+  const query = new URLSearchParams();
+
+  if (params?.status) {
+    query.set('status', params.status);
+  }
+
+  if (params?.type) {
+    query.set('type', params.type);
+  }
+
+  const queryString = query.toString();
+
+  return apiRequest<Appointment[]>(
+    `/api/appointments${queryString ? `?${queryString}` : ''}`
+  );
 }
 
 /**
@@ -39,14 +47,7 @@ export function getCustomerAppointments(customerId: number) {
   );
 }
 
-/**
- * Get appointments available to this employee.
- *
- * Backend returns:
- * - appointments already assigned to this employee
- * - pending unassigned appointments belonging
- *   to the employee's shop area
- */
+
 export function getEmployeeAppointments(employeeId: number) {
   return apiRequest<Appointment[]>(
     `/api/appointments?employeeId=${employeeId}`
@@ -89,14 +90,7 @@ export function updateAppointmentStatus(
   );
 }
 
-/**
- * Update appointment details.
- *
- * Currently supports:
- * - date
- * - time
- * - status
- */
+
 export function updateAppointment(
   appointmentId: number,
   payload: Partial<Pick<Appointment, 'date' | 'time' | 'status'>>
