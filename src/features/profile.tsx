@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Swal from "sweetalert2";
 import {
   UserRound,
   Phone,
@@ -102,6 +103,36 @@ const Profile: React.FC = () => {
       );
     };
   }, []);
+
+
+  const getProfileImageUrl = (
+    image?: string | null
+  ): string => {
+    if (!image) {
+      return "";
+    }
+
+    // Base64 image
+    if (image.startsWith("data:")) {
+      return image;
+    }
+
+    // Already complete URL
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://")
+    ) {
+      return image;
+    }
+
+    // Relative path from backend
+    if (image.startsWith("/")) {
+      return `${API_BASE_URL}${image}`;
+    }
+
+    return `${API_BASE_URL}/${image}`;
+  };
+
 
   /*
   |--------------------------------------------------------------------------
@@ -367,12 +398,20 @@ const Profile: React.FC = () => {
   |--------------------------------------------------------------------------
   */
 
-  const handleLogout = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to logout?"
-    );
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ec4899",
+      cancelButtonColor: "#6b7280",
+      reverseButtons: true,
+    });
 
-    if (!confirmed) {
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -413,7 +452,7 @@ const Profile: React.FC = () => {
           <div className="relative mx-auto mb-3 h-[92px] w-[92px]">
             <div className="flex h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#f7e9ed] to-[#efd5dc] text-[#a9687d] shadow-[0_5px_18px_rgba(80,44,56,0.12)]">
               <img
-                src={profile.profileImage || defaultAvatar}
+                src={profile.profileImage ? getProfileImageUrl(profile.profileImage) : defaultAvatar}
                 alt={`${profile.name} profile`}
                 className="h-full w-full object-cover"
               />

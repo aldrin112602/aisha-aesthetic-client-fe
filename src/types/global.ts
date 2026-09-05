@@ -6,6 +6,8 @@ export interface CurrentUser {
   email?: string;
   role: UserRole;
   shopArea?: string | null;
+  phone?: string | null;
+  profileImage?: string | null;
   [key: string]: unknown;
 }
 
