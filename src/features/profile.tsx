@@ -251,7 +251,7 @@ const Profile: React.FC = () => {
         new Event("user-updated")
       );
 
-      alert("Profile picture updated successfully!");
+      Swal.fire("Success", "Profile picture updated successfully!", "success");
     } catch (error: any) {
       console.error("Error uploading image:", error);
       alert(error.message || "Failed to upload image to server.");
