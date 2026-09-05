@@ -144,11 +144,16 @@ function EmployeeAppointmentList({
               <p className="font-medium text-gray-800">{appointment.area}</p>
             </MobileDetail>
 
-            <MobileDetail icon={<UserCheck size={17} />} label="Assigned Employee">
-              <p className="font-medium text-gray-800">
-                {appointment.employeeName || `Employee #${appointment.employeeId}`}
-              </p>
-            </MobileDetail>
+         <MobileDetail icon={<UserCheck size={17} />} label="Assigned Employee"
+        >
+          <p className="font-medium text-gray-800">
+            {appointment.employeeName
+              ? appointment.employeeName
+              : appointment.employeeId
+                ? `Employee #${appointment.employeeId}`
+                : 'Unassigned'}
+          </p>
+        </MobileDetail>
 
             <MobileDetail icon={<PhilippinePeso size={17} />} label="Price">
               <p className="font-semibold text-gray-800">

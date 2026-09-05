@@ -20,11 +20,14 @@ function CustomerDashboard() {
       return;
     }
 
-    getCustomerAppointments(currentUser.id)
-      .then((data) => {
-        setAppointments(Array.isArray(data) ? data : []);
-        setError('');
-      })
+getCustomerAppointments(currentUser.id)
+  .then((data) => {
+    console.log('Logged-in customer ID:', currentUser.id);
+    console.log('Customer appointments from API:', data);
+
+    setAppointments(Array.isArray(data) ? data : []);
+    setError('');
+  })
       .catch((fetchError) => {
         console.error('Failed to fetch appointments:', fetchError);
         setError(
@@ -89,10 +92,10 @@ function CustomerDashboard() {
         ))}
       </div>
 
-      <div className="mt-8 grid gap-5 xl:grid-cols-2">
+      <div className="mt-8 grid gap-4 xl:grid-cols-2">
         <div className="pink-card">
           <h2 className="text-lg font-bold text-[#4b343b]">My Appointments</h2>
-          <ul className="mt-4 space-y-3 text-sm text-[#6d4a54]">
+          <ul className="mt-1 space-y-1 text-sm text-[#6d4a54]">
             {appointments.length === 0 ? (
               <li className="text-[#92737c]">
                 No bookings yet.{' '}

@@ -599,6 +599,16 @@ function AdminAppointments() {
                       {appointment.area}
                     </p>
                   </div>
+                    <div>
+                  <p className="text-[#92737c]">Assigned Employee</p>
+                  <p className="truncate font-medium text-[#5b3e45]">
+                    {appointment.employeeName ||
+                      (appointment.employeeId
+                        ? `Employee #${appointment.employeeId}`
+                        : 'Unassigned')}
+                  </p>
+                </div>
+
 
                   <div>
                     <p className="text-[#92737c]">Date</p>
@@ -653,6 +663,9 @@ function AdminAppointments() {
                     <th className="px-4 py-3 font-semibold">Time</th>
                     <th className="hidden px-4 py-3 font-semibold xl:table-cell">
                       Area
+                    </th>
+                    <th className="px-4 py-3 font-semibold">
+                      Assigned Employee
                     </th>
                     <th className="px-4 py-3 font-semibold">Price</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
@@ -718,6 +731,17 @@ function AdminAppointments() {
                           {appointment.area}
                         </span>
                       </td>
+
+                      {/* Assigned Employee */}
+                      <td className="px-4 py-3">
+                        <span className="block max-w-[140px] truncate font-medium text-[#5b3e45]">
+                          {appointment.employeeName ||
+                            (appointment.employeeId
+                              ? `Employee #${appointment.employeeId}`
+                              : 'Unassigned')}
+                        </span>
+                      </td>
+
 
                       {/* Price */}
                       <td className="whitespace-nowrap px-4 py-3">

@@ -64,7 +64,15 @@ function EmployeeDashboard() {
 
       const data = await getEmployeeAppointments(currentUser.id);
 
+      console.log('=================================');
+      console.log('EMPLOYEE ID:', currentUser.id);
+      console.log('EMPLOYEE NAME:', currentUser.name);
+      console.log('EMPLOYEE SHOP AREA:', currentUser.shopArea);
+      console.log('EMPLOYEE APPOINTMENTS:', data);
+      console.log('=================================');
+
       setAppointments(Array.isArray(data) ? data : []);
+      setCurrentTime(Date.now());
       setCurrentTime(Date.now());
     } catch (loadError) {
       console.error(
@@ -98,36 +106,9 @@ function EmployeeDashboard() {
    * - appointments assigned to them
    * - pending unassigned appointments in their shop area
    */
-  const employeeAppointments = useMemo(() => {
-    if (!currentUser?.id) {
-      return [];
-    }
-
-    return appointments.filter((appointment) => {
-      const assignedToMe =
-        Number(appointment.employeeId) ===
-        Number(currentUser.id);
-
-      const unassigned =
-        appointment.employeeId === null ||
-        appointment.employeeId === undefined;
-
-      const sameShopArea =
-        String(appointment.area || '')
-          .trim()
-          .toLowerCase() ===
-        String(currentUser.shopArea || '')
-          .trim()
-          .toLowerCase();
-
-      const availableForMe =
-        unassigned &&
-        appointment.status?.toLowerCase() === 'pending' &&
-        sameShopArea;
-
-      return assignedToMe || availableForMe;
-    });
-  }, [appointments, currentUser]);
+const employeeAppointments = useMemo(() => {
+  return Array.isArray(appointments) ? appointments : [];
+}, [appointments]);
 
   const upcomingAppointments = useMemo(() => {
     return employeeAppointments
