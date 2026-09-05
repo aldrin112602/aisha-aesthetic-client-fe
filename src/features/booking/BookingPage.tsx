@@ -10,7 +10,7 @@ import {
 // ==========================================
 // SERVICE IMAGES
 // ==========================================
-
+import Swal from "sweetalert2";
 import snowWhiteImage from '../../assets/img/snowhite.png';
 import cinderellaImage from '../../assets/img/cinderella.png';
 
@@ -442,14 +442,21 @@ function Booking() {
           service.price,
       });
 
-      alert(
-        `Appointment booked successfully!\n\n` +
-        `Service: ${service.name}\n` +
-        `Date: ${selectedDate}\n` +
-        `Time: ${selectedTime}\n` +
-        `Area: ${selectedArea}\n` +
-        `Price: ₱${service.price.toLocaleString()}`
-      );
+await Swal.fire({
+  icon: "success",
+  title: "Appointment Booked!",
+  html: `
+    <div style="text-align: left; line-height: 1.8;">
+      <p><strong>Service:</strong> ${service.name}</p>
+      <p><strong>Date:</strong> ${selectedDate}</p>
+      <p><strong>Time:</strong> ${selectedTime}</p>
+      <p><strong>Area:</strong> ${selectedArea}</p>
+      <p><strong>Price:</strong> ₱${service.price.toLocaleString()}</p>
+    </div>
+  `,
+  confirmButtonText: "Done",
+  confirmButtonColor: "#d77a94",
+});
 
     } catch (error) {
       const message =
