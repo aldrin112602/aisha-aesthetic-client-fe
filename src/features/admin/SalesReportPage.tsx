@@ -344,13 +344,13 @@ const SalesReportPage: React.FC = () => {
         id: 'pending',
         label: 'Pending',
         value: Number(bookings?.pending || 0),
-        color: '#d6a85f',
+        color: '#b7c95a',
       },
       {
         id: 'confirmed',
         label: 'Confirmed',
         value: Number(bookings?.confirmed || 0),
-        color: '#8064b5',
+        color: '#e78aa5',
       },
       {
         id: 'completed',
@@ -362,13 +362,13 @@ const SalesReportPage: React.FC = () => {
         id: 'cancelled',
         label: 'Cancelled',
         value: Number(bookings?.cancelled || 0),
-        color: '#d8798d',
+        color: '#ef4444',
       },
       {
         id: 'no-show',
         label: 'No-show',
         value: Number(bookings?.noShow || 0),
-        color: '#908698',
+        color: '#8b5cf6',
       },
     ];
 
