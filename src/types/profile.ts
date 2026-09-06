@@ -5,6 +5,7 @@ export interface UserProfile {
   phone: string;
   role?: string;
   profileImage?: string;
+  type?: string;
 }
 
 export interface PasswordForm {

@@ -247,49 +247,56 @@ function AdminAppointments() {
     return pages;
   }, [currentPage, totalPages]);
 
-  const updateStatus = async (
-    appointmentId: number,
-    nextStatus: string
-  ) => {
-    try {
-      await updateAppointmentStatus(
-        appointmentId,
-        nextStatus
-      );
+ const updateStatus = async (
+  appointmentId: number,
+  nextStatus: string
+) => {
+  try {
+    await updateAppointmentStatus(
+      appointmentId,
+      nextStatus,
+      true
+    );
 
-      setAppointments((current) =>
-        current.map((item) =>
-          item.id === appointmentId
-            ? {
-                ...item,
-                status: nextStatus,
-              }
-            : item
-        )
-      );
+    setAppointments((current) =>
+      current.map((item) =>
+        item.id === appointmentId
+          ? {
+              ...item,
+              status: nextStatus,
+            }
+          : item
+      )
+    );
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Status Updated',
-        text: `Appointment status changed to ${nextStatus}.`,
-        confirmButtonColor: '#df7f98',
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      console.error(
-        'Error updating appointment status:',
-        error
-      );
+    Swal.fire({
+      icon: 'success',
+      title: 'Status Updated',
+      text: `Appointment status changed to ${nextStatus}.`,
+      confirmButtonColor: '#df7f98',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (error: any) {
+    console.error(
+      'Error updating appointment status:',
+      error
+    );
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: 'Unable to update appointment status.',
-        confirmButtonColor: '#df7f98',
-      });
-    }
-  };
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      'Unable to update appointment status.';
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Update Failed',
+      text: message,
+      confirmButtonColor: '#df7f98',
+    });
+  }
+};
+
 
   const deleteAppointment = async (
     appointmentId: number,
@@ -833,5 +840,4 @@ function AdminAppointments() {
     </div>
   );
 }
-
 export default AdminAppointments;

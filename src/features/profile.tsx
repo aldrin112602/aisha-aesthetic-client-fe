@@ -287,6 +287,7 @@ const Profile: React.FC = () => {
       name: editForm.name.trim(),
       email: editForm.email.trim(),
       phone: editForm.phone.trim(),
+      type: "update_profile",
     };
 
     if (!updatedProfile.name || !updatedProfile.email || !updatedProfile.phone) {
@@ -302,6 +303,7 @@ const Profile: React.FC = () => {
           name: updatedProfile.name,
           email: updatedProfile.email,
           phone: updatedProfile.phone,
+          type: "update_profile",
         }),
       });
 

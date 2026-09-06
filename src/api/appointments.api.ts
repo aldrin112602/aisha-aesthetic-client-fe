@@ -77,7 +77,8 @@ export function assignAppointment(
  */
 export function updateAppointmentStatus(
   appointmentId: number,
-  status: AppointmentStatusUpdate['status']
+  status: AppointmentStatusUpdate['status'],
+  isAdmin: boolean = false
 ) {
   return apiRequest<Appointment>(
     `/api/appointments/${appointmentId}/status`,
@@ -85,6 +86,7 @@ export function updateAppointmentStatus(
       method: 'PATCH',
       body: {
         status,
+        isAdmin,
       },
     }
   );
