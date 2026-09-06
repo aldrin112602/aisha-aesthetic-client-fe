@@ -35,43 +35,48 @@ const navigationByRole: Record<
   // =========================================================
   // ADMIN NAVIGATION
   // =========================================================
-  admin: [
-    {
-      name: 'Home',
-      path: '/admin',
-      icon: House,
-    },
-    {
-      name: 'Appointments',
-      path: '/admin-appointments',
-      icon: CalendarDays,
-    },
-    {
-      name: 'Manage Accounts',
-      path: '/account-management',
-      icon: UserCog,
-    },
-    {
-      name: 'Walk-ins',
-      path: '/walkins',
-      icon: Users,
-    },
-    {
-      name: 'Notifications',
-      path: '/notifications',
-      icon: Bell,
-    },
-    {
-      name: 'Shop areas',
-      path: '/shop-areas',
-      icon: Users,
-    },
-    {
-      name: 'Services',
-      path: '/services',
-      icon: Sparkles,
-    },
-  ],
+admin: [
+  {
+    name: 'Home',
+    path: '/admin',
+    icon: House,
+  },
+  {
+    name: 'Appointments',
+    path: '/admin-appointments',
+    icon: CalendarDays,
+  },
+  {
+    name: 'Manage Accounts',
+    path: '/account-management',
+    icon: UserCog,
+  },
+  {
+    name: 'Walk-ins',
+    path: '/walkins',
+    icon: Users,
+  },
+  {
+    name: 'Notifications',
+    path: '/notifications',
+    icon: Bell,
+  },
+  {
+    name: 'Shop areas',
+    path: '/shop-areas',
+    icon: Users,
+  },
+  {
+    name: 'Services',
+    path: '/services',
+    icon: Sparkles,
+  },
+  {
+    name: 'Sales Report',
+    path: '/sales-report',
+    icon: Clock3,
+  },
+],
 
   // =========================================================
   // EMPLOYEE NAVIGATION
@@ -99,6 +104,11 @@ const navigationByRole: Record<
     },
   ],
 
+
+
+
+
+  
   // =========================================================
   // CUSTOMER NAVIGATION
   // =========================================================

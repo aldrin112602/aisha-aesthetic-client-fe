@@ -1,4 +1,10 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 
 import Dashboard from './features/Dashboard';
 import Booking from './features/booking/BookingPage';
@@ -7,6 +13,7 @@ import History from './features/History';
 import Signin from './features/Signin';
 import Signup from './features/Signup';
 import Profile from './features/profile';
+import SalesReportPage from './features/admin/SalesReportPage';
 import AdminDashboard from './features/admin/AdminDashboard';
 import EmployeeDashboard from './features/employee/EmployeeDashboard';
 import CustomerDashboard from './features/customer/CustomerDashboard';
@@ -19,20 +26,95 @@ import FollowupReminders from './features/followups/FollowupRemindersPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicRoute from './routes/PublicRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import { getCurrentUser, getRoleDestination } from './utils/auth';
 
+import {
+  getCurrentUser,
+  getRoleDestination,
+} from './utils/auth';
+// ==========================================
+// PAGE TITLES
+// ==========================================
+
+const pageTitles: Record<string, string> = {
+  '/': 'Aisha Aesthetics',
+
+  // AUTH
+  '/signin': 'Sign In',
+  '/signup': 'Sign Up',
+
+  // DASHBOARDS
+  '/admin': 'Admin Dashboard',
+  '/employee': 'Employee Dashboard',
+  '/customer': 'Customer Dashboard',
+  '/dashboard': 'Dashboard',
+
+  // ADMIN
+  '/admin-appointments': 'Appointment Management',
+  '/account-management': 'Account Management',
+  '/shop-areas': 'Shop Areas',
+  '/services': 'Services',
+  '/sales-report': 'Sales Report',
+
+  // SHARED
+  '/walkins': 'Walk-ins',
+  '/notifications': 'Notifications',
+  '/appointments': 'Appointments',
+  '/profile': 'Profile',
+
+  // CUSTOMER
+  '/booking': 'Book Appointment',
+  '/history': 'Appointment History',
+};
+
+// ==========================================
+// APP
+// ==========================================
 
 function App() {
   const location = useLocation();
   const currentUser = getCurrentUser();
 
+  // ==========================================
+  // DYNAMIC DOCUMENT TITLE
+  // ==========================================
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+
+    const pageTitle =
+      pageTitles[currentPath] ||
+      'Aisha Aesthetics';
+
+    document.title =
+      pageTitle === 'Aisha Aesthetics'
+        ? pageTitle
+        : `${pageTitle} | Aisha Aesthetics`;
+  }, [location.pathname]);
+
+  // ==========================================
+  // ROOT REDIRECT
+  // ==========================================
+
   if (location.pathname === '/') {
-    return <Navigate to={getRoleDestination(currentUser)} replace />;
+    return (
+      <Navigate
+        to={getRoleDestination(currentUser)}
+        replace
+      />
+    );
   }
+
+  // ==========================================
+  // ROUTES
+  // ==========================================
 
   return (
     <Routes>
-      {/* AUTH */}
+
+      {/* ======================================
+          AUTH
+      ======================================= */}
+
       <Route
         path="/signin"
         element={
@@ -41,6 +123,7 @@ function App() {
           </PublicRoute>
         }
       />
+
       <Route
         path="/signup"
         element={
@@ -50,7 +133,10 @@ function App() {
         }
       />
 
-      {/* ROLE DASHBOARDS */}
+      {/* ======================================
+          ROLE DASHBOARDS
+      ======================================= */}
+
       <Route
         path="/admin"
         element={
@@ -61,6 +147,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/employee"
         element={
@@ -71,6 +158,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/customer"
         element={
@@ -82,7 +170,10 @@ function App() {
         }
       />
 
-      {/* LEGACY ADMIN DASHBOARD */}
+      {/* ======================================
+          LEGACY ADMIN DASHBOARD
+      ======================================= */}
+
       <Route
         path="/dashboard"
         element={
@@ -94,7 +185,10 @@ function App() {
         }
       />
 
-      {/* ADMIN TOOLS */}
+      {/* ======================================
+          ADMIN TOOLS
+      ======================================= */}
+
       <Route
         path="/admin-appointments"
         element={
@@ -105,6 +199,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/account-management"
         element={
@@ -115,6 +210,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/shop-areas"
         element={
@@ -125,6 +221,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/services"
         element={
@@ -136,11 +233,27 @@ function App() {
         }
       />
 
-      {/* SHARED (ADMIN + EMPLOYEE) */}
+      <Route
+        path="/sales-report"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedLayout>
+              <SalesReportPage />
+            </ProtectedLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ======================================
+          SHARED ADMIN + EMPLOYEE
+      ======================================= */}
+
       <Route
         path="/walkins"
         element={
-          <ProtectedRoute allowedRoles={['employee', 'admin']}>
+          <ProtectedRoute
+            allowedRoles={['employee', 'admin']}
+          >
             <ProtectedLayout>
               <WalkinManagement />
             </ProtectedLayout>
@@ -148,31 +261,54 @@ function App() {
         }
       />
 
-      {/* SHARED (ALL ROLES) */}
+      {/* ======================================
+          SHARED ALL ROLES
+      ======================================= */}
+
       <Route
         path="/notifications"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+          <ProtectedRoute
+            allowedRoles={[
+              'admin',
+              'employee',
+              'customer',
+            ]}
+          >
             <ProtectedLayout>
               <FollowupReminders />
             </ProtectedLayout>
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/appointments"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+          <ProtectedRoute
+            allowedRoles={[
+              'admin',
+              'employee',
+              'customer',
+            ]}
+          >
             <ProtectedLayout>
               <Appointments />
             </ProtectedLayout>
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/profile"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'employee', 'customer']}>
+          <ProtectedRoute
+            allowedRoles={[
+              'admin',
+              'employee',
+              'customer',
+            ]}
+          >
             <ProtectedLayout>
               <Profile />
             </ProtectedLayout>
@@ -180,7 +316,10 @@ function App() {
         }
       />
 
-      {/* CUSTOMER ONLY */}
+      {/* ======================================
+          CUSTOMER ONLY
+      ======================================= */}
+
       <Route
         path="/booking"
         element={
@@ -191,6 +330,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/history"
         element={
@@ -202,11 +342,20 @@ function App() {
         }
       />
 
-      {/* UNKNOWN ROUTE */}
+      {/* ======================================
+          UNKNOWN ROUTE
+      ======================================= */}
+
       <Route
         path="*"
-        element={<Navigate to={getRoleDestination(currentUser)} replace />}
+        element={
+          <Navigate
+            to={getRoleDestination(currentUser)}
+            replace
+          />
+        }
       />
+
     </Routes>
   );
 }

@@ -52,7 +52,7 @@ export function getCurrentUser(): CurrentUser | null {
       );
     }
 
-    console.log('current user:', user)
+    // console.log('current user:', user)
 
     return user;
   } catch (error) {
