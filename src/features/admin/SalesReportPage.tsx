@@ -468,28 +468,267 @@ const SalesReportPage: React.FC = () => {
   // ==========================================
 
   const handlePrint = () => {
-    window.print();
-  };
+  if (!report) {
+    return;
+  }
+
+  window.print();
+};
+
+const printSummaryRows = [
+  ['Period', formattedPeriod],
+  ['Total Sales', formatCurrency(summary?.totalSales || 0)],
+  ['Appointment Sales', formatCurrency(summary?.appointmentSales || 0)],
+  ['Walk-in Sales', formatCurrency(summary?.walkinSales || 0)],
+  ['Average Sale', formatCurrency(summary?.averageSale || 0)],
+  ['Total Transactions', String(summary?.totalTransactions || 0)],
+  ['Total Appointments', String(summary?.totalAppointments || 0)],
+  ['Total Walk-ins', String(summary?.totalWalkins || 0)],
+];
+
+const printBookingRows = [
+  ['Pending', bookings?.pending || 0],
+  ['Confirmed', bookings?.confirmed || 0],
+  ['Completed', bookings?.completed || 0],
+  ['Cancelled', bookings?.cancelled || 0],
+  ['No-show', bookings?.noShow || 0],
+];
 
   return (
-    <div className="min-h-screen bg-[#fff8fa] p-4 md:p-6 lg:p-8">
+    <>
 
       <style>{`
         @media print {
-          .no-print {
-            display: none !important;
-          }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
 
-          body {
-            background: #ffffff !important;
-          }
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+  }
 
-          .print-card {
-            box-shadow: none !important;
-            border: 1px solid #e5c6cf !important;
-          }
-        }
+  .no-print {
+    display: none !important;
+  }
+
+  .screen-report {
+    display: none !important;
+  }
+
+  .print-report {
+    display: block !important;
+  }
+
+  .print-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #d9d9d9 !important;
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+  }
+
+  th {
+    font-weight: 700 !important;
+  }
+
+  .print-page-break {
+    page-break-before: always;
+  }
+}
+
+.print-report {
+  display: none;
+}
+
+
+
+
       `}</style>
+
+{/* =====================================================
+    PRINT-ONLY REPORT
+===================================================== */}
+<div className="print-report text-[#3f3035]">
+  <div className="mb-6 text-center">
+    <h1 className="text-2xl font-bold">
+      Aisha Aesthetics
+    </h1>
+
+    <h2 className="mt-1 text-xl font-bold">
+      Sales Report
+    </h2>
+
+    <p className="text-sm">
+      Sales and booking performance for {formattedPeriod}
+    </p>
+  </div>
+
+  {/* SUMMARY */}
+  <div className="print-section">
+    <h3 className="mb-3 text-base font-bold">
+      Sales Summary
+    </h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th className="text-left">Metric</th>
+          <th className="text-right">Value</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {printSummaryRows.map(([metric, value]) => (
+          <tr key={metric}>
+            <td>{metric}</td>
+            <td className="text-right">
+              {value}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* APPOINTMENT STATUS */}
+  <div className="print-section">
+    <h3 className="mb-3 text-base font-bold">
+      Appointment Status
+    </h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th className="text-left">Status</th>
+          <th className="text-right">Appointments</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {printBookingRows.map(([status, value]) => (
+          <tr key={String(status)}>
+            <td>{status}</td>
+            <td className="text-right">
+              {value}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* DAILY SALES */}
+  <div className="print-section print-page-break">
+    <h3 className="mb-3 text-base font-bold">
+      Daily Sales
+    </h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th className="text-left">Date</th>
+          <th className="text-right">Transactions</th>
+          <th className="text-right">Sales</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {(report?.dailySales || []).map((item, index) => (
+          <tr key={`${item.date}-${index}`}>
+            <td>{item.date}</td>
+            <td className="text-right">
+              {Number(item.transactions || 0)}
+            </td>
+            <td className="text-right">
+              {formatCurrency(Number(item.sales || 0))}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* SALES BY SERVICE */}
+  <div className="print-section print-page-break">
+    <h3 className="mb-3 text-base font-bold">
+      Sales by Service
+    </h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th className="text-left">Service</th>
+          <th className="text-right">Transactions</th>
+          <th className="text-right">Sales</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {(report?.salesByService || []).map((item, index) => (
+          <tr key={`${item.serviceName}-${index}`}>
+            <td>
+              {item.serviceName || 'Unnamed Service'}
+            </td>
+            <td className="text-right">
+              {Number(item.transactions || 0)}
+            </td>
+            <td className="text-right">
+              {formatCurrency(Number(item.sales || 0))}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* SALES BY EMPLOYEE */}
+  <div className="print-section print-page-break">
+    <h3 className="mb-3 text-base font-bold">
+      Sales by Employee
+    </h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th className="text-left">Employee</th>
+          <th className="text-right">Transactions</th>
+          <th className="text-right">Sales</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {(report?.salesByEmployee || []).map((item, index) => (
+          <tr key={`${item.employeeName}-${index}`}>
+            <td>
+              {item.employeeName || 'Unassigned'}
+            </td>
+            <td className="text-right">
+              {Number(item.transactions || 0)}
+            </td>
+            <td className="text-right">
+              {formatCurrency(Number(item.sales || 0))}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+      <div className="screen-report min-h-screen bg-[#fff8fa] p-4 md:p-6 lg:p-8">
 
       {/* ======================================
           HEADER
@@ -1480,7 +1719,10 @@ const SalesReportPage: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+
+      </div>
+
+    </>
   );
 };
 
