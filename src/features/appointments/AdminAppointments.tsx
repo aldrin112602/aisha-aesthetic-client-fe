@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import {
   deleteAppointmentById,
   getAdminAppointments,
+  getAppointmentStatusHistory,
   updateAppointmentStatus,
 } from '../../api/appointments.api';
+import { getCurrentUser } from '../../utils/auth';
 
 import type { Appointment } from '../../types';
 
@@ -252,10 +254,13 @@ function AdminAppointments() {
   nextStatus: string
 ) => {
   try {
+    const currentAdmin = getCurrentUser();
+
     await updateAppointmentStatus(
       appointmentId,
       nextStatus,
-      true
+      true,
+      currentAdmin?.id
     );
 
     setAppointments((current) =>
@@ -364,6 +369,82 @@ function AdminAppointments() {
       });
     }
   };
+
+  // =========================================================
+  // STATUS HISTORY (mini audit trail)
+  // =========================================================
+
+  const viewStatusHistory = async (appointment: Appointment) => {
+    const customerLabel =
+      appointment.customerName || `Customer #${appointment.customerId}`;
+
+    Swal.fire({
+      title: 'Loading history...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      const entries = await getAppointmentStatusHistory(appointment.id);
+
+      const rowsHtml =
+        entries.length === 0
+          ? `<p class="text-sm text-gray-500 py-4">No status changes recorded yet.</p>`
+          : `
+            <div class="text-left text-sm max-h-80 overflow-y-auto">
+              ${entries
+                .map(
+                  (entry) => `
+                    <div class="border-b border-pink-100 py-2.5">
+                      <div class="font-semibold text-[#5b3e45]">
+                        ${entry.oldStatus} &rarr; ${entry.newStatus}
+                      </div>
+                      <div class="text-xs text-[#92737c] mt-0.5">
+                        by ${entry.changedByName || 'Unknown user'}
+                        &middot;
+                        ${new Date(entry.changedAt).toLocaleString()}
+                      </div>
+                    </div>
+                  `
+                )
+                .join('')}
+            </div>
+          `;
+
+      Swal.fire({
+        icon: undefined,
+        title: `Status History — ${customerLabel}`,
+        html: rowsHtml,
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#df7f98',
+        width: 480,
+      });
+    } catch (error) {
+      console.error('Error fetching status history:', error);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Unable to Load',
+        text: 'Unable to load status history for this appointment.',
+        confirmButtonColor: '#df7f98',
+      });
+    }
+  };
+
+  const HistoryButton = ({ appointment }: { appointment: Appointment }) => (
+    <button
+      type="button"
+      onClick={() => viewStatusHistory(appointment)}
+      className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#fff0f4] px-3 py-2 text-xs font-semibold text-[#c15d78] transition hover:bg-[#ffe0e8] sm:w-auto"
+    >
+      <History size={14} />
+      History
+    </button>
+  );
 
   const formatAppointmentType = (
     appointmentType?: string | null
@@ -649,6 +730,7 @@ function AdminAppointments() {
 
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <StatusSelect appointment={appointment} />
+                  <HistoryButton appointment={appointment} />
                   <DeleteButton appointment={appointment} />
                 </div>
               </div>
@@ -676,7 +758,7 @@ function AdminAppointments() {
                     </th>
                     <th className="px-4 py-3 font-semibold">Price</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="min-w-[230px] px-4 py-3 font-semibold">
+                    <th className="min-w-[300px] px-4 py-3 font-semibold">
                       Action
                     </th>
                   </tr>
@@ -764,11 +846,12 @@ function AdminAppointments() {
                       </td>
 
                       {/* Actions */}
-                      <td className="min-w-[230px] px-4 py-3">
+                      <td className="min-w-[300px] px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-[130px] shrink-0">
                             <StatusSelect appointment={appointment} />
                           </div>
+                          <HistoryButton appointment={appointment} />
                           <DeleteButton appointment={appointment} />
                         </div>
                       </td>

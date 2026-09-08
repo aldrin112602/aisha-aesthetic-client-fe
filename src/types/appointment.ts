@@ -31,6 +31,16 @@ export interface Appointment {
 
 export type AppointmentStatusUpdate = Pick<Appointment, 'status'>;
 
+export interface AppointmentStatusHistoryEntry {
+  id: number;
+  appointmentId: number;
+  oldStatus: string;
+  newStatus: string;
+  changedBy: number | null;
+  changedByName: string | null;
+  changedAt: string;
+}
+
 export interface BookingPayload {
   customerId: number;
   serviceId: number;

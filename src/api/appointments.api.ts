@@ -2,6 +2,7 @@ import { apiRequest } from './client';
 
 import type {
   Appointment,
+  AppointmentStatusHistoryEntry,
   AppointmentStatusUpdate,
   BookingPayload,
 } from '../types';
@@ -74,11 +75,14 @@ export function assignAppointment(
 
 /**
  * Update appointment status.
+ * `changedBy` is the id of the user (admin or employee) making the
+ * change, used server-side to write a mini audit trail entry.
  */
 export function updateAppointmentStatus(
   appointmentId: number,
   status: AppointmentStatusUpdate['status'],
-  isAdmin: boolean = false
+  isAdmin: boolean = false,
+  changedBy?: number
 ) {
   return apiRequest<Appointment>(
     `/api/appointments/${appointmentId}/status`,
@@ -87,8 +91,19 @@ export function updateAppointmentStatus(
       body: {
         status,
         isAdmin,
+        changedBy,
       },
     }
+  );
+}
+
+/**
+ * Get the status-change audit trail for an appointment.
+ * Admin-only surface.
+ */
+export function getAppointmentStatusHistory(appointmentId: number) {
+  return apiRequest<AppointmentStatusHistoryEntry[]>(
+    `/api/appointments/${appointmentId}/history`
   );
 }
 

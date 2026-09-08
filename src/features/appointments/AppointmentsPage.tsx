@@ -13,6 +13,7 @@ import {
 import {
   deleteAppointmentById,
   getCustomerAppointments,
+  getEmployeeAppointments,
   updateAppointment,
   updateAppointmentStatus,
 } from '../../api/appointments.api';
@@ -116,7 +117,13 @@ function Appointments() {
     }
 
     try {
-      const data = await getCustomerAppointments(currentUser.id);
+      // This page is shared by both the customer and employee routes.
+      // Employees need their own assigned appointments, not the
+      // appointments where they happen to share an id with a customer.
+      const data =
+        currentUser.role === 'employee'
+          ? await getEmployeeAppointments(currentUser.id)
+          : await getCustomerAppointments(currentUser.id);
 
       setAppointments(Array.isArray(data) ? data : []);
       setCurrentTime(Date.now());
@@ -251,7 +258,14 @@ function Appointments() {
     setError('');
 
     try {
-      await updateAppointmentStatus(appointmentId, 'confirmed');
+      const currentUser = getCurrentUser();
+
+      await updateAppointmentStatus(
+        appointmentId,
+        'confirmed',
+        false,
+        currentUser?.id
+      );
 
       setAppointments((current) =>
         current.map((item) =>
@@ -317,7 +331,14 @@ function Appointments() {
         setError('');
 
         try {
-          await updateAppointmentStatus(appointmentId, 'cancelled');
+          const currentUser = getCurrentUser();
+
+          await updateAppointmentStatus(
+            appointmentId,
+            'cancelled',
+            false,
+            currentUser?.id
+          );
 
           setAppointments((current) =>
             current.map((item) =>
