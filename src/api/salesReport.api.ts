@@ -166,7 +166,7 @@ export const getEmployeeOptions = async (): Promise<
   EmployeeOption[]
 > => {
   const response = await fetch(
-    `${apiBaseUrl}/api/users?role=Employee`
+    `${apiBaseUrl}/api/users`
   );
 
   const data = await parseJsonResponse(
@@ -174,7 +174,9 @@ export const getEmployeeOptions = async (): Promise<
     'Failed to load employees.'
   );
 
-  return data as EmployeeOption[];
+  return (data as (EmployeeOption & { role: string })[])
+    .filter(user => ['employee', 'admin'].includes(String(user.role).trim().toLowerCase()))
+    .map(({ id, name }) => ({ id, name }));
 };
 
 // ==========================================

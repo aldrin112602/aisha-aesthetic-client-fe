@@ -79,7 +79,7 @@ export function createSalesReportPdf(report: SalesReport, filters: ReportPdfFilt
   ]);
   table('Daily Sales', ['Date', 'Transactions', 'Sales'], report.dailySales.map(r => [r.date, r.transactions, money(r.sales)]));
   table('Sales by Service', ['Service', 'Transactions', 'Sales'], report.salesByService.map(r => [r.serviceName || 'Unnamed Service', r.transactions, money(r.sales)]));
-  table('Sales by Employee', ['Employee', 'Transactions', 'Sales'], report.salesByEmployee.map(r => [r.employeeName || 'Unassigned', r.transactions, money(r.sales)]));
+  table('Sales by Employee', ['Employee', 'Transactions', 'Sales'], report.salesByEmployee.map(r => [r.employeeName || 'Not recorded', r.transactions, money(r.sales)]));
 
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {

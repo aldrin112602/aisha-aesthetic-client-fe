@@ -17,7 +17,7 @@ test('PDF includes report values, filters, all rows and page numbering', () => {
   const pdf = doc.output();
   assert.ok(pdf.startsWith('%PDF-'));
   assert.ok(doc.getNumberOfPages() >= 4);
-  for (const text of ['125,000.50', 'All employees', 'Service 65', 'Sales by Employee', 'Unassigned']) assert.ok(pdf.includes(text), text);
+  for (const text of ['125,000.50', 'All employees', 'Service 65', 'Sales by Employee', 'Not recorded']) assert.ok(pdf.includes(text), text);
   assert.ok(pdf.includes(`Page ${doc.getNumberOfPages()} of ${doc.getNumberOfPages()}`));
 });
 

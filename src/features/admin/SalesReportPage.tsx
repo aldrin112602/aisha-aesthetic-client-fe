@@ -1,3 +1,4 @@
+import EmployeePerformanceChart from './components/EmployeePerformanceChart';
 import React, {
   useEffect,
   useMemo,
@@ -1422,6 +1423,10 @@ const SalesReportPage: React.FC = () => {
                 </p>
               </div>
             ) : (
+              <>
+              <EmployeePerformanceChart rows={report.salesByEmployee} />
+              <details className="group">
+                <summary className="mb-4 cursor-pointer text-sm font-semibold text-[#8b5cf6]">View employee data table</summary>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[600px]">
                   <thead>
@@ -1461,7 +1466,7 @@ const SalesReportPage: React.FC = () => {
                           <td className="py-4">
                             <p className="font-semibold text-[#5b3e45]">
                               {item.employeeName ||
-                                'Unassigned'}
+                                'Not recorded'}
                             </p>
                           </td>
 
@@ -1485,6 +1490,8 @@ const SalesReportPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              </details>
+              </>
             )}
           </div>
         </>
