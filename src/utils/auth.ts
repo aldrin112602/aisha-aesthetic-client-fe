@@ -1,3 +1,4 @@
+import { revokeSession } from '../api/client';
 import type { CurrentUser, UserRole } from "../types/global";
 import type { User } from "../types/user";
 
@@ -141,6 +142,7 @@ export function saveCurrentUser(
 // =====================================================
 
 export function clearCurrentUser(): void {
+  revokeSession();
   localStorage.removeItem('aisha_notification_token');
   localStorage.removeItem(
     STORAGE_KEY

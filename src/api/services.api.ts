@@ -1,3 +1,4 @@
+import { authFetch } from './client';
 import { apiRequest } from './client';
 
 import type { Service, ServicePayload } from '../types';
@@ -37,7 +38,7 @@ export async function uploadServiceImage(file: File) {
 
   formData.append('image', file);
 
-  const response = await fetch(
+  const response = await authFetch(
     `${apiBaseUrl}/api/services/upload-image`,
     {
       method: 'POST',

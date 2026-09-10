@@ -1,3 +1,4 @@
+import { authFetch } from './client';
 // ==========================================
 // SALES REPORT API
 // ==========================================
@@ -146,7 +147,7 @@ export const getSalesReport = async (
     params.set('appointmentType', filters.appointmentType);
   }
 
-  const response = await fetch(
+  const response = await authFetch(
     `${apiBaseUrl}/api/sales-report?${params.toString()}`
   );
 
@@ -165,7 +166,7 @@ export const getSalesReport = async (
 export const getEmployeeOptions = async (): Promise<
   EmployeeOption[]
 > => {
-  const response = await fetch(
+  const response = await authFetch(
     `${apiBaseUrl}/api/users`
   );
 
@@ -186,7 +187,7 @@ export const getEmployeeOptions = async (): Promise<
 export const getServiceOptions = async (): Promise<
   ServiceOption[]
 > => {
-  const response = await fetch(
+  const response = await authFetch(
     `${apiBaseUrl}/api/services`
   );
 

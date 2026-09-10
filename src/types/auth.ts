@@ -1,3 +1,4 @@
+import { revokeSession } from '../api/client';
 import type { User } from "./user";
 
 // =========================================================
@@ -119,6 +120,7 @@ export const saveCurrentUser = (
 // =========================================================
 
 export const clearCurrentUser = (): void => {
+  revokeSession();
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(LEGACY_STORAGE_KEY);

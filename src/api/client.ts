@@ -15,6 +15,20 @@ export class ApiError extends Error {
   }
 }
 
+export function authFetch(input: RequestInfo | URL, options: RequestInit = {}) {
+  const headers = new Headers(options.headers);
+  const token = localStorage.getItem('aisha_notification_token');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return fetch(input, { ...options, headers });
+}
+
+export function revokeSession() {
+  if (localStorage.getItem('aisha_notification_token')) {
+    void authFetch(`${API_BASE_URL}/api/logout`, { method: 'POST', keepalive: true }).catch(() => {});
+  }
+  localStorage.removeItem('aisha_notification_token');
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type');
   const hasJson = contentType?.includes('application/json');
@@ -42,7 +56,7 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await authFetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
     body:

@@ -22,7 +22,7 @@ import {
 
 import Swal from 'sweetalert2';
 
-import * as XLSX from 'xlsx';
+import writeExcelFile, { type SheetData } from 'write-excel-file/browser';
 
 import {
   getSalesReport,
@@ -393,7 +393,7 @@ const SalesReportPage: React.FC = () => {
   // EXPORT TO EXCEL
   // ==========================================
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!report) {
       return;
     }
@@ -438,41 +438,26 @@ const SalesReportPage: React.FC = () => {
       })
     );
 
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(summaryRows),
-      'Summary'
-    );
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(dailyRows),
-      'Daily Sales'
-    );
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(serviceRows),
-      'Sales by Service'
-    );
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      XLSX.utils.json_to_sheet(employeeRows),
-      'Sales by Employee'
-    );
+    const makeSheet = (rows: Record<string, string | number>[], headers: string[]): SheetData => [
+      headers.map(value => ({ value, fontWeight: 'bold' as const })),
+      ...rows.map(row => headers.map(key => ({ value: row[key] ?? '' }))),
+    ];
 
     const fileLabel =
       filterMode === 'range' && startDate && endDate
         ? `${startDate}_to_${endDate}`
         : selectedMonth;
 
-    XLSX.writeFile(
-      workbook,
-      `sales-report-${fileLabel}.xlsx`
-    );
+    try {
+      await writeExcelFile([
+        { sheet: 'Summary', data: makeSheet(summaryRows, ['Metric', 'Value']) },
+        { sheet: 'Daily Sales', data: makeSheet(dailyRows, ['Date', 'Sales', 'Transactions']) },
+        { sheet: 'Sales by Service', data: makeSheet(serviceRows, ['Service', 'Sales', 'Transactions']) },
+        { sheet: 'Sales by Employee', data: makeSheet(employeeRows, ['Employee', 'Sales', 'Transactions']) },
+      ]).toFile(`sales-report-${fileLabel}.xlsx`);
+    } catch {
+      alert('Unable to export the Excel report. Please try again.');
+    }
   };
 
   // ==========================================

@@ -1,3 +1,4 @@
+import { authFetch } from '../api/client';
 import React, { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import {
@@ -174,7 +175,7 @@ const Profile: React.FC = () => {
     formData.append("image", file);
 
   try {
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE_URL}/api/users/${profile.id}/profile-image`,
     {
       method: "POST",
@@ -296,7 +297,7 @@ const Profile: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/${profile.id}`, {
+      const response = await authFetch(`${API_BASE_URL}/api/users/${profile.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
