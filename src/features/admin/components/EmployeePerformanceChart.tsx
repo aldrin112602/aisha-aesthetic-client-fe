@@ -22,6 +22,7 @@ export default function EmployeePerformanceChart({ rows }: { rows: EmployeeSale[
     <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Employee performance chart. Scroll horizontally to view all employees.">
       <div style={{ minWidth: Math.max(600, rows.length * 150) }}>
         <ChartsContainer
+          skipAnimation
           height={390}
           margin={{ top: 24, bottom: 28, left: 12, right: 12 }}
           series={[

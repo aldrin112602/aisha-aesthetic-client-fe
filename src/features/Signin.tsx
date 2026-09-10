@@ -6,9 +6,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
-import { login } from '../api/auth.api';
+import { login, acceptStaffTerms } from '../api/auth.api';
+import type { StaffTermsChallenge } from '../api/auth.api';
+import StaffTermsAgreement from '../components/StaffTermsAgreement';
 import beautyWoman from '../assets/img/beauty.png';
 import {
   getRoleDestination,
@@ -18,6 +20,7 @@ import {
 
 function Signin() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -25,6 +28,7 @@ function Signin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsChallenge, setTermsChallenge] = useState<StaffTermsChallenge | null>(null);
 
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
@@ -35,6 +39,11 @@ function Signin() {
 
     try {
       const data = await login({ email, password });
+      if (data.termsRequired) {
+        setTermsChallenge(data);
+        setPassword('');
+        return;
+      }
       const currentUser = normalizeCurrentUser(data.user);
 
       saveCurrentUser(currentUser);
@@ -47,6 +56,24 @@ function Signin() {
       setLoading(false);
     }
   };
+
+  const handleAcceptTerms = async () => {
+    if (!termsChallenge) return;
+    setLoading(true);
+    setError('');
+    try {
+      const data = await acceptStaffTerms(termsChallenge);
+      const currentUser = normalizeCurrentUser(data.user);
+      saveCurrentUser(currentUser);
+      navigate(getRoleDestination(currentUser), { replace: true });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to save your agreement.');
+    } finally { setLoading(false); }
+  };
+
+  if (termsChallenge) return <StaffTermsAgreement key={termsChallenge.termsToken}
+    challenge={termsChallenge} onAccept={() => void handleAcceptTerms()}
+    onCancel={() => { setTermsChallenge(null); setError(''); }} loading={loading} error={error} />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#fff8fa] px-4 py-8">
@@ -242,6 +269,7 @@ function Signin() {
             onSubmit={handleSubmit}
             className="mt-8 space-y-5"
           >
+            {location.state?.signupSuccess && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-700">Your customer account has been created. Sign in below.</p>}
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}
