@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Navigate,
   Route,
@@ -22,7 +22,7 @@ import AccountManagement from './features/accounts/AccountManagementPage';
 import AdminShopareas from './features/shop-areas/AdminShopAreasPage';
 import AdminServices from './features/services/AdminServicesPage';
 import WalkinManagement from './features/walkins/WalkinManagementPage';
-import FollowupReminders from './features/followups/FollowupRemindersPage';
+import Notification from './features/Notification';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicRoute from './routes/PublicRoute';
 import ProtectedLayout from './layouts/ProtectedLayout';
@@ -276,7 +276,7 @@ function App() {
             ]}
           >
             <ProtectedLayout>
-              <FollowupReminders />
+              <Notification />
             </ProtectedLayout>
           </ProtectedRoute>
         }

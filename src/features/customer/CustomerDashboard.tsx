@@ -5,9 +5,11 @@ import { AlertCircle, CalendarDays, Clock } from 'lucide-react';
 import { getCustomerAppointments } from '../../api/appointments.api';
 import type { Appointment } from '../../types';
 import { getCurrentUser } from '../../utils/auth';
+import { useNotifications } from '../../hooks/useNotifications';
 
 function CustomerDashboard() {
   const navigate = useNavigate();
+  const { notifications, error: notificationError, loading: notificationsLoading } = useNotifications();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -123,19 +125,10 @@ getCustomerAppointments(currentUser.id)
         <div className="pink-card">
           <h2 className="text-lg font-bold text-[#4b343b]">Notifications</h2>
           <ul className="mt-4 space-y-3 text-sm text-[#6d4a54]">
-            <li className="flex gap-2">
-              <span className="text-[#c18c2d]">•</span>
-              <span>Welcome to Aisha Aesthetics!</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-[#c18c2d]">•</span>
-              <span>Book your first appointment now</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-[#c18c2d]">•</span>
-              <span>Exclusive offers available</span>
-            </li>
+            {notificationError ? <li>{notificationError}</li> : notificationsLoading ? <li>Loading notifications…</li> : notifications.length === 0 ? <li>No notifications yet.</li> :
+              notifications.slice(0, 3).map(notification => <li key={notification.id}>{notification.message}</li>)}
           </ul>
+          <button onClick={() => navigate('/notifications')} className="mt-4 text-sm font-semibold text-[#d77992] hover:underline">View all notifications</button>
         </div>
       </div>
     </div>

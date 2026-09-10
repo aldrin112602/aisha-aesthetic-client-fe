@@ -141,6 +141,7 @@ export function saveCurrentUser(
 // =====================================================
 
 export function clearCurrentUser(): void {
+  localStorage.removeItem('aisha_notification_token');
   localStorage.removeItem(
     STORAGE_KEY
   );

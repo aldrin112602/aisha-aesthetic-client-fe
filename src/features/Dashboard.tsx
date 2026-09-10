@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import beautyWoman from '../assets/img/beauty.png';
+import { useNotifications } from '../hooks/useNotifications';
 
 const services = [
   {
@@ -27,6 +28,7 @@ const services = [
 ];
 
 function Dashboard() {
+  const { unreadCount, error: notificationError } = useNotifications();
   return (
     <div className="page-container">
       {/* Welcome Section */}
@@ -196,10 +198,10 @@ function Dashboard() {
         <div className="pink-card">
           <p className="text-sm text-[#92737c]">Notifications</p>
 
-          <p className="mt-2 text-3xl font-bold text-[#4b343b]">2</p>
+          <p className="mt-2 text-3xl font-bold text-[#4b343b]">{notificationError ? '—' : unreadCount}</p>
 
           <p className="mt-1 text-xs text-[#d77992]">
-            You have unread reminders
+            {notificationError ? 'Unable to load notifications' : 'Unread notifications'}
           </p>
         </div>
       </section>

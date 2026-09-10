@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import { getCurrentUser } from "../utils/auth";
+import { useNotifications } from '../hooks/useNotifications';
 
 function Navbar({
   onMenuClick,
@@ -10,6 +11,7 @@ function Navbar({
   onMenuClick?: () => void;
 }) {
   const location = useLocation();
+  const { unreadCount, error: notificationError } = useNotifications();
 
   // =====================================================
   // PROFILE STATE
@@ -177,12 +179,12 @@ function Navbar({
           <Link
             to="/notifications"
             className="relative rounded-xl p-2.5 text-[#76545f] transition hover:bg-pink-50"
-            aria-label="Notifications"
+            aria-label={notificationError ? 'Notifications unavailable' : `Notifications, ${unreadCount} unread`}
           >
             <Bell size={21} />
 
             {/* Notification dot */}
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#df7f98]" />
+            {unreadCount > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[#df7f98] px-1 text-center text-xs font-bold text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}
           </Link>
 
           {/* =================================================

@@ -32,11 +32,13 @@ export function getAdminAppointments(params?: {
 /**
  * Create a new customer booking.
  */
-export function createBooking(payload: BookingPayload) {
-  return apiRequest<Appointment>('/api/bookings', {
+export async function createBooking(payload: BookingPayload) {
+  const appointment = await apiRequest<Appointment>('/api/bookings', {
     method: 'POST',
     body: payload,
   });
+  window.dispatchEvent(new Event('notifications-updated'));
+  return appointment;
 }
 
 /**

@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Clock,
   Phone,
   User,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   Plus,
   X,
@@ -477,40 +475,6 @@ function WalkinManagement() {
   // STATUS BADGE
   // =========================================================
 
-  const getStatusBadge = (status: string) => {
-    const normalizedStatus = status?.toLowerCase().trim();
-
-    if (
-      normalizedStatus === 'completed' ||
-      normalizedStatus === 'complete'
-    ) {
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf9f1] px-2.5 py-1 text-xs font-semibold text-[#2f7d59]">
-          <CheckCircle2 size={13} />
-          {status}
-        </span>
-      );
-    }
-
-    if (
-      normalizedStatus === 'cancelled' ||
-      normalizedStatus === 'canceled'
-    ) {
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-500">
-          <AlertCircle size={13} />
-          {status}
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fff4e5] px-2.5 py-1 text-xs font-semibold text-[#b87918]">
-        <Clock size={13} />
-        {status || 'Pending'}
-      </span>
-    );
-  };
 
   // =========================================================
   // RENDER
