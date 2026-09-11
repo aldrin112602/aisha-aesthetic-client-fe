@@ -15,6 +15,7 @@ import Signup from './features/Signup';
 import Profile from './features/profile';
 import SalesReportPage from './features/admin/SalesReportPage';
 import AdminDashboard from './features/admin/AdminDashboard';
+import DatabaseBackupsPage from './features/admin/DatabaseBackupsPage';
 import EmployeeDashboard from './features/employee/EmployeeDashboard';
 import CustomerDashboard from './features/customer/CustomerDashboard';
 import AdminAppointments from './features/appointments/AdminAppointments';
@@ -54,6 +55,7 @@ const pageTitles: Record<string, string> = {
   '/shop-areas': 'Shop Areas',
   '/services': 'Services',
   '/sales-report': 'Sales Report',
+  '/database-backups': 'Database Backups',
 
   // SHARED
   '/walkins': 'Walk-ins',
@@ -243,6 +245,12 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/database-backups" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <ProtectedLayout><DatabaseBackupsPage /></ProtectedLayout>
+        </ProtectedRoute>
+      } />
 
       {/* ======================================
           SHARED ADMIN + EMPLOYEE

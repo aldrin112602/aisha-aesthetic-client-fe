@@ -1,5 +1,6 @@
 import {
   Bell,
+  Database,
   CalendarDays,
   Clock3,
   House,
@@ -75,6 +76,11 @@ admin: [
     name: 'Sales Report',
     path: '/sales-report',
     icon: Clock3,
+  },
+  {
+    name: 'Database Backups',
+    path: '/database-backups',
+    icon: Database,
   },
 ],
 
