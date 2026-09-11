@@ -32,7 +32,6 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
   const uploadFileRef = useRef<HTMLInputElement>(null);
 
-
   const [profile, setProfile] = useState<UserProfile>({
     id: 0,
     name: "John Doe",
@@ -43,7 +42,8 @@ const Profile: React.FC = () => {
   });
 
   const [showEditProfile, setShowEditProfile] = useState<boolean>(false);
-  const [showChangePassword, setShowChangePassword] = useState<boolean>(false);
+  const [showChangePassword, setShowChangePassword] =
+    useState<boolean>(false);
 
   const [editForm, setEditForm] = useState<UserProfile>({
     name: "John Doe",
@@ -59,9 +59,12 @@ const Profile: React.FC = () => {
     confirmPassword: "",
   });
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState<boolean>(false);
-  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [showCurrentPassword, setShowCurrentPassword] =
+    useState<boolean>(false);
+  const [showNewPassword, setShowNewPassword] =
+    useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   /*
   |--------------------------------------------------------------------------
@@ -105,7 +108,6 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-
   const getProfileImageUrl = (
     image?: string | null
   ): string => {
@@ -134,10 +136,9 @@ const Profile: React.FC = () => {
     return `${API_BASE_URL}/${image}`;
   };
 
-
   /*
   |--------------------------------------------------------------------------
-  | PROFILE IMAGE UPLOAD (BACKEND DIRECT API)
+  | PROFILE IMAGE UPLOAD
   |--------------------------------------------------------------------------
   */
 
@@ -155,33 +156,51 @@ const Profile: React.FC = () => {
     }
 
     if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
+      await Swal.fire({
+        icon: "warning",
+        title: "Invalid Image",
+        text: "Please select a valid image file.",
+        confirmButtonColor: "#b96d83",
+      });
+
       event.target.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Profile image must be less than 5MB.");
+      await Swal.fire({
+        icon: "warning",
+        title: "File Too Large",
+        text: "Profile image must be less than 5MB.",
+        confirmButtonColor: "#b96d83",
+      });
+
       event.target.value = "";
       return;
     }
 
     if (!profile.id) {
-      alert("User session not found. Please log in again.");
+      await Swal.fire({
+        icon: "error",
+        title: "Session Not Found",
+        text: "User session not found. Please log in again.",
+        confirmButtonColor: "#b96d83",
+      });
+
       return;
     }
 
     const formData = new FormData();
     formData.append("image", file);
 
-  try {
-  const response = await authFetch(
-    `${API_BASE_URL}/api/users/${profile.id}/profile-image`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+    try {
+      const response = await authFetch(
+        `${API_BASE_URL}/api/users/${profile.id}/profile-image`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const responseText = await response.text();
 
@@ -207,8 +226,10 @@ const Profile: React.FC = () => {
         );
       }
 
-      // Backend returns relative url: /uploads/profiles/filename.jpg
-      const imagePath = data?.image || data?.profileImage || data?.user?.profileImage;
+      const imagePath =
+        data?.image ||
+        data?.profileImage ||
+        data?.user?.profileImage;
 
       if (!imagePath) {
         throw new Error(
@@ -252,10 +273,21 @@ const Profile: React.FC = () => {
         new Event("user-updated")
       );
 
-      Swal.fire("Success", "Profile picture updated successfully!", "success");
+      await Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Profile picture updated successfully!",
+        confirmButtonColor: "#b96d83",
+      });
     } catch (error: any) {
       console.error("Error uploading image:", error);
-      alert(error.message || "Failed to upload image to server.");
+
+      await Swal.fire({
+        icon: "error",
+        title: "Upload Failed",
+        text: error.message || "Failed to upload image to server.",
+        confirmButtonColor: "#b96d83",
+      });
     } finally {
       event.target.value = "";
     }
@@ -291,22 +323,37 @@ const Profile: React.FC = () => {
       type: "update_profile",
     };
 
-    if (!updatedProfile.name || !updatedProfile.email || !updatedProfile.phone) {
-      alert("Please fill in all required fields.");
+    if (
+      !updatedProfile.name ||
+      !updatedProfile.email ||
+      !updatedProfile.phone
+    ) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Incomplete Fields",
+        text: "Please fill in all required fields.",
+        confirmButtonColor: "#b96d83",
+      });
+
       return;
     }
 
     try {
-      const response = await authFetch(`${API_BASE_URL}/api/users/${profile.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: updatedProfile.name,
-          email: updatedProfile.email,
-          phone: updatedProfile.phone,
-          type: "update_profile",
-        }),
-      });
+      const response = await authFetch(
+        `${API_BASE_URL}/api/users/${profile.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: updatedProfile.name,
+            email: updatedProfile.email,
+            phone: updatedProfile.phone,
+            type: "update_profile",
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update profile info.");
@@ -335,8 +382,20 @@ const Profile: React.FC = () => {
       );
 
       setShowEditProfile(false);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Profile Updated",
+        text: "Your profile information has been updated successfully.",
+        confirmButtonColor: "#b96d83",
+      });
     } catch (err: any) {
-      alert(err.message || "Error updating profile.");
+      await Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: err.message || "Error updating profile.",
+        confirmButtonColor: "#b96d83",
+      });
     }
   };
 
@@ -367,12 +426,24 @@ const Profile: React.FC = () => {
       !passwordForm.newPassword ||
       !passwordForm.confirmPassword
     ) {
-      alert("Please complete all password fields.");
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Fields",
+        text: "Please complete all password fields.",
+        confirmButtonColor: "#b96d83",
+      });
+
       return;
     }
 
     if (passwordForm.newPassword.length < 8) {
-      alert("New password must be at least 8 characters.");
+      Swal.fire({
+        icon: "warning",
+        title: "Password Too Short",
+        text: "New password must be at least 8 characters.",
+        confirmButtonColor: "#b96d83",
+      });
+
       return;
     }
 
@@ -380,11 +451,22 @@ const Profile: React.FC = () => {
       passwordForm.newPassword !==
       passwordForm.confirmPassword
     ) {
-      alert("New passwords do not match.");
+      Swal.fire({
+        icon: "warning",
+        title: "Passwords Do Not Match",
+        text: "New passwords do not match.",
+        confirmButtonColor: "#b96d83",
+      });
+
       return;
     }
 
-    alert("Password changed successfully.");
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: "Password changed successfully!",
+      confirmButtonColor: "#b96d83",
+    });
 
     setPasswordForm({
       currentPassword: "",
@@ -455,7 +537,11 @@ const Profile: React.FC = () => {
           <div className="relative mx-auto mb-3 h-[92px] w-[92px]">
             <div className="flex h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-gradient-to-br from-[#f7e9ed] to-[#efd5dc] text-[#a9687d] shadow-[0_5px_18px_rgba(80,44,56,0.12)]">
               <img
-                src={profile.profileImage ? getProfileImageUrl(profile.profileImage) : defaultAvatar}
+                src={
+                  profile.profileImage
+                    ? getProfileImageUrl(profile.profileImage)
+                    : defaultAvatar
+                }
                 alt={`${profile.name} profile`}
                 className="h-full w-full object-cover"
               />
@@ -546,7 +632,10 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">Full Name</span>
+              <span className="text-[10px] text-[#9b898f]">
+                Full Name
+              </span>
+
               <strong className="text-xs font-medium text-[#4a393f]">
                 {profile.name}
               </strong>
@@ -559,7 +648,10 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">Mobile Number</span>
+              <span className="text-[10px] text-[#9b898f]">
+                Mobile Number
+              </span>
+
               <strong className="text-xs font-medium text-[#4a393f]">
                 {profile.phone || "No mobile number"}
               </strong>
@@ -572,7 +664,10 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[10px] text-[#9b898f]">Email Address</span>
+              <span className="text-[10px] text-[#9b898f]">
+                Email Address
+              </span>
+
               <strong className="break-all text-xs font-medium text-[#4a393f]">
                 {profile.email}
               </strong>
@@ -587,8 +682,15 @@ const Profile: React.FC = () => {
           className="flex min-h-[50px] w-full items-center gap-3 rounded-xl border border-[#f0dfe3] bg-white px-4 text-left text-[#c1667d] transition hover:bg-[#fff7f8]"
         >
           <LogOut size={17} />
-          <span className="flex-1 text-xs font-medium">Logout</span>
-          <ChevronRight size={17} className="text-[#d1a3af]" />
+
+          <span className="flex-1 text-xs font-medium">
+            Logout
+          </span>
+
+          <ChevronRight
+            size={17}
+            className="text-[#d1a3af]"
+          />
         </button>
       </div>
 
@@ -608,6 +710,7 @@ const Profile: React.FC = () => {
                 <h2 className="font-serif text-xl font-medium text-[#3b2b30]">
                   Edit Profile
                 </h2>
+
                 <p className="mt-1 text-xs text-[#97858b]">
                   Update your account information.
                 </p>
@@ -627,6 +730,7 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Full Name
                 </label>
+
                 <input
                   type="text"
                   name="name"
@@ -641,6 +745,7 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Mobile Number
                 </label>
+
                 <input
                   type="tel"
                   name="phone"
@@ -655,6 +760,7 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Email Address
                 </label>
+
                 <input
                   type="email"
                   name="email"
@@ -693,6 +799,7 @@ const Profile: React.FC = () => {
                 <h2 className="font-serif text-xl font-medium text-[#3b2b30]">
                   Change Password
                 </h2>
+
                 <p className="mt-1 text-xs text-[#97858b]">
                   Keep your account secure.
                 </p>
@@ -712,21 +819,35 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Current Password
                 </label>
+
                 <div className="relative">
                   <input
-                    type={showCurrentPassword ? "text" : "password"}
+                    type={
+                      showCurrentPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="currentPassword"
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
+
                   <button
                     type="button"
-                    onClick={() => setShowCurrentPassword((prev) => !prev)}
+                    onClick={() =>
+                      setShowCurrentPassword(
+                        (prev) => !prev
+                      )
+                    }
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
                   >
-                    {showCurrentPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {showCurrentPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -735,21 +856,35 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   New Password
                 </label>
+
                 <div className="relative">
                   <input
-                    type={showNewPassword ? "text" : "password"}
+                    type={
+                      showNewPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="newPassword"
                     value={passwordForm.newPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
+
                   <button
                     type="button"
-                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    onClick={() =>
+                      setShowNewPassword(
+                        (prev) => !prev
+                      )
+                    }
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
                   >
-                    {showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {showNewPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -758,21 +893,35 @@ const Profile: React.FC = () => {
                 <label className="mb-1.5 block text-[11px] font-medium text-[#59474e]">
                   Confirm New Password
                 </label>
+
                 <div className="relative">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="confirmPassword"
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordChange}
                     required
                     className="h-11 w-full rounded-lg border border-[#e6d9dd] bg-[#fffdfd] px-3 pr-11 text-xs text-[#43343a] outline-none transition focus:border-[#c98499] focus:ring-4 focus:ring-[#c98499]/10"
                   />
+
                   <button
                     type="button"
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        (prev) => !prev
+                      )
+                    }
                     className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-2 text-[#9a858d]"
                   >
-                    {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -793,3 +942,4 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+

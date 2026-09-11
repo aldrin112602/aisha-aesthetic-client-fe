@@ -455,8 +455,16 @@ const SalesReportPage: React.FC = () => {
         { sheet: 'Sales by Service', data: makeSheet(serviceRows, ['Service', 'Sales', 'Transactions']) },
         { sheet: 'Sales by Employee', data: makeSheet(employeeRows, ['Employee', 'Sales', 'Transactions']) },
       ]).toFile(`sales-report-${fileLabel}.xlsx`);
-    } catch {
-      alert('Unable to export the Excel report. Please try again.');
+    } catch (error) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Excel Export Failed',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Unable to export the Excel report. Please try again.',
+        confirmButtonColor: '#c26c84',
+      });
     }
   };
 
@@ -746,7 +754,7 @@ const SalesReportPage: React.FC = () => {
       ======================================= */}
 
       {loading && !report ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-pink-100 bg-white shadow-sm">
+        <div className="flex min-h-100 items-center justify-center rounded-2xl border border-pink-100 bg-white shadow-sm">
           <div className="text-center">
             <RefreshCw
               size={35}
@@ -1132,7 +1140,7 @@ const SalesReportPage: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className="flex h-[280px] items-center justify-center text-center">
+                <div className="flex h-70 items-center justify-center text-center">
                   <div>
                     <CalendarDays
                       size={36}
@@ -1274,7 +1282,7 @@ const SalesReportPage: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-150">
                   <thead>
                     <tr className="border-b border-pink-100 text-left">
                       <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
@@ -1413,7 +1421,7 @@ const SalesReportPage: React.FC = () => {
               <details className="group">
                 <summary className="mb-4 cursor-pointer text-sm font-semibold text-[#8b5cf6]">View employee data table</summary>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full min-w-150">
                   <thead>
                     <tr className="border-b border-pink-100 text-left">
                       <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">

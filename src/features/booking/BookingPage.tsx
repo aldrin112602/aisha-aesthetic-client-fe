@@ -367,112 +367,117 @@ function Booking() {
     );
   };
 
-  // ==========================================
-  // HANDLE BOOKING
-  // ==========================================
-
   const handleBooking = async () => {
-    if (!service) {
-      alert(
-        'Please select a service.'
-      );
-      return;
-    }
+  if (!service) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'No Service Selected',
+      text: 'Please select a service.',
+      confirmButtonColor: '#d77a94',
+    });
+    return;
+  }
 
-    if (!selectedDate) {
-      alert(
-        'Please select an appointment date.'
-      );
-      return;
-    }
+  if (!selectedDate) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'No Date Selected',
+      text: 'Please select an appointment date.',
+      confirmButtonColor: '#d77a94',
+    });
+    return;
+  }
 
-    if (!selectedTime) {
-      alert(
-        'Please select an available time.'
-      );
-      return;
-    }
+  if (!selectedTime) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'No Time Selected',
+      text: 'Please select an available time.',
+      confirmButtonColor: '#d77a94',
+    });
+    return;
+  }
 
-    if (!selectedArea) {
-      alert(
-        'Please select a shop area.'
-      );
-      return;
-    }
+  if (!selectedArea) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'No Shop Area Selected',
+      text: 'Please select a shop area.',
+      confirmButtonColor: '#d77a94',
+    });
+    return;
+  }
 
-    // ==========================================
-    // CURRENT USER
-    // ==========================================
+  // ==========================================
+  // CURRENT USER
+  // ==========================================
 
-    const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser();
 
-    if (!currentUser?.id) {
-      alert(
-        'Please sign in before booking an appointment.'
-      );
-      return;
-    }
+  if (!currentUser?.id) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Sign In Required',
+      text: 'Please sign in before booking an appointment.',
+      confirmButtonColor: '#d77a94',
+    });
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      await createBooking({
-        customerId:
-          currentUser.id,
+  try {
+    await createBooking({
+      customerId: currentUser.id,
 
-        serviceId:
-          service.id,
+      serviceId: service.id,
 
-        serviceName:
-          service.name,
+      serviceName: service.name,
 
-        category:
-          service.category,
+      category: service.category,
 
-        date:
-          selectedDate,
+      date: selectedDate,
 
-        time:
-          selectedTime,
+      time: selectedTime,
 
-        area:
-          selectedArea,
+      area: selectedArea,
 
-        price:
-          service.price,
-      });
+      price: service.price,
+    });
 
-await Swal.fire({
-  icon: "success",
-  title: "Appointment Booked!",
-  html: `
-    <div style="text-align: left; line-height: 1.8;">
-      <p><strong>Service:</strong> ${service.name}</p>
-      <p><strong>Date:</strong> ${selectedDate}</p>
-      <p><strong>Time:</strong> ${selectedTime}</p>
-      <p><strong>Area:</strong> ${selectedArea}</p>
-      <p><strong>Price:</strong> ₱${service.price.toLocaleString()}</p>
-    </div>
-  `,
-  confirmButtonText: "Done",
-  confirmButtonColor: "#d77a94",
-});
+    await Swal.fire({
+      icon: "success",
+      title: "Appointment Booked!",
+      html: `
+        <div style="text-align: left; line-height: 1.8;">
+          <p><strong>Service:</strong> ${service.name}</p>
+          <p><strong>Date:</strong> ${selectedDate}</p>
+          <p><strong>Time:</strong> ${selectedTime}</p>
+          <p><strong>Area:</strong> ${selectedArea}</p>
+          <p><strong>Price:</strong> ₱${service.price.toLocaleString()}</p>
+        </div>
+      `,
+      confirmButtonText: "Done",
+      confirmButtonColor: "#d77a94",
+    });
 
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Something went wrong.';
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Something went wrong.';
 
-      alert(
-        `Booking failed: ${message}`
-      );
+    await Swal.fire({
+      icon: 'error',
+      title: 'Booking Failed',
+      text: message,
+      confirmButtonColor: '#d77a94',
+    });
 
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   // ==========================================
   // RENDER
   // ==========================================

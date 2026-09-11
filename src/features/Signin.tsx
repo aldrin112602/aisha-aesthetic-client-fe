@@ -11,6 +11,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, acceptStaffTerms } from '../api/auth.api';
 import type { StaffTermsChallenge } from '../api/auth.api';
 import StaffTermsAgreement from '../components/StaffTermsAgreement';
+import ForgotPassword from '../components/ForgotPassword';
 import beautyWoman from '../assets/img/beauty.png';
 import {
   getRoleDestination,
@@ -28,6 +29,7 @@ function Signin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
   const [termsChallenge, setTermsChallenge] = useState<StaffTermsChallenge | null>(null);
 
   const handleSubmit = async (
@@ -70,6 +72,8 @@ function Signin() {
       setError(reason instanceof Error ? reason.message : 'Unable to save your agreement.');
     } finally { setLoading(false); }
   };
+
+  if (forgotPassword) return <ForgotPassword initialEmail={email} onBack={() => { setForgotPassword(false); setPassword(''); setError(''); }} />;
 
   if (termsChallenge) return <StaffTermsAgreement key={termsChallenge.termsToken}
     challenge={termsChallenge} onAccept={() => void handleAcceptTerms()}
@@ -411,6 +415,8 @@ function Signin() {
 
               <button
                 type="button"
+                onClick={() => setForgotPassword(true)}
+                disabled={loading}
                 className="
                   text-sm
                   font-semibold

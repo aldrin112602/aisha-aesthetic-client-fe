@@ -43,3 +43,11 @@ export interface CustomerTerms {
 export function getCustomerTerms() {
   return apiRequest<CustomerTerms>('/api/customer-terms');
 }
+
+export function requestPasswordReset(email: string) {
+  return apiRequest<{ message: string }>('/api/forgot-password', { method: 'POST', body: { email } });
+}
+
+export function resetPassword(payload: { email: string; otp: string; password: string }) {
+  return apiRequest<{ message: string }>('/api/reset-password', { method: 'POST', body: payload });
+}
