@@ -1,3 +1,4 @@
+import BrandLogo from './BrandLogo';
 import {
   Bell,
   Database,
@@ -311,12 +312,12 @@ function Sidebar({
                 text-[#b88a2c]
               "
             >
-              <Sparkles size={21} />
+              <BrandLogo className="h-11 w-11" />
             </div>
 
             <div className="min-w-0">
               <h2 className="truncate font-bold text-[#49343a]">
-                Aisha
+                AishaEsthetics
               </h2>
 
               <p className="truncate text-xs capitalize text-[#b88a2c]">
@@ -446,12 +447,12 @@ function Sidebar({
                       text-[#b88a2c]
                     "
                   >
-                    <Sparkles size={21} />
+                    <BrandLogo className="h-11 w-11" />
                   </div>
 
                   <div className="min-w-0">
                     <h2 className="truncate font-bold text-[#49343a]">
-                      Aisha
+                      AishaEsthetics
                     </h2>
 
                     <p className="truncate text-xs capitalize text-[#b88a2c]">

@@ -38,7 +38,7 @@ function Dashboard() {
           {/* Background Image */}
           <img
             src={beautyWoman}
-            alt="Aisha Aesthetics Beauty Treatment"
+            alt="AishaEsthetics Beauty Treatment"
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
 

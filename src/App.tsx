@@ -1,3 +1,4 @@
+import { renderSeoHead } from './seo';
 import { useEffect } from 'react';
 import {
   Navigate,
@@ -34,43 +35,6 @@ import {
   getRoleDestination,
 } from './utils/auth';
 // ==========================================
-// PAGE TITLES
-// ==========================================
-
-const pageTitles: Record<string, string> = {
-  '/': 'Aisha Aesthetics',
-
-  // AUTH
-  '/signin': 'Sign In',
-  '/signup': 'Sign Up',
-
-  // DASHBOARDS
-  '/admin': 'Admin Dashboard',
-  '/employee': 'Employee Dashboard',
-  '/customer': 'Customer Dashboard',
-  '/dashboard': 'Dashboard',
-
-  // ADMIN
-  '/admin-appointments': 'Appointment Management',
-  '/account-management': 'Account Management',
-  '/shop-areas': 'Shop Areas',
-  '/services': 'Services',
-  '/sales-report': 'Sales Report',
-  '/database-backups': 'Database Backups',
-  '/archives': 'Archives',
-
-  // SHARED
-  '/walkins': 'Walk-ins',
-  '/notifications': 'Notifications',
-  '/appointments': 'Appointments',
-  '/profile': 'Profile',
-
-  // CUSTOMER
-  '/booking': 'Book Appointment',
-  '/history': 'Appointment History',
-};
-
-// ==========================================
 // APP
 // ==========================================
 
@@ -83,16 +47,8 @@ function App() {
   // ==========================================
 
   useEffect(() => {
-    const currentPath = location.pathname;
-
-    const pageTitle =
-      pageTitles[currentPath] ||
-      'Aisha Aesthetics';
-
-    document.title =
-      pageTitle === 'Aisha Aesthetics'
-        ? pageTitle
-        : `${pageTitle} | Aisha Aesthetics`;
+    document.head.querySelectorAll('[data-seo]').forEach(element => element.remove());
+    document.head.insertAdjacentHTML('beforeend', renderSeoHead(location.pathname, import.meta.env.VITE_SITE_URL || window.location.origin));
   }, [location.pathname]);
 
   // ==========================================

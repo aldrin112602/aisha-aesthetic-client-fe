@@ -500,7 +500,7 @@ function Booking() {
           />
 
           <span className="truncate text-xs font-semibold uppercase tracking-[0.15em] text-[#c18c2d] sm:text-sm sm:tracking-[0.2em]">
-            Aishaesthetics
+            AishaEsthetics
           </span>
 
         </div>

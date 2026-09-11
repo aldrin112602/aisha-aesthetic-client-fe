@@ -1,3 +1,4 @@
+import BrandLogo from './BrandLogo';
 import { Bell, Menu, Sparkles } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -152,10 +153,12 @@ function Navbar({
             <Menu size={22} />
           </button>
 
+          <BrandLogo className="h-10 w-10 shrink-0 md:hidden" />
+
           {/* PAGE TITLE */}
           <div className="min-w-0">
-            <p className="truncate text-xs font-medium uppercase tracking-[0.15em] text-[#b88a2c] sm:tracking-[0.25em]">
-              Aisha Aesthetics
+            <p className="truncate text-xs font-medium tracking-[0.02em] text-[#b88a2c] sm:tracking-[0.05em]">
+              AishaEsthetics
             </p>
 
             <h1 className="truncate text-base font-bold text-[#4b343b] sm:text-lg">

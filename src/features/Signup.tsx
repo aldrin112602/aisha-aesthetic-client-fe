@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import { LockKeyhole, Mail, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -50,8 +51,9 @@ function Signup() {
         
 
         <div className="mt-6 text-center">
+          <BrandLogo className="mx-auto mb-4 h-24 w-24" />
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b88a2c]">
-            Aisha Aesthetics
+            AishaEsthetics
           </p>
 
           <h1 className="mt-3 text-3xl font-bold text-[#4b343b]">

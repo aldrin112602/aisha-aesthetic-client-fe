@@ -1,3 +1,4 @@
+import BrandLogo from './BrandLogo';
 import { useState } from 'react';
 import { requestPasswordReset, resetPassword } from '../api/auth.api';
 
@@ -51,6 +52,7 @@ export default function ForgotPassword({ initialEmail, onBack }: { initialEmail:
 
   return <div className="flex min-h-screen items-center justify-center bg-[#fff8fa] px-4 py-8">
     <section className="w-full max-w-md rounded-3xl border border-pink-100 bg-white p-8 shadow-xl shadow-pink-100/40">
+      <BrandLogo className="mb-5 h-20 w-20" />
       <h1 className="text-2xl font-bold text-[#64434e]">{done ? 'Password updated' : 'Forgot password?'}</h1>
       {!done && <p className="mt-3 text-sm text-[#92737c]">{sent ? 'Enter the six-digit code from your email and choose a new password. The code expires in 10 minutes.' : 'Enter the email address registered to your account. We’ll email you a verification code.'}</p>}
       {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">{message}</p>}

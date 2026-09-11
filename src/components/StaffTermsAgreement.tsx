@@ -1,3 +1,4 @@
+import BrandLogo from './BrandLogo';
 import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import type { StaffTermsChallenge } from '../api/auth.api';
@@ -12,7 +13,8 @@ export default function StaffTermsAgreement({ challenge, onAccept, onCancel, loa
   return <div className="flex min-h-screen items-center justify-center bg-[#fff8fa] px-4 py-8">
     <main className="w-full max-w-3xl rounded-3xl border border-pink-100 bg-white p-6 shadow-xl shadow-pink-100/40 sm:p-10">
       <ShieldCheck size={32} className="mb-4 text-[#c26c84]" />
-      <p className="text-xs font-semibold uppercase tracking-widest text-[#b88a2c]">Aisha Aesthetics · First login</p>
+      <BrandLogo className="mb-5 h-20 w-20" />
+      <p className="text-xs font-semibold uppercase tracking-widest text-[#b88a2c]">AishaEsthetics · First login</p>
       <h1 className="mt-3 text-2xl font-bold text-[#4b343b]">{challenge.title}</h1>
       <p className="mt-2 text-sm text-[#80656d]">Please review your responsibilities before using your {challenge.role} account.</p>
       <div className="my-6 rounded-2xl border border-pink-100 bg-[#fffafb] p-5">

@@ -12,12 +12,12 @@ const money = (value: number) => `PHP ${Number(value || 0).toLocaleString('en-PH
 
 export function createSalesReportPdf(report: SalesReport, filters: ReportPdfFilters, generatedAt = new Date()) {
   const doc = new jsPDF({ format: 'a4', unit: 'mm' });
-  doc.setProperties({ title: 'Aisha Aesthetics - Sales Report', author: 'Aisha Aesthetics' });
+  doc.setProperties({ title: 'AishaEsthetics - Sales Report', author: 'AishaEsthetics' });
   let y = 22;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.setTextColor('#5b3e45');
-  doc.text('Aisha Aesthetics', 15, y);
+  doc.text('AishaEsthetics', 15, y);
   y += 9;
   doc.setFontSize(15);
   doc.text('Sales Report', 15, y);
@@ -87,7 +87,7 @@ export function createSalesReportPdf(report: SalesReport, filters: ReportPdfFilt
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor('#80656d');
-    if (page > 1) doc.text(`Aisha Aesthetics | Sales Report | ${report.startDate} to ${report.endDate}`, 15, 12);
+    if (page > 1) doc.text(`AishaEsthetics | Sales Report | ${report.startDate} to ${report.endDate}`, 15, 12);
     doc.setDrawColor('#e8c6cf');
     doc.line(15, 282, 195, 282);
     doc.text('Amounts in Philippine pesos (PHP)', 15, 288);

@@ -1,0 +1,12 @@
+{
+  "name": "AishaEsthetics",
+  "short_name": "AishaEsthetics",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#fff8fa",
+  "theme_color": "#fff8fa",
+  "icons": [
+    { "src": "/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,9 +1,9 @@
+import BrandLogo from '../components/BrandLogo';
 import {
   Eye,
   EyeOff,
   LockKeyhole,
   Mail,
-  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -125,7 +125,7 @@ function Signin() {
 
           <img
             src={beautyWoman}
-            alt="Aisha Aesthetics Beauty Treatment"
+            alt="AishaEsthetics Beauty Treatment"
             className="
               absolute
               inset-0
@@ -158,6 +158,7 @@ function Signin() {
           ======================================== */}
 
           <div className="relative z-10 p-8 lg:p-10">
+            <BrandLogo className="h-32 w-32 lg:h-40 lg:w-40" />
 
             
 
@@ -171,7 +172,7 @@ function Signin() {
           <div className="relative z-10 px-8 pb-10 lg:px-10">
 
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b88a2c]">
-              Aisha Aesthetics
+              AishaEsthetics
             </p>
 
 
@@ -229,8 +230,8 @@ function Signin() {
             <div
               className="
                 flex
-                h-12
-                w-12
+                h-20
+                w-20
                 items-center
                 justify-center
                 rounded-2xl
@@ -238,7 +239,7 @@ function Signin() {
                 text-[#c18c2d]
               "
             >
-              <Sparkles size={23} />
+              <BrandLogo className="h-20 w-20" />
             </div>
 
           </div>
