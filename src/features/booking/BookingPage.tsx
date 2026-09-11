@@ -484,7 +484,7 @@ function Booking() {
   // ==========================================
 
   return (
-    <div className="page-container w-full min-w-0 overflow-x-hidden">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8 w-full min-w-0 overflow-x-hidden">
 
       {/* ==========================================
           PAGE HEADER

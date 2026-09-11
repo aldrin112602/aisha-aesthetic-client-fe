@@ -15,7 +15,7 @@ export default function Notification() {
     catch (reason) { setActionError(reason instanceof Error ? reason.message : 'Unable to mark notifications as read.'); }
     finally { setSaving(false); }
   }
-  return <div className="page-container">
+  return <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div><h1 className="page-title">Notifications</h1><p className="page-subtitle">Your booking updates and appointment reminders.</p></div>
       <div className="flex gap-4">

@@ -56,7 +56,7 @@ export default function CustomerDashboard() {
     return { label: date.toLocaleDateString(undefined, { month: 'short' }), count: completed.filter(a => a.date.startsWith(key)).length };
   });
   const maxVisits = Math.max(1, ...months.map(m => m.count));
-  return <ThemeProvider theme={theme}><div className="page-container space-y-6 text-[#49343a]">
+  return <ThemeProvider theme={theme}><div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8 space-y-6 text-[#49343a]">
     <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ae7284]">Your personal beauty space</p><h1 className="page-title">Hello, {firstName}<span className="text-[#c78498]">.</span></h1><p className="page-subtitle">A little time for yourself. Everything you need, right here.</p></div><Button component={Link} to="/booking" variant="contained" startIcon={<Plus size={18} />} sx={{ px: 2.5, py: 1.4 }}>Book an appointment</Button></header>
     {error && <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => { setLoading(true); setRefreshKey(key => key + 1); }}>Retry</Button>}>{error}</Alert>}
     <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">

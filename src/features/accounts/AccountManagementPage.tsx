@@ -896,7 +896,7 @@ function AccountManagement() {
 
   return (
 
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
 
 
       {/* ========================================================

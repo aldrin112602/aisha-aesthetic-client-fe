@@ -30,7 +30,7 @@ const services = [
 function Dashboard() {
   const { unreadCount, error: notificationError } = useNotifications();
   return (
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
       {/* Welcome Section */}
       <section className="mb-6 grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
         {/* Hero Banner */}

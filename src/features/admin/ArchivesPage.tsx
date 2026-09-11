@@ -25,7 +25,7 @@ export default function ArchivesPage() {
   useEffect(() => { queueMicrotask(() => void refresh()); }, [refresh]);
   const rows = records.filter(record => (filter === 'all' || record.entity === filter) && `${record.name} ${record.detail || ''} ${record.id}`.toLowerCase().includes(search.trim().toLowerCase()));
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / 8) - 1));
-  return <ThemeProvider theme={theme}><div className="page-container space-y-6 text-[#49343a]">
+  return <ThemeProvider theme={theme}><div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8 space-y-6 text-[#49343a]">
     <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ae7284]">Data & recovery</p><h1 className="page-title">Archives</h1><p className="page-subtitle">Deleted from your lists. Kept here for a fresh start.</p></div><Button startIcon={<RotateCcw size={16} />} disabled={loading || restoring} onClick={() => void refresh()}>Refresh</Button></header>
     {error && <Alert severity="error">{error}</Alert>}{success && <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>}
     <section className="flex flex-wrap items-center gap-5 rounded-3xl border border-[#efdde3] bg-gradient-to-r from-[#fff0f4] to-[#fffaf2] p-6 sm:p-8">

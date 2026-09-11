@@ -80,7 +80,7 @@ export default function DatabaseBackupsPage() {
   const statusLabel = !status ? 'Status unavailable' : busy ? 'Backup in progress' : status.lastError ? 'Needs attention' : status.enabled ? 'Automatic backups on' : 'Automatic backups off';
 
   return <ThemeProvider theme={theme}>
-    <div className="page-container space-y-6 text-[#49343a]">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8 space-y-6 text-[#49343a]">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ae7284]">Data & recovery</p>

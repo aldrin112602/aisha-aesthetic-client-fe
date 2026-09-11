@@ -53,7 +53,7 @@ export default function History() {
   }, [customerId, refreshKey]);
 
   const history = customerId ? customerHistory(appointments, customerId, now) : [];
-  return <div className="page-container">
+  return <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
     <div className="mb-6 flex items-start justify-between gap-4">
       <div>
         <h1 className="page-title">Appointment History</h1>

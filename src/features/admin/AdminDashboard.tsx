@@ -411,7 +411,7 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="page-container">
+      <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-center">
             <RefreshCw
@@ -433,7 +433,7 @@ function AdminDashboard() {
   // =========================================================
 
   return (
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
       {/* =====================================================
           HEADER
       ====================================================== */}

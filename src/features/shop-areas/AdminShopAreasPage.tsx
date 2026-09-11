@@ -597,7 +597,7 @@ function AdminShopareas() {
   // ============================================================
 
   return (
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
 
       {/* HEADER */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -545,7 +545,7 @@ function AdminAppointments() {
 
 
   return (
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
       {sessionAppointment && <div role="dialog" aria-modal="true" aria-label="Next session details" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl bg-white p-5">
           <button type="button" onClick={() => setSessionAppointment(null)} className="mb-3 rounded-lg border px-3 py-2">Close</button>

@@ -522,8 +522,8 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#fffafb] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-2xl">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
+      <div className="mx-auto w-full">
 
         {/* HEADER */}
         <div className="mb-6 flex items-center justify-between">

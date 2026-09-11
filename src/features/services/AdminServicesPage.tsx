@@ -513,7 +513,7 @@ function AdminService() {
 
   if (loading) {
     return (
-      <div className="page-container">
+      <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-pink-500"></div>
@@ -534,7 +534,7 @@ function AdminService() {
    */
 
   return (
-    <div className="page-container">
+    <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
 
       {/* HEADER */}
 
