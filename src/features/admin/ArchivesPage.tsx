@@ -28,7 +28,7 @@ export default function ArchivesPage() {
   return <ThemeProvider theme={theme}><div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8 space-y-6 text-[#49343a]">
     <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ae7284]">Data & recovery</p><h1 className="page-title">Archives</h1><p className="page-subtitle">Deleted from your lists. Kept here for a fresh start.</p></div><Button startIcon={<RotateCcw size={16} />} disabled={loading || restoring} onClick={() => void refresh()}>Refresh</Button></header>
     {error && <Alert severity="error">{error}</Alert>}{success && <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>}
-    <section className="flex flex-wrap items-center gap-5 rounded-3xl border border-[#efdde3] bg-gradient-to-r from-[#fff0f4] to-[#fffaf2] p-6 sm:p-8">
+    <section className="flex flex-col items-start gap-5 sm:flex-row sm:items-center rounded-3xl border border-[#efdde3] bg-gradient-to-r from-[#fff0f4] to-[#fffaf2] p-6 sm:p-8">
       <span className="rounded-2xl bg-white p-4 text-[#b2687e]"><Archive size={28} /></span><div className="min-w-0 flex-1"><h2 className="text-xl font-semibold">Nothing here is lost.</h2><p className="mt-2 max-w-xl text-sm leading-relaxed text-[#876f77]">Restore a record to return it to its original list, with its details and linked history intact.</p></div><div className="rounded-2xl bg-white/80 px-6 py-4"><p className="text-3xl font-semibold">{loading ? '—' : records.length}</p><p className="mt-1 text-xs text-[#876f77]">Archived records</p></div>
     </section>
     <section className="overflow-hidden rounded-3xl border border-[#efe3e7] bg-white">

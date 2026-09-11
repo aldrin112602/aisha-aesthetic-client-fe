@@ -611,7 +611,7 @@ function AdminShopareas() {
 
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[#c18c2d] hover:bg-[#b07720] px-4 py-3 font-semibold text-white transition-colors w-full sm:w-auto"
+          className="primary-btn inline-flex items-center justify-center gap-2"
         >
           <Plus size={20} />
           Add Shop Area

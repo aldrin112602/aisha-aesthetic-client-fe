@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import {
   X,
   Trash2,
+  Plus,
 } from 'lucide-react';
 
 import {
@@ -922,8 +923,9 @@ function AccountManagement() {
         <button
           type="button"
           onClick={handleOpenModal}
-          className="primary-btn"
+          className="primary-btn inline-flex items-center justify-center gap-2"
         >
+          <Plus size={16} />
           Add Account
         </button>
 
