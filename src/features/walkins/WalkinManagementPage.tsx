@@ -6,6 +6,10 @@ import {
   RefreshCw,
   Plus,
   X,
+  Sparkles,
+  MapPin,
+  Wallet,
+  NotebookPen,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -472,11 +476,6 @@ function WalkinManagement() {
   };
 
   // =========================================================
-  // STATUS BADGE
-  // =========================================================
-
-
-  // =========================================================
   // RENDER
   // =========================================================
 
@@ -486,7 +485,7 @@ function WalkinManagement() {
           HEADER
       ====================================================== */}
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="page-title">Walk-in Management</h1>
 
@@ -500,7 +499,7 @@ function WalkinManagement() {
             type="button"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-white px-4 py-2.5 text-sm font-semibold text-[#d77992] transition hover:bg-[#fff7f9] disabled:cursor-not-allowed disabled:opacity-60"
+            className="secondary-btn"
           >
             <RefreshCw
               size={16}
@@ -531,13 +530,19 @@ function WalkinManagement() {
           onClick={closeAddWalkinModal}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+            className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-[#4b343b]">
-                Record New Walk-in
-              </h2>
+            {/* MODAL HEADER */}
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-pink-100 px-6 py-4">
+              <div>
+                <h2 className="text-lg font-bold text-[#4b343b]">
+                  Record New Walk-in
+                </h2>
+                <p className="text-xs text-[#92737c]">
+                  Fill in the details for the customer in front of you.
+                </p>
+              </div>
 
               <button
                 type="button"
@@ -549,172 +554,180 @@ function WalkinManagement() {
               </button>
             </div>
 
-            <form onSubmit={handleRecordWalkin} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+            {/* MODAL BODY */}
+            <form
+              id="walkin-form"
+              onSubmit={handleRecordWalkin}
+              className="flex-1 space-y-6 overflow-y-auto px-6 py-5"
+            >
+              {/* CUSTOMER SECTION */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#c18c2d]">
+                  Customer
+                </p>
 
-            {/* CUSTOMER NAME */}
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#5d444c]">
-                <User size={16} className="text-[#c18c2d]" />
-                Customer Name *
-              </label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#5d444c]">
+                      <User size={15} className="text-[#c18c2d]" />
+                      Customer name *
+                    </label>
 
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="input-field w-full"
-                placeholder="Enter customer name"
-                required
-              />
-            </div>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="Enter customer name"
+                      required
+                    />
+                  </div>
 
-            {/* PHONE */}
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#5d444c]">
-                <Phone size={16} className="text-[#c18c2d]" />
-                Phone Number
-              </label>
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#5d444c]">
+                      <Phone size={15} className="text-[#c18c2d]" />
+                      Phone number
+                    </label>
 
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                className="input-field w-full"
-                placeholder="09XX-XXX-XXXX"
-              />
-            </div>
-
-            {/* SERVICE */}
-            <div>
-              <label className="mb-2 text-sm font-semibold text-[#5d444c]">
-                Service *
-              </label>
-
-              {servicesLoading ? (
-                <div className="input-field w-full text-[#999]">
-                  Loading services...
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder="09XX-XXX-XXXX"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <select
-                  name="serviceId"
-                  value={formData.serviceId}
-                  onChange={handleServiceChange}
-                  className="input-field w-full"
-                  required
-                >
-                  <option value="">Select a service</option>
+              </div>
 
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} (₱{service.price.toLocaleString()})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+              {/* SERVICE SECTION */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#c18c2d]">
+                  Service
+                </p>
 
-            {/* CATEGORY */}
-            <div>
-              <label className="mb-2 text-sm font-semibold text-[#5d444c]">
-                Category
-              </label>
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#5d444c]">
+                    <Sparkles size={15} className="text-[#c18c2d]" />
+                    Select service *
+                  </label>
 
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="input-field w-full bg-[#f9f9f9]"
-                placeholder="Auto-filled from service"
-                disabled
-              />
-            </div>
+                  {servicesLoading ? (
+                    <div className="input-field w-full text-[#999]">
+                      Loading services...
+                    </div>
+                  ) : (
+                    <select
+                      name="serviceId"
+                      value={formData.serviceId}
+                      onChange={handleServiceChange}
+                      className="input-field w-full"
+                      required
+                    >
+                      <option value="">Choose a service</option>
 
-            {/* SHOP AREA */}
-            <div>
-              <label className="mb-2 text-sm font-semibold text-[#5d444c]">
-                Shop Area *
-              </label>
+                      {services.map((service) => (
+                        <option key={service.id} value={service.id}>
+                          {service.name} (₱{service.price.toLocaleString()})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
 
-              <select
-                name="area"
-                value={formData.area}
-                onChange={handleInputChange}
-                className="input-field w-full"
-                disabled={
-                  shopAreasLoading || shopAreas.length === 0
-                }
-              >
-                {shopAreasLoading ? (
-                  <option value="">Loading shop areas...</option>
-                ) : shopAreas.length === 0 ? (
-                  <option value="">No shop area available</option>
-                ) : (
-                  shopAreas.map((area) => (
-                    <option key={area.id} value={area.name}>
-                      {area.name}
-                    </option>
-                  ))
+                {/* SERVICE SUMMARY — replaces the old disabled inputs */}
+                {formData.serviceId && (
+                  <div className="flex items-center justify-between rounded-xl bg-[#fff4f6] px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm text-[#5d444c]">
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#c15d78]">
+                        {formData.category || 'Uncategorized'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 font-bold text-[#c18c2d]">
+                      <Wallet size={15} />
+                      ₱{formData.price.toLocaleString()}
+                    </div>
+                  </div>
                 )}
-              </select>
-            </div>
 
-            {/* PRICE */}
-            <div>
-              <label className="mb-2 text-sm font-semibold text-[#5d444c]">
-                Price (₱) *
-              </label>
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#5d444c]">
+                    <MapPin size={15} className="text-[#c18c2d]" />
+                    Shop area *
+                  </label>
 
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className="input-field w-full bg-[#f9f9f9]"
-                placeholder="0"
-                disabled
-              />
-            </div>
-          </div>
+                  <select
+                    name="area"
+                    value={formData.area}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                    disabled={shopAreasLoading || shopAreas.length === 0}
+                  >
+                    {shopAreasLoading ? (
+                      <option value="">Loading shop areas...</option>
+                    ) : shopAreas.length === 0 ? (
+                      <option value="">No shop area available</option>
+                    ) : (
+                      shopAreas.map((area) => (
+                        <option key={area.id} value={area.name}>
+                          {area.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              </div>
 
-          {/* NOTES */}
-          <div>
-            <label className="mb-2 text-sm font-semibold text-[#5d444c]">
-              Notes
-            </label>
+              {/* NOTES SECTION */}
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#5d444c]">
+                  <NotebookPen size={15} className="text-[#c18c2d]" />
+                  Notes
+                </label>
 
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              className="input-field w-full resize-none"
-              rows={3}
-              placeholder="Add any additional notes..."
-            />
-          </div>
-
-          {/* SUBMIT */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="primary-btn mt-6 inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? (
-              <>
-                <RefreshCw size={17} className="animate-spin" />
-                Recording...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={17} />
-                Record Walk-in
-              </>
-            )}
-          </button>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  className="input-field w-full resize-none"
+                  rows={3}
+                  placeholder="Add any additional notes..."
+                />
+              </div>
             </form>
+
+            {/* MODAL FOOTER */}
+            <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-pink-100 bg-[#fffafb] px-6 py-4">
+              <button
+                type="button"
+                onClick={closeAddWalkinModal}
+                className="secondary-btn"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                form="walkin-form"
+                disabled={loading}
+                className="primary-btn inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw size={17} className="animate-spin" />
+                    Recording...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={17} />
+                    Record Walk-in
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -723,8 +736,6 @@ function WalkinManagement() {
           RECENT WALK-INS
       ====================================================== */}
       <RecentWalkins walkins={walkins} />
-
-
     </div>
   );
 }

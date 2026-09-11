@@ -8,7 +8,9 @@
 
 * {
   box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 html {
@@ -28,7 +30,7 @@ button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: inherit;
 }
 
 button {
@@ -83,11 +85,11 @@ html:has(.protected-layout)::-webkit-scrollbar,
   }
 
   .primary-btn {
-    @apply rounded-xl bg-gradient-to-r from-[#df7f98] to-[#ef9daf] px-5 py-3 font-semibold text-white shadow-sm transition hover:scale-[1.01] hover:shadow-md active:scale-[0.99];
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#df7f98] to-[#ef9daf] px-3.5 py-2 text-sm leading-5 font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c66b83];
   }
 
   .secondary-btn {
-    @apply rounded-xl border border-[#e7b4c0] bg-white px-5 py-3 font-semibold text-[#c66b83] transition hover:bg-[#fff4f6];
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#e7b4c0] bg-white px-3.5 py-2 text-sm leading-5 font-semibold text-[#c66b83] transition hover:bg-[#fff4f6] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c66b83];
   }
 
   .input-field {
