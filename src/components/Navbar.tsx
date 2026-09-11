@@ -136,31 +136,31 @@ function Navbar({
 
   return (
     <header className="sticky top-0 z-40 border-b border-pink-100 bg-white/90 backdrop-blur-md">
-      <div className="flex h-[72px] items-center justify-between px-4 sm:px-6">
+      <div className="flex h-[72px] min-w-0 items-center justify-between gap-2 px-3 sm:px-6">
 
         {/* =====================================================
             LEFT
         ===================================================== */}
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
 
           {/* MOBILE MENU */}
           <button
             type="button"
             onClick={onMenuClick}
-            className="rounded-xl p-2 text-[#70535d] hover:bg-pink-50 md:hidden"
+            className="shrink-0 rounded-xl p-2 text-[#70535d] hover:bg-pink-50 md:hidden"
             aria-label="Open navigation menu"
           >
             <Menu size={22} />
           </button>
 
           {/* PAGE TITLE */}
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#b88a2c]">
+          <div className="min-w-0">
+            <p className="truncate text-xs font-medium uppercase tracking-[0.15em] text-[#b88a2c] sm:tracking-[0.25em]">
               Aisha Aesthetics
             </p>
 
-            <h1 className="text-base font-bold text-[#4b343b] sm:text-lg">
+            <h1 className="truncate text-base font-bold text-[#4b343b] sm:text-lg">
               {getPageTitle()}
             </h1>
           </div>
@@ -170,7 +170,7 @@ function Navbar({
             RIGHT
         ===================================================== */}
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
 
           {/* =================================================
               NOTIFICATIONS

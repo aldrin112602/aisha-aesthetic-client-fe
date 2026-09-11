@@ -10,14 +10,14 @@ export default function ProtectedLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#fff8fa]">
+    <div className="protected-layout min-h-dvh bg-[#fff8fa]">
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-      <div className="flex">
+      <div className="flex min-w-0 items-start">
         <Sidebar
           isMobileOpen={isSidebarOpen}
           onMobileClose={() => setIsSidebarOpen(false)}
         />
-        <main className="min-h-[calc(100vh-73px)] flex-1 pb-24 md:pb-8">
+        <main className="min-h-[calc(100dvh-73px)] min-w-0 flex-1 pb-6 [overflow-wrap:anywhere]">
           {children}
         </main>
       </div>

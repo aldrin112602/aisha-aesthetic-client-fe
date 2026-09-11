@@ -249,58 +249,58 @@ function AdminAppointments() {
     return pages;
   }, [currentPage, totalPages]);
 
- const updateStatus = async (
-  appointmentId: number,
-  nextStatus: string
-) => {
-  try {
-    const currentAdmin = getCurrentUser();
+  const updateStatus = async (
+    appointmentId: number,
+    nextStatus: string
+  ) => {
+    try {
+      const currentAdmin = getCurrentUser();
 
-    await updateAppointmentStatus(
-      appointmentId,
-      nextStatus,
-      true,
-      currentAdmin?.id
-    );
+      await updateAppointmentStatus(
+        appointmentId,
+        nextStatus,
+        true,
+        currentAdmin?.id
+      );
 
-    setAppointments((current) =>
-      current.map((item) =>
-        item.id === appointmentId
-          ? {
+      setAppointments((current) =>
+        current.map((item) =>
+          item.id === appointmentId
+            ? {
               ...item,
               status: nextStatus,
             }
-          : item
-      )
-    );
+            : item
+        )
+      );
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Status Updated',
-      text: `Appointment status changed to ${nextStatus}.`,
-      confirmButtonColor: '#df7f98',
-      timer: 1500,
-      showConfirmButton: false,
-    });
-  } catch (error: any) {
-    console.error(
-      'Error updating appointment status:',
-      error
-    );
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: `Appointment status changed to ${nextStatus}.`,
+        confirmButtonColor: '#df7f98',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error: any) {
+      console.error(
+        'Error updating appointment status:',
+        error
+      );
 
-    const message =
-      error?.response?.data?.message ||
-      error?.message ||
-      'Unable to update appointment status.';
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Unable to update appointment status.';
 
-    Swal.fire({
-      icon: 'error',
-      title: 'Update Failed',
-      text: message,
-      confirmButtonColor: '#df7f98',
-    });
-  }
-};
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: message,
+        confirmButtonColor: '#df7f98',
+      });
+    }
+  };
 
 
   const deleteAppointment = async (
@@ -397,8 +397,8 @@ function AdminAppointments() {
           : `
             <div class="text-left text-sm max-h-80 overflow-y-auto">
               ${entries
-                .map(
-                  (entry) => `
+            .map(
+              (entry) => `
                     <div class="border-b border-pink-100 py-2.5">
                       <div class="font-semibold text-[#5b3e45]">
                         ${entry.oldStatus} &rarr; ${entry.newStatus}
@@ -410,8 +410,8 @@ function AdminAppointments() {
                       </div>
                     </div>
                   `
-                )
-                .join('')}
+            )
+            .join('')}
             </div>
           `;
 
@@ -439,10 +439,26 @@ function AdminAppointments() {
     <button
       type="button"
       onClick={() => viewStatusHistory(appointment)}
-      className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#fff0f4] px-3 py-2 text-xs font-semibold text-[#c15d78] transition hover:bg-[#ffe0e8] sm:w-auto"
+      className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#fff0f4] px-2.5 py-2 text-xs font-semibold text-[#c15d78] transition hover:bg-[#ffe0e8]"
     >
-      <History size={14} />
+      <History size={13} />
       History
+    </button>
+  );
+
+  const DeleteButton = ({ appointment }: { appointment: Appointment }) => (
+    <button
+      type="button"
+      onClick={() =>
+        deleteAppointment(
+          appointment.id,
+          appointment.customerName || `Customer #${appointment.customerId}`
+        )
+      }
+      className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#fee5e5] px-2.5 py-2 text-xs font-semibold text-[#c1433f] transition hover:bg-[#fdd5d5]"
+    >
+      <Trash2 size={13} />
+      Delete
     </button>
   );
 
@@ -509,21 +525,6 @@ function AdminAppointments() {
     </select>
   );
 
-  const DeleteButton = ({ appointment }: { appointment: Appointment }) => (
-    <button
-      type="button"
-      onClick={() =>
-        deleteAppointment(
-          appointment.id,
-          appointment.customerName || `Customer #${appointment.customerId}`
-        )
-      }
-      className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#fee5e5] px-3 py-2 text-xs font-semibold text-[#c1433f] transition hover:bg-[#fdd5d5] sm:w-auto"
-    >
-      <Trash2 size={14} />
-      Delete
-    </button>
-  );
 
   return (
     <div className="page-container">
@@ -542,16 +543,16 @@ function AdminAppointments() {
             Showing: {dashboardFilter === 'today'
               ? 'Today’s Appointments'
               : dashboardFilter === 'upcoming'
-              ? 'Upcoming Appointments'
-              : dashboardFilter === 'pending'
-              ? 'Pending Appointments'
-              : dashboardFilter === 'confirmed'
-              ? 'Confirmed Appointments'
-              : dashboardFilter === 'completed'
-              ? 'Completed Appointments'
-              : dashboardFilter === 'cancelled'
-              ? 'Cancelled Appointments'
-              : 'No Show Appointments'}
+                ? 'Upcoming Appointments'
+                : dashboardFilter === 'pending'
+                  ? 'Pending Appointments'
+                  : dashboardFilter === 'confirmed'
+                    ? 'Confirmed Appointments'
+                    : dashboardFilter === 'completed'
+                      ? 'Completed Appointments'
+                      : dashboardFilter === 'cancelled'
+                        ? 'Cancelled Appointments'
+                        : 'No Show Appointments'}
           </div>
         )}
       </div>
@@ -652,13 +653,22 @@ function AdminAppointments() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-[#5b3e45]">
+                    <p
+                      className="truncate font-semibold text-[#5b3e45]"
+                      title={
+                        appointment.customerName ||
+                        `Customer #${appointment.customerId}`
+                      }
+                    >
                       {appointment.customerName ||
                         `Customer #${appointment.customerId}`}
                     </p>
 
                     {appointment.customerEmail && (
-                      <p className="mt-0.5 truncate text-xs text-gray-500">
+                      <p
+                        className="mt-0.5 truncate text-xs text-gray-500"
+                        title={appointment.customerEmail}
+                      >
                         {appointment.customerEmail}
                       </p>
                     )}
@@ -676,27 +686,41 @@ function AdminAppointments() {
                 <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                   <div>
                     <p className="text-[#92737c]">Service</p>
-                    <p className="truncate font-medium text-[#5b3e45]">
+                    <p
+                      className="truncate font-medium text-[#5b3e45]"
+                      title={appointment.serviceName}
+                    >
                       {appointment.serviceName}
                     </p>
                   </div>
 
                   <div>
                     <p className="text-[#92737c]">Area</p>
-                    <p className="truncate font-medium text-[#5b3e45]">
+                    <p
+                      className="truncate font-medium text-[#5b3e45]"
+                      title={appointment.area}
+                    >
                       {appointment.area}
                     </p>
                   </div>
-                    <div>
-                  <p className="text-[#92737c]">Assigned Employee</p>
-                  <p className="truncate font-medium text-[#5b3e45]">
-                    {appointment.employeeName ||
-                      (appointment.employeeId
-                        ? `Employee #${appointment.employeeId}`
-                        : 'Unassigned')}
-                  </p>
-                </div>
 
+                  <div>
+                    <p className="text-[#92737c]">Assigned Employee</p>
+                    <p
+                      className="truncate font-medium text-[#5b3e45]"
+                      title={
+                        appointment.employeeName ||
+                        (appointment.employeeId
+                          ? `Employee #${appointment.employeeId}`
+                          : 'Unassigned')
+                      }
+                    >
+                      {appointment.employeeName ||
+                        (appointment.employeeId
+                          ? `Employee #${appointment.employeeId}`
+                          : 'Unassigned')}
+                    </p>
+                  </div>
 
                   <div>
                     <p className="text-[#92737c]">Date</p>
@@ -742,23 +766,23 @@ function AdminAppointments() {
           ======================================== */}
           <div className="hidden overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm lg:block">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+              <table className="w-full min-w-[1000px] text-left text-sm">
                 <thead className="bg-[#fff4f6] text-[#5b3e45]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Customer</th>
-                    <th className="px-4 py-3 font-semibold">Type</th>
-                    <th className="px-4 py-3 font-semibold">Service</th>
-                    <th className="px-4 py-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 font-semibold">Time</th>
-                    <th className="hidden px-4 py-3 font-semibold xl:table-cell">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Customer</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Type</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Service</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Date</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Time</th>
+                    <th className="hidden whitespace-nowrap px-4 py-3 font-semibold xl:table-cell">
                       Area
                     </th>
-                    <th className="px-4 py-3 font-semibold">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">
                       Assigned Employee
                     </th>
-                    <th className="px-4 py-3 font-semibold">Price</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="min-w-[300px] px-4 py-3 font-semibold">
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Price</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-semibold">Status</th>
+                    <th className="min-w-[300px] whitespace-nowrap px-4 py-3 font-semibold">
                       Action
                     </th>
                   </tr>
@@ -772,22 +796,31 @@ function AdminAppointments() {
                     >
                       {/* Customer */}
                       <td className="px-4 py-3">
-                        <div className="max-w-[160px] truncate font-medium text-[#5b3e45]">
+                        <div
+                          className="max-w-[160px] truncate font-medium text-[#5b3e45]"
+                          title={
+                            appointment.customerName ||
+                            `Customer #${appointment.customerId}`
+                          }
+                        >
                           {appointment.customerName ||
                             `Customer #${appointment.customerId}`}
                         </div>
 
                         {appointment.customerEmail && (
-                          <div className="mt-0.5 max-w-[160px] truncate text-xs text-gray-500">
+                          <div
+                            className="mt-0.5 max-w-[160px] truncate text-xs text-gray-500"
+                            title={appointment.customerEmail}
+                          >
                             {appointment.customerEmail}
                           </div>
                         )}
                       </td>
 
                       {/* Appointment Type */}
-                      <td className="px-4 py-3">
+                      <td className="whitespace-nowrap px-4 py-3">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${getAppointmentTypeClass(
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${getAppointmentTypeClass(
                             appointment.appointmentType
                           )}`}
                         >
@@ -799,7 +832,10 @@ function AdminAppointments() {
 
                       {/* Service */}
                       <td className="px-4 py-3">
-                        <span className="block max-w-[140px] truncate font-medium text-[#5b3e45]">
+                        <span
+                          className="block max-w-[140px] truncate font-medium text-[#5b3e45]"
+                          title={appointment.serviceName}
+                        >
                           {appointment.serviceName}
                         </span>
                       </td>
@@ -816,21 +852,31 @@ function AdminAppointments() {
 
                       {/* Area */}
                       <td className="hidden px-4 py-3 xl:table-cell">
-                        <span className="block max-w-[110px] truncate">
+                        <span
+                          className="block max-w-[110px] truncate"
+                          title={appointment.area}
+                        >
                           {appointment.area}
                         </span>
                       </td>
 
                       {/* Assigned Employee */}
                       <td className="px-4 py-3">
-                        <span className="block max-w-[140px] truncate font-medium text-[#5b3e45]">
+                        <span
+                          className="block max-w-[140px] truncate font-medium text-[#5b3e45]"
+                          title={
+                            appointment.employeeName ||
+                            (appointment.employeeId
+                              ? `Employee #${appointment.employeeId}`
+                              : 'Unassigned')
+                          }
+                        >
                           {appointment.employeeName ||
                             (appointment.employeeId
                               ? `Employee #${appointment.employeeId}`
                               : 'Unassigned')}
                         </span>
                       </td>
-
 
                       {/* Price */}
                       <td className="whitespace-nowrap px-4 py-3">
@@ -839,8 +885,8 @@ function AdminAppointments() {
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3">
-                        <span className="inline-flex rounded-full bg-[#fff5df] px-2.5 py-1 text-xs font-semibold uppercase text-[#b88a2c]">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="inline-flex whitespace-nowrap rounded-full bg-[#fff5df] px-2.5 py-1 text-xs font-semibold uppercase text-[#b88a2c]">
                           {appointment.status}
                         </span>
                       </td>
@@ -863,8 +909,8 @@ function AdminAppointments() {
           </div>
 
           {/* ========================================
-              PAGINATION
-          ======================================== */}
+    PAGINATION
+======================================== */}
           {totalPages > 1 && (
             <div className="mt-5 flex flex-col items-center justify-between gap-3 sm:flex-row">
               <p className="text-xs text-[#92737c]">
@@ -884,10 +930,7 @@ function AdminAppointments() {
 
                 {pageNumbers.map((page, index) =>
                   page === 'ellipsis' ? (
-                    <span
-                      key={`ellipsis-${index}`}
-                      className="px-1.5 text-sm text-[#92737c]"
-                    >
+                    <span key={`ellipsis-${index}`} className="px-1.5 text-sm text-[#92737c]">
                       …
                     </span>
                   ) : (
@@ -895,11 +938,10 @@ function AdminAppointments() {
                       key={page}
                       type="button"
                       onClick={() => goToPage(page)}
-                      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-semibold transition ${
-                        page === currentPage
-                          ? 'bg-[#df7f98] text-white'
-                          : 'border border-pink-200 bg-white text-[#745d65] hover:bg-[#fff0f4]'
-                      }`}
+                      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-semibold transition ${page === currentPage
+                        ? 'bg-[#df7f98] text-white'
+                        : 'border border-pink-200 bg-white text-[#745d65] hover:bg-[#fff0f4]'
+                        }`}
                     >
                       {page}
                     </button>

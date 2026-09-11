@@ -35,6 +35,18 @@ button {
   cursor: pointer;
 }
 
+/* Keep document and navigation scrolling accessible without duplicate rails.
+   Wide tables retain their own horizontal scrollbars. */
+html:has(.protected-layout),
+.sidebar-scroll {
+  scrollbar-width: none;
+}
+
+html:has(.protected-layout)::-webkit-scrollbar,
+.sidebar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -54,7 +66,7 @@ button {
 
 @layer components {
   .page-container {
-    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+    @apply mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
   }
 
   .page-title {

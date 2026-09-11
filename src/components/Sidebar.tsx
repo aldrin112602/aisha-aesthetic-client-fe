@@ -198,7 +198,7 @@ function Sidebar({
   const renderNavigation = (
     onItemClick?: () => void
   ) => (
-    <nav className="flex flex-col gap-1.5">
+    <nav className="flex flex-col gap-1">
       {navigation.map((item) => {
         const Icon = item.icon;
 
@@ -218,7 +218,7 @@ function Sidebar({
               gap-3
               rounded-xl
               px-4
-              py-3
+              py-2.5
               text-sm
               font-medium
               transition
@@ -254,14 +254,13 @@ function Sidebar({
       <aside
         className="
           sticky
-          top-[72px]
+          top-[73px]
 
           hidden
-          h-[calc(100vh-72px)]
+          h-[calc(100dvh-73px)]
 
-          w-[260px]
-          min-w-[260px]
-          max-w-[260px]
+          w-[224px]
+          lg:w-[240px]
 
           shrink-0
 
@@ -275,7 +274,7 @@ function Sidebar({
           bg-white
 
           px-4
-          py-6
+          py-4
 
           md:flex
         "
@@ -290,7 +289,7 @@ function Sidebar({
               BRAND / ROLE
               ================================================= */}
 
-          <div className="mb-8 flex shrink-0 items-center gap-3 px-3">
+          <div className="mb-4 flex shrink-0 items-center gap-3 px-3">
             <div
               className="
                 flex
@@ -325,7 +324,7 @@ function Sidebar({
               sidebar height without breaking width.
               ================================================= */}
 
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-color:#e2a0b1_#fff4f6] [scrollbar-width:thin]">
+          <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
             {renderNavigation()}
           </div>
 
@@ -333,7 +332,7 @@ function Sidebar({
               LOGOUT
               ================================================= */}
 
-          <div className="mt-4 shrink-0 border-t border-pink-100 pt-4">
+          <div className="mt-3 shrink-0 border-t border-pink-100 pt-3">
             <button
               type="button"
               onClick={handleLogout}
@@ -475,7 +474,7 @@ function Sidebar({
                   MOBILE NAVIGATION
                   ============================================= */}
 
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-color:#e2a0b1_#fff4f6] [scrollbar-width:thin]">
+              <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
                 {renderNavigation(onMobileClose)}
               </div>
 
