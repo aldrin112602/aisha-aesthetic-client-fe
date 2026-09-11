@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import NextSession from './components/NextSession';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, History, Trash2 } from 'lucide-react';
+import { CalendarClock, ChevronLeft, ChevronRight, History, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import {
@@ -28,6 +29,7 @@ type StatusFilter =
 const PAGE_SIZE = 10;
 
 function AdminAppointments() {
+  const [sessionAppointment, setSessionAppointment] = useState<Appointment | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -312,7 +314,7 @@ function AdminAppointments() {
 
     const result = await Swal.fire({
       title: 'Delete Appointment?',
-      text: `Are you sure you want to delete the appointment for ${displayCustomerName}?`,
+      text: `Move the appointment for ${displayCustomerName} to Archives? You can restore it later.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Delete',
@@ -349,8 +351,8 @@ function AdminAppointments() {
 
       await Swal.fire({
         icon: 'success',
-        title: 'Deleted!',
-        text: `Appointment for ${displayCustomerName} has been deleted.`,
+        title: 'Moved to Archives',
+        text: `Appointment for ${displayCustomerName} has been moved to Archives.`,
         confirmButtonColor: '#df7f98',
         timer: 1800,
         showConfirmButton: false,
@@ -462,6 +464,22 @@ function AdminAppointments() {
     </button>
   );
 
+  const NextSessionButton = ({ appointment }: { appointment: Appointment }) => (
+    <button
+      type="button"
+      onClick={() => setSessionAppointment(appointment)}
+      className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#eef2ff] px-2.5 py-2 text-xs font-semibold text-[#4f46e5] transition hover:bg-[#e0e7ff]"
+    >
+      <CalendarClock size={13} />
+      Next session
+      {appointment.previousAppointmentId && (
+        <span className="font-normal text-[#6366f1]">
+          · #{appointment.previousAppointmentId}
+        </span>
+      )}
+    </button>
+  );
+
   const formatAppointmentType = (
     appointmentType?: string | null
   ) => {
@@ -528,6 +546,12 @@ function AdminAppointments() {
 
   return (
     <div className="page-container">
+      {sessionAppointment && <div role="dialog" aria-modal="true" aria-label="Next session details" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl bg-white p-5">
+          <button type="button" onClick={() => setSessionAppointment(null)} className="mb-3 rounded-lg border px-3 py-2">Close</button>
+          <NextSession key={sessionAppointment.id} appointment={sessionAppointment} onCreated={session => setAppointments(items => [...items, session])} />
+        </div>
+      </div>}
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="page-title">
@@ -752,9 +776,10 @@ function AdminAppointments() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <StatusSelect appointment={appointment} />
                   <HistoryButton appointment={appointment} />
+                  <NextSessionButton appointment={appointment} />
                   <DeleteButton appointment={appointment} />
                 </div>
               </div>
@@ -782,7 +807,7 @@ function AdminAppointments() {
                     </th>
                     <th className="whitespace-nowrap px-4 py-3 font-semibold">Price</th>
                     <th className="whitespace-nowrap px-4 py-3 font-semibold">Status</th>
-                    <th className="min-w-[300px] whitespace-nowrap px-4 py-3 font-semibold">
+                    <th className="min-w-[340px] whitespace-nowrap px-4 py-3 font-semibold">
                       Action
                     </th>
                   </tr>
@@ -892,12 +917,13 @@ function AdminAppointments() {
                       </td>
 
                       {/* Actions */}
-                      <td className="min-w-[300px] px-4 py-3">
+                      <td className="min-w-[340px] px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-[130px] shrink-0">
                             <StatusSelect appointment={appointment} />
                           </div>
                           <HistoryButton appointment={appointment} />
+                          <NextSessionButton appointment={appointment} />
                           <DeleteButton appointment={appointment} />
                         </div>
                       </td>

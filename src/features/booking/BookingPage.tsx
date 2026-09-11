@@ -447,7 +447,8 @@ function Booking() {
 
     await Swal.fire({
       icon: "success",
-      title: "Appointment Booked!",
+        title: "Appointment Booked!",
+        footer: 'To schedule a follow-up, open Appointments → View Details → Schedule next session.',
       html: `
         <div style="text-align: left; line-height: 1.8;">
           <p><strong>Service:</strong> ${service.name}</p>

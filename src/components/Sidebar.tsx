@@ -1,6 +1,7 @@
 import {
   Bell,
   Database,
+  Archive,
   CalendarDays,
   Clock3,
   House,
@@ -82,6 +83,7 @@ admin: [
     path: '/database-backups',
     icon: Database,
   },
+  { name: 'Archives', path: '/archives', icon: Archive },
 ],
 
   // =========================================================

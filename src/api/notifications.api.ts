@@ -3,7 +3,7 @@ import { apiRequest } from './client';
 export interface AppNotification {
   id: number;
   appointmentId: number;
-  kind: 'booking' | 'reminder';
+  kind: 'booking' | 'reminder' | 'next-session';
   title: string;
   message: string;
   createdAt: string;

@@ -423,7 +423,7 @@ function AdminService() {
 
     Swal.fire({
       title: 'Are you sure?',
-      text: `Do you want to delete "${service.name}"?`,
+      text: `Move "${service.name}" to Archives? You can restore it later.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, delete it!',
@@ -439,8 +439,8 @@ function AdminService() {
         await fetchServices();
 
         Swal.fire({
-          title: 'Deleted!',
-          text: `"${service.name}" has been deleted.`,
+          title: 'Moved to Archives',
+          text: `"${service.name}" has been moved to Archives.`,
           icon: 'success',
         });
       } catch (err) {

@@ -24,6 +24,7 @@ import type {
   AppointmentListTab,
 } from '../../types';
 import { getCurrentUser } from '../../utils/auth';
+import NextSession from './components/NextSession';
 
 function Appointments() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
@@ -445,7 +446,7 @@ function Appointments() {
     setConfirmAction({
       title: 'Delete Appointment?',
       message:
-        'Permanently delete this appointment? This cannot be undone.',
+        'Move this appointment to Archives? An admin can restore it later.',
       action: async () => {
         setIsSubmitting(true);
         setError('');
@@ -460,7 +461,7 @@ function Appointments() {
           );
 
           setSuccess(
-            'Appointment deleted successfully!'
+            'Appointment moved to Archives.'
           );
 
           setSelectedAppointment(null);
@@ -790,6 +791,8 @@ function Appointments() {
                   </span>
                 </div>
 
+                {selectedAppointment.notes && <p className="whitespace-pre-wrap">{selectedAppointment.notes}</p>}
+                <NextSession key={selectedAppointment.id} appointment={selectedAppointment} onCreated={() => void fetchAppointments()} />
                 {/* ACTIONS */}
                 <div className="space-y-3 border-t border-pink-100 pt-4">
                   {selectedAppointment.status !==
@@ -838,7 +841,7 @@ function Appointments() {
                     </>
                   )}
 
-                  <button
+                  {getCurrentUser()?.role === 'admin' && <button
                     type="button"
                     onClick={() =>
                       deleteAppointment(
@@ -849,8 +852,8 @@ function Appointments() {
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-3 font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
                   >
                     <Trash2 size={18} />
-                    Delete Permanently
-                  </button>
+                    Move to Archives
+                  </button>}
 
                   <button
                     type="button"

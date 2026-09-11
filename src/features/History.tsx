@@ -87,6 +87,8 @@ export default function History() {
             <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusStyles[status] || 'bg-gray-100 text-gray-700'}`}>{status || 'Status not recorded'}</span>
             <span className="text-xs text-[#92737c]">Booking #{item.id}</span>
           </div>
+          {item.previousAppointmentId && <p className="mt-3 text-sm text-[#80656d]">Follow-up to appointment #{item.previousAppointmentId}</p>}
+          {status === 'completed' && <Link to="/appointments" className="mt-3 inline-block text-sm font-semibold text-[#d77992]">Schedule next session in Appointments → Past → View Details</Link>}
         </article>;
       })}
     </div>}

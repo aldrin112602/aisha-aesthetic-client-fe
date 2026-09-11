@@ -562,7 +562,7 @@ function AdminShopareas() {
       setDeleteTarget(null);
 
       // Show success message.
-      setSuccess(`"${deletedName}" has been deleted successfully.`);
+      setSuccess(`"${deletedName}" has been moved to Archives.`);
 
       setTimeout(() => {
         setSuccess('');
@@ -1119,7 +1119,7 @@ function AdminShopareas() {
                   </h2>
 
                   <p className="mt-1 text-sm text-[#80656d]">
-                    Are you sure you want to delete this shop area?
+                    Move this shop area to Archives? You can restore it later.
                   </p>
                 </div>
 
@@ -1146,7 +1146,7 @@ function AdminShopareas() {
                 </p>
 
                 <p className="mt-2 text-xs text-red-600">
-                  This action cannot be undone.
+                  This record will move to Admin Archives and can be restored.
                 </p>
               </div>
             </div>

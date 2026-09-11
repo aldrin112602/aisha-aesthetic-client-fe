@@ -723,7 +723,7 @@ function AccountManagement() {
 
       const result = await Swal.fire({
         title: 'Delete Account?',
-        text: `Are you sure you want to delete ${name}?`,
+        text: `Move ${name} to Archives? You can restore this account later.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes, Delete',
@@ -749,7 +749,7 @@ function AccountManagement() {
 
 
         setSuccess(
-          'Account deleted successfully!'
+          'Account moved to Archives.'
         );
 
 

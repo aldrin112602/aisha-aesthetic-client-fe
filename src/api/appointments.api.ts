@@ -1,5 +1,17 @@
 import { apiRequest } from './client';
 
+export function getNextSessions(id: number) {
+  return apiRequest<Appointment[]>(`/api/appointments/${id}/next-sessions`);
+}
+
+export async function createNextSession(id: number, payload: {
+  date: string; time: string; serviceId: number; employeeId: number | null; notes: string;
+}) {
+  const appointment = await apiRequest<Appointment>(`/api/appointments/${id}/next-sessions`, { method: 'POST', body: payload });
+  window.dispatchEvent(new Event('notifications-updated'));
+  return appointment;
+}
+
 import type {
   Appointment,
   AppointmentStatusHistoryEntry,

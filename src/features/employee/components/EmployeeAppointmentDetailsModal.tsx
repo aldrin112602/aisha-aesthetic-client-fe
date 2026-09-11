@@ -22,6 +22,7 @@ import {
   formatPeso,
 } from '../utils/appointmentDashboard';
 import EmployeeStatusBadge from './EmployeeStatusBadge';
+import NextSession from '../../appointments/components/NextSession';
 
 function EmployeeAppointmentDetailsModal({
   activeTab,
@@ -133,6 +134,7 @@ function EmployeeAppointmentDetailsModal({
             </div>
           )}
 
+          <NextSession key={appointment.id} appointment={appointment} />
           {canUpdate && (
             <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-5 sm:grid-cols-2">
               <button

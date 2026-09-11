@@ -16,6 +16,7 @@ import Profile from './features/profile';
 import SalesReportPage from './features/admin/SalesReportPage';
 import AdminDashboard from './features/admin/AdminDashboard';
 import DatabaseBackupsPage from './features/admin/DatabaseBackupsPage';
+import ArchivesPage from './features/admin/ArchivesPage';
 import EmployeeDashboard from './features/employee/EmployeeDashboard';
 import CustomerDashboard from './features/customer/CustomerDashboard';
 import AdminAppointments from './features/appointments/AdminAppointments';
@@ -56,6 +57,7 @@ const pageTitles: Record<string, string> = {
   '/services': 'Services',
   '/sales-report': 'Sales Report',
   '/database-backups': 'Database Backups',
+  '/archives': 'Archives',
 
   // SHARED
   '/walkins': 'Walk-ins',
@@ -249,6 +251,11 @@ function App() {
       <Route path="/database-backups" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <ProtectedLayout><DatabaseBackupsPage /></ProtectedLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/archives" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <ProtectedLayout><ArchivesPage /></ProtectedLayout>
         </ProtectedRoute>
       } />
 
