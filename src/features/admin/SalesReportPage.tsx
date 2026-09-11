@@ -1,4 +1,4 @@
-import EmployeePerformanceChart from './components/EmployeePerformanceChart';
+import SalesBreakdown from './components/SalesBreakdown';
 import React, {
   useEffect,
   useMemo,
@@ -7,20 +7,16 @@ import React, {
 } from 'react';
 
 import {
-  BarChart3,
   CalendarDays,
-  DollarSign,
   Filter,
   FileDown,
   RefreshCw,
   RotateCcw,
-  ShoppingBag,
-  TrendingUp,
-  Users,
   FileSpreadsheet,
 } from 'lucide-react';
 
 import Swal from 'sweetalert2';
+import { Alert, LinearProgress } from '@mui/material';
 
 import writeExcelFile, { type SheetData } from 'write-excel-file/browser';
 
@@ -33,46 +29,7 @@ import {
   type ServiceOption,
 } from '../../api/salesReport.api';
 
-import {
-  PieChart,
-  pieClasses,
-} from '@mui/x-charts/PieChart';
-
-import Box from '@mui/material/Box';
-
-import { styled } from '@mui/material/styles';
-
-import { useDrawingArea } from '@mui/x-charts/hooks';
-
-const StyledText = styled('text')({
-  fill: '#5b3e45',
-  textAnchor: 'middle',
-  dominantBaseline: 'central',
-  fontSize: 24,
-  fontWeight: 700,
-});
-
-const PieCenterLabel = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const {
-    width,
-    height,
-    left,
-    top,
-  } = useDrawingArea();
-
-  return (
-    <StyledText
-      x={left + width / 2}
-      y={top + height / 2}
-    >
-      {children}
-    </StyledText>
-  );
-};
+import SalesOverview from './components/SalesOverview';
 
 type FilterMode = 'month' | 'range';
 
@@ -149,8 +106,8 @@ const SalesReportPage: React.FC = () => {
   const loadSalesReport = async () => {
     const request = ++reportRequest.current;
     if (
-      filterMode === 'range' &&
-      (!startDate || !endDate)
+      (filterMode === 'range' && (!startDate || !endDate || startDate > endDate)) ||
+      (filterMode === 'month' && !selectedMonth)
     ) {
       setLoading(false);
       return;
@@ -208,6 +165,8 @@ const SalesReportPage: React.FC = () => {
   // ==========================================
 
   useEffect(() => {
+    // Loading state tracks the asynchronous request started by a filter change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSalesReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -234,20 +193,6 @@ const SalesReportPage: React.FC = () => {
     setEmployeeId('');
     setServiceId('');
     setAppointmentType('');
-  };
-
-  // ==========================================
-  // FORMAT CURRENCY
-  // ==========================================
-
-  const formatCurrency = (
-    value: number
-  ) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      minimumFractionDigits: 2,
-    }).format(Number(value || 0));
   };
 
   // ==========================================
@@ -302,45 +247,6 @@ const SalesReportPage: React.FC = () => {
   ]);
 
   // ==========================================
-  // MAX DAILY SALES
-  // ==========================================
-
-  const maxDailySales = useMemo(() => {
-    if (
-      !report?.dailySales?.length
-    ) {
-      return 0;
-    }
-
-    return Math.max(
-      ...report.dailySales.map(
-        (item) =>
-          Number(item.sales || 0)
-      )
-    );
-  }, [report]);
-
-  // ==========================================
-  // TOTAL SERVICE TRANSACTIONS
-  // ==========================================
-
-  const totalServiceTransactions =
-    useMemo(() => {
-      if (
-        !report?.salesByService?.length
-      ) {
-        return 0;
-      }
-
-      return report.salesByService.reduce(
-        (total, item) =>
-          total +
-          Number(item.transactions || 0),
-        0
-      );
-    }, [report]);
-
-  // ==========================================
   // EMPTY REPORT SAFETY
   // ==========================================
 
@@ -350,51 +256,12 @@ const SalesReportPage: React.FC = () => {
   const bookings =
     report?.bookings;
 
-  const appointmentStatusData = useMemo(() => {
-    const data = [
-      {
-        id: 'pending',
-        label: 'Pending',
-        value: Number(bookings?.pending || 0),
-        color: '#b7c95a',
-      },
-      {
-        id: 'confirmed',
-        label: 'Confirmed',
-        value: Number(bookings?.confirmed || 0),
-        color: '#e78aa5',
-      },
-      {
-        id: 'completed',
-        label: 'Completed',
-        value: Number(bookings?.completed || 0),
-        color: '#55a178',
-      },
-      {
-        id: 'cancelled',
-        label: 'Cancelled',
-        value: Number(bookings?.cancelled || 0),
-        color: '#ef4444',
-      },
-      {
-        id: 'no-show',
-        label: 'No-show',
-        value: Number(bookings?.noShow || 0),
-        color: '#8b5cf6',
-      },
-    ];
-
-    return data.filter(
-      (item) => item.value > 0
-    );
-  }, [bookings]);
-
   // ==========================================
   // EXPORT TO EXCEL
   // ==========================================
 
   const handleExportExcel = async () => {
-    if (!report) {
+    if (!report || loading || loadedFilterKey !== filterKey) {
       return;
     }
 
@@ -540,7 +407,7 @@ const SalesReportPage: React.FC = () => {
           <button
             type="button"
             onClick={handleExportExcel}
-            disabled={!report}
+            disabled={!report || loading || loadedFilterKey !== filterKey}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#3f8f5f] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f8f5f] shadow-sm transition hover:bg-[#eaf6ef] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <FileSpreadsheet size={17} />
@@ -753,6 +620,8 @@ const SalesReportPage: React.FC = () => {
           LOADING
       ======================================= */}
 
+      {loading && <LinearProgress aria-label="Updating sales report" sx={{ mb: 2, borderRadius: 2, bgcolor: '#f7e6ec', '& .MuiLinearProgress-bar': { bgcolor: '#bd657e' } }} />}
+
       {loading && !report ? (
         <div className="flex min-h-100 items-center justify-center rounded-2xl border border-pink-100 bg-white shadow-sm">
           <div className="text-center">
@@ -766,727 +635,19 @@ const SalesReportPage: React.FC = () => {
             </p>
           </div>
         </div>
+      ) : !report || loadedFilterKey !== filterKey ? (
+        <Alert severity="info" sx={{ borderRadius: 3 }}>
+          {filterMode === 'range' && (!startDate || !endDate) ? 'Choose a start and end date to view your report.'
+            : filterMode === 'range' && startDate > endDate ? 'The end date must be on or after the start date.'
+              : filterMode === 'month' && !selectedMonth ? 'Choose a month to view your report.'
+                : loading ? 'Updating charts for your selected filters…' : 'No report is available for these filters. Use Refresh to try again.'}
+        </Alert>
       ) : (
         <>
-          {/* ======================================
-              REVENUE CARDS
-          ======================================= */}
+          {report && <SalesOverview report={report} />}
 
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-            {/* TOTAL SALES */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-4 flex items-center justify-between">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fdecef] text-[#c26c84]">
-                  <DollarSign size={21} />
-                </div>
-              </div>
-
-              <p className="text-sm text-[#92737c]">
-                Total Sales
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-[#5b3e45]">
-                {formatCurrency(
-                  summary?.totalSales || 0
-                )}
-              </p>
-
-              <p className="mt-1 text-xs text-[#92737c]">
-              Confirmed and completed transactions
-            </p>
-            </div>
-
-            {/* APPOINTMENT SALES */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-4 flex items-center justify-between">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#eee8ff] text-[#8067b7]">
-                  <CalendarDays size={21} />
-                </div>
-              </div>
-
-              <p className="text-sm text-[#92737c]">
-                Appointment Sales
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-[#5b3e45]">
-                {formatCurrency(
-                  summary?.appointmentSales ||
-                    0
-                )}
-              </p>
-
-              <p className="mt-1 text-xs text-[#92737c]">
-                {summary?.totalAppointments ||
-                  0}{' '}
-                completed appointments
-              </p>
-            </div>
-
-            {/* WALK-IN SALES */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-4 flex items-center justify-between">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e5f5ed] text-[#4f9671]">
-                  <Users size={21} />
-                </div>
-              </div>
-
-              <p className="text-sm text-[#92737c]">
-                Walk-in Sales
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-[#5b3e45]">
-                {formatCurrency(
-                  summary?.walkinSales ||
-                    0
-                )}
-              </p>
-
-              <p className="mt-1 text-xs text-[#92737c]">
-                {summary?.totalWalkins ||
-                  0}{' '}
-                completed walk-ins
-              </p>
-            </div>
-
-            {/* AVERAGE SALE */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-4 flex items-center justify-between">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e6f0ff] text-[#5680bb]">
-                  <TrendingUp size={21} />
-                </div>
-              </div>
-
-              <p className="text-sm text-[#92737c]">
-                Average Sale
-              </p>
-
-              <p className="mt-1 text-2xl font-bold text-[#5b3e45]">
-                {formatCurrency(
-                  summary?.averageSale || 0
-                )}
-              </p>
-
-              <p className="mt-1 text-xs text-[#92737c]">
-                Per confirmed/completed transaction
-              </p>
-            </div>
-          </div>
-
-          {/* ======================================
-              SALES BREAKDOWN
-          ======================================= */}
-
-          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-            {/* SALES BY TYPE */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-5">
-                <h2 className="text-lg font-bold text-[#5b3e45]">
-                  Sales Breakdown
-                </h2>
-
-                <p className="text-sm text-[#92737c]">
-                  Appointment vs Walk-in revenue
-                </p>
-              </div>
-
-              <div className="space-y-5">
-
-                {/* APPOINTMENTS */}
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-[#8067b7]" />
-
-                      <span className="text-sm font-medium text-[#5b3e45]">
-                        Appointments
-                      </span>
-                    </div>
-
-                    <span className="text-sm font-bold text-[#5b3e45]">
-                      {formatCurrency(
-                        summary?.appointmentSales ||
-                          0
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="h-3 overflow-hidden rounded-full bg-[#f4edf0]">
-                    <div
-                      className="h-full rounded-full bg-[#8067b7] transition-all"
-                      style={{
-                        width:
-                          summary?.totalSales
-                            ? `${Math.min(
-                                100,
-                                ((summary.appointmentSales ||
-                                  0) /
-                                  summary.totalSales) *
-                                  100
-                              )}%`
-                            : '0%',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* WALK-INS */}
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-[#4f9671]" />
-
-                      <span className="text-sm font-medium text-[#5b3e45]">
-                        Walk-ins
-                      </span>
-                    </div>
-
-                    <span className="text-sm font-bold text-[#5b3e45]">
-                      {formatCurrency(
-                        summary?.walkinSales ||
-                          0
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="h-3 overflow-hidden rounded-full bg-[#f4edf0]">
-                    <div
-                      className="h-full rounded-full bg-[#4f9671] transition-all"
-                      style={{
-                        width:
-                          summary?.totalSales
-                            ? `${Math.min(
-                                100,
-                                ((summary.walkinSales ||
-                                  0) /
-                                  summary.totalSales) *
-                                  100
-                              )}%`
-                            : '0%',
-                      }}
-                    />
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* ======================================
-                APPOINTMENT STATUS
-            ======================================= */}
-
-            <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-2">
-                <h2 className="text-lg font-bold text-[#5b3e45]">
-                  Appointment Status
-                </h2>
-
-                <p className="text-sm text-[#92737c]">
-                  Appointment distribution for {formattedPeriod}
-                </p>
-              </div>
-
-              {appointmentStatusData.length > 0 ? (
-                <>
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 280,
-                      display: 'flex',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <PieChart
-                      series={[
-                        {
-                          data: appointmentStatusData,
-                          innerRadius: 72,
-                          outerRadius: 112,
-                          paddingAngle: 3,
-                          cornerRadius: 5,
-
-                          highlightScope: {
-                            fade: 'global',
-                            highlight: 'item',
-                          },
-
-                          faded: {
-                            innerRadius: 66,
-                            additionalRadius: -5,
-                          },
-
-                          arcLabel: (item) => {
-                            const total = Number(
-                              bookings?.totalBookings || 0
-                            );
-
-                            if (!total) {
-                              return '';
-                            }
-
-                            const percentage =
-                              (item.value / total) * 100;
-
-                            return percentage >= 5
-                              ? `${percentage.toFixed(0)}%`
-                              : '';
-                          },
-
-                          valueFormatter: ({
-                            value,
-                          }) => {
-                            const total = Number(
-                              bookings?.totalBookings || 0
-                            );
-
-                            const percentage =
-                              total > 0
-                                ? (
-                                    (Number(value) /
-                                      total) *
-                                    100
-                                  ).toFixed(1)
-                                : '0';
-
-                            return `${value} appointments (${percentage}%)`;
-                          },
-                        },
-                      ]}
-                      colors={appointmentStatusData.map(
-                        (item) => item.color
-                      )}
-                      hideLegend
-                      sx={{
-                        [`& .${pieClasses.arcLabel}`]: {
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          fill: '#ffffff',
-                        },
-                      }}
-                    >
-                      <PieCenterLabel>
-                        {Number(
-                          bookings?.totalBookings || 0
-                        )}
-                      </PieCenterLabel>
-                    </PieChart>
-                  </Box>
-
-                  {/* LEGEND */}
-
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-
-                    {appointmentStatusData.map(
-                      (item) => {
-                        const total = Number(
-                          bookings?.totalBookings || 0
-                        );
-
-                        const percentage =
-                          total > 0
-                            ? (item.value / total) * 100
-                            : 0;
-
-                        return (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-2 rounded-xl bg-[#fff9fb] px-3 py-2"
-                          >
-                            <span
-                              className="h-3 w-3 shrink-0 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  item.color,
-                              }}
-                            />
-
-                            <div className="min-w-0">
-                              <p className="truncate text-xs text-[#92737c]">
-                                {item.label}
-                              </p>
-
-                              <p className="text-sm font-bold text-[#5b3e45]">
-                                {item.value}{' '}
-                                <span className="font-normal text-[#92737c]">
-                                  ({percentage.toFixed(0)}%)
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-70 items-center justify-center text-center">
-                  <div>
-                    <CalendarDays
-                      size={36}
-                      className="mx-auto mb-3 text-[#d8b8c1]"
-                    />
-
-                    <p className="font-medium text-[#5b3e45]">
-                      No appointment data
-                    </p>
-
-                    <p className="mt-1 text-sm text-[#92737c]">
-                      No appointments found for this period.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* ======================================
-              DAILY SALES
-          ======================================= */}
-
-          <div className="print-card mb-6 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[#5b3e45]">
-                  Daily Sales
-                </h2>
-
-                <p className="text-sm text-[#92737c]">
-                  Revenue generated each day
-                </p>
-              </div>
-
-              <BarChart3
-                size={21}
-                className="text-[#c26c84]"
-              />
-            </div>
-
-            {!report?.dailySales?.length ? (
-              <div className="py-12 text-center">
-                <BarChart3
-                  size={35}
-                  className="mx-auto mb-3 text-[#d8b8c1]"
-                />
-
-                <p className="text-sm text-[#92737c]">
-                  No sales recorded for this period.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {report.dailySales.map((item, index) => {
-                  const percentage = maxDailySales
-                    ? (Number(item.sales || 0) / maxDailySales) * 100
-                    : 0;
-
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-20 shrink-0 text-xs font-medium text-[#92737c]">
-                        {item.date
-                          ? new Date(item.date).toLocaleDateString(
-                              'en-US',
-                              { month: 'short', day: 'numeric' }
-                            )
-                          : `Day ${index + 1}`}
-                      </div>
-
-                      <div className="h-8 flex-1 overflow-hidden rounded-lg bg-[#f4edf0]">
-                        <div
-                          className="flex h-full items-center rounded-lg bg-[#c26c84] px-3 text-xs font-semibold text-white transition-all"
-                          style={{
-                            width: `${Math.max(
-                              percentage,
-                              Number(item.sales || 0) > 0
-                                ? 8
-                                : 0
-                            )}%`,
-                          }}
-                        >
-                          {Number(item.transactions || 0)}{' '}
-                          {Number(item.transactions || 0) === 1
-                            ? 'transaction'
-                            : 'transactions'}
-                        </div>
-                      </div>
-
-                      <div className="w-28 shrink-0 text-right text-xs font-semibold text-[#5b3e45]">
-                        {formatCurrency(Number(item.sales || 0))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* ======================================
-              SALES BY SERVICE
-          ======================================= */}
-
-          <div className="print-card mb-6 rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[#5b3e45]">
-                  Sales by Service
-                </h2>
-
-                <p className="text-sm text-[#92737c]">
-                  Top performing services
-                </p>
-              </div>
-
-              <ShoppingBag
-                size={21}
-                className="text-[#c26c84]"
-              />
-            </div>
-
-            {!report?.salesByService
-              ?.length ? (
-              <div className="py-10 text-center">
-                <ShoppingBag
-                  size={35}
-                  className="mx-auto mb-3 text-[#d8b8c1]"
-                />
-
-                <p className="text-sm text-[#92737c]">
-                  No service sales recorded.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-150">
-                  <thead>
-                    <tr className="border-b border-pink-100 text-left">
-                      <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        #
-                      </th>
-
-                      <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Service
-                      </th>
-
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Transactions
-                      </th>
-
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Sales
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {report.salesByService.map(
-                      (
-                        item,
-                        index
-                      ) => (
-                        <tr
-                          key={`${item.serviceName}-${index}`}
-                          className="border-b border-pink-50 last:border-0"
-                        >
-                          <td className="py-4 text-sm font-medium text-[#92737c]">
-                            {index + 1}
-                          </td>
-
-                          <td className="py-4">
-                            <p className="font-semibold text-[#5b3e45]">
-                              {item.serviceName ||
-                                'Unnamed Service'}
-                            </p>
-                          </td>
-
-                          <td className="py-4 text-right text-sm text-[#92737c]">
-                            {Number(
-                              item.transactions ||
-                                0
-                            )}
-                          </td>
-
-                          <td className="py-4 text-right text-sm font-bold text-[#5b3e45]">
-                            {formatCurrency(
-                              Number(
-                                item.sales || 0
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    )}
-
-                    <tr>
-                      <td
-                        colSpan={2}
-                        className="pt-4 text-sm font-semibold text-[#5b3e45]"
-                      >
-                        Total
-                      </td>
-
-                      <td className="pt-4 text-right text-sm font-bold text-[#5b3e45]">
-                        {
-                          totalServiceTransactions
-                        }
-                      </td>
-
-                      <td className="pt-4 text-right text-sm font-bold text-[#c26c84]">
-                        {formatCurrency(
-                          report.salesByService.reduce(
-                            (
-                              total,
-                              item
-                            ) =>
-                              total +
-                              Number(
-                                item.sales ||
-                                  0
-                              ),
-                            0
-                          )
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* ======================================
-              SALES BY EMPLOYEE
-          ======================================= */}
-
-          <div className="print-card rounded-2xl border border-pink-100 bg-white p-5 shadow-sm">
-
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[#5b3e45]">
-                  Sales by Employee
-                </h2>
-
-                <p className="text-sm text-[#92737c]">
-                  Employee performance for{' '}
-                  {formattedPeriod}
-                </p>
-              </div>
-
-              <Users
-                size={21}
-                className="text-[#c26c84]"
-              />
-            </div>
-
-            {!report?.salesByEmployee
-              ?.length ? (
-              <div className="py-10 text-center">
-                <Users
-                  size={35}
-                  className="mx-auto mb-3 text-[#d8b8c1]"
-                />
-
-                <p className="text-sm text-[#92737c]">
-                  No employee sales recorded.
-                </p>
-              </div>
-            ) : (
-              <>
-              <EmployeePerformanceChart rows={report.salesByEmployee} />
-              <details className="group">
-                <summary className="mb-4 cursor-pointer text-sm font-semibold text-[#8b5cf6]">View employee data table</summary>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-150">
-                  <thead>
-                    <tr className="border-b border-pink-100 text-left">
-                      <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        #
-                      </th>
-
-                      <th className="pb-3 text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Employee
-                      </th>
-
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Transactions
-                      </th>
-
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wide text-[#92737c]">
-                        Sales
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {report.salesByEmployee.map(
-                      (
-                        item,
-                        index
-                      ) => (
-                        <tr
-                          key={`${item.employeeName}-${index}`}
-                          className="border-b border-pink-50 last:border-0"
-                        >
-                          <td className="py-4 text-sm font-medium text-[#92737c]">
-                            {index + 1}
-                          </td>
-
-                          <td className="py-4">
-                            <p className="font-semibold text-[#5b3e45]">
-                              {item.employeeName ||
-                                'Not recorded'}
-                            </p>
-                          </td>
-
-                          <td className="py-4 text-right text-sm text-[#92737c]">
-                            {Number(
-                              item.transactions ||
-                                0
-                            )}
-                          </td>
-
-                          <td className="py-4 text-right text-sm font-bold text-[#5b3e45]">
-                            {formatCurrency(
-                              Number(
-                                item.sales || 0
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              </details>
-              </>
-            )}
-          </div>
+          <SalesBreakdown kind="service" period={formattedPeriod} rows={report.salesByService.map(row => ({ ...row, name: row.serviceName || 'Unnamed Service' }))} />
+          <SalesBreakdown kind="employee" period={formattedPeriod} rows={report.salesByEmployee.map(row => ({ ...row, name: row.employeeName || 'Not recorded' }))} />
         </>
       )}
 
