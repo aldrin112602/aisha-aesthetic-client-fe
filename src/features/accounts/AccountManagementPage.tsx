@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react';
 import Swal from 'sweetalert2';
+import EmployeeAccess from './EmployeeAccess';
 import {
   X,
   Trash2,
@@ -73,6 +74,7 @@ const ROLE_FILTERS: RoleFilter[] = [
 
 
 function AccountManagement() {
+  const [accessAccount, setAccessAccount] = useState<Account | null>(null);
 
   // ============================================================
   // ACCOUNTS
@@ -898,6 +900,7 @@ function AccountManagement() {
   return (
 
     <div className="min-w-0 bg-[#fff8fa] p-4 md:p-6 lg:p-8">
+      {accessAccount && <EmployeeAccess id={accessAccount.id} name={accessAccount.name} onClose={() => setAccessAccount(null)} />}
 
 
       {/* ========================================================
@@ -1156,6 +1159,7 @@ function AccountManagement() {
                       <td className="px-4 py-3">
 
                         <div className="flex gap-2">
+                          {String(account.role).trim().toLowerCase() === 'employee' && <button type="button" className="secondary-btn px-3 py-2 text-xs" onClick={() => setAccessAccount(account)}>Duty access</button>}
 
                           <button
                             type="button"

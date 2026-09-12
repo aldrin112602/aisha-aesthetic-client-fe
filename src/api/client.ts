@@ -13,11 +13,19 @@ export class ApiError extends Error {
   }
 }
 
-export function authFetch(input: RequestInfo | URL, options: RequestInit = {}) {
+export async function authFetch(input: RequestInfo | URL, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
   const token = localStorage.getItem('aisha_notification_token');
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  return fetch(input, { ...options, headers });
+  const response = await fetch(input, { ...options, headers, cache: 'no-store' });
+  if (token && token === localStorage.getItem('aisha_notification_token')) {
+    if (response.status === 401) window.dispatchEvent(new Event('session-expired'));
+    else if (response.status === 403) {
+      const data = await response.clone().json().catch(() => null);
+      if (data?.code === 'EMPLOYEE_ACCESS_DENIED') window.dispatchEvent(new Event('session-expired'));
+    }
+  }
+  return response;
 }
 
 export function revokeSession() {

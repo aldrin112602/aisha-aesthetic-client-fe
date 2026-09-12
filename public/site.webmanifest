@@ -2,7 +2,9 @@
   "name": "AishaEsthetics",
   "short_name": "AishaEsthetics",
   "start_url": "/",
-  "display": "browser",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
   "background_color": "#fff8fa",
   "theme_color": "#fff8fa",
   "icons": [
