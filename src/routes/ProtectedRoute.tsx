@@ -1,7 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { apiRequest, ApiError } from '../api/client';
-
+import SessionSkeleton from '../components/SessionSkeleton';
+import SessionError from '../components/SessionError';
 import { getCurrentUser, getRoleDestination, saveCurrentUser, clearCurrentUser } from '../utils/auth';
 import type { ProtectedRouteProps } from '../types/global';
 
@@ -62,8 +63,8 @@ export default function ProtectedRoute({
       document.removeEventListener('visibilitychange', visibility);
     };
   }, [location.pathname]);
-  if (!session || session.path !== location.pathname) return <p className="p-8" role="status">Checking your session...</p>;
-  if (session.error) return <p className="p-8" role="alert">Unable to verify your session. Please refresh to try again.</p>;
+  if (!session || session.path !== location.pathname) return <SessionSkeleton />;
+  if (session.error) return <SessionError />;
   const currentUser = session.user;
 
   if (!currentUser) {
